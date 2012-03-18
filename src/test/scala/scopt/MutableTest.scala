@@ -1,5 +1,4 @@
-package scopt
-
+package mutabletest
 
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
@@ -7,8 +6,6 @@ import org.scalatest.FunSuite
 
 /**
  * Tests the use of the options parser
- *
- * @version $Revision : 1.1 $
  */
 
 case class Config(var foo: Int = -1,
@@ -25,7 +22,7 @@ case class Config(var foo: Int = -1,
 class OptionsTest extends FunSuite {
   var config: Config = _
 
-  val parser1 = new OptionParser("scopt") {
+  val parser1 = new scopt.OptionParser("scopt") {
     intOpt("f", "foo", "foo is an integer property", {v: Int => config.foo = v})
     opt("o", "output", "<file>", "output is a string property", {v: String => config.bar = v})
     booleanOpt("xyz", "xyz is a boolean property", {v: Boolean => config.xyz = v})
@@ -63,7 +60,7 @@ class OptionsTest extends FunSuite {
     invalidArguments(parser1, "--xyz", "shouldBeBoolean", "blah")
   }
 
-  val parser2 = new OptionParser("scopt") {
+  val parser2 = new scopt.OptionParser("scopt") {
     arglist("<file>...", "some argument", {v: String => config.files = (v :: config.files).reverse })
   }
   
@@ -71,7 +68,7 @@ class OptionsTest extends FunSuite {
     validArguments(parser2, Config(files = List("foo", "bar")), "foo", "bar")
   }
   
-  val parser3 = new OptionParser("scopt") {
+  val parser3 = new scopt.OptionParser("scopt") {
     argOpt("<file>...", "some argument", {v: String => config.files = (v :: config.files).reverse })
   }
   
@@ -83,7 +80,7 @@ class OptionsTest extends FunSuite {
     validArguments(parser3, Config(files = List("foo")), "foo")
   }
     
-  def validArguments(parser: OptionParser,
+  def validArguments(parser: scopt.OptionParser,
       expectedConfig: Config, args: String*) {
     config = new Config()
     expect(true) {
@@ -95,7 +92,7 @@ class OptionsTest extends FunSuite {
     }
   }
 
-  def invalidArguments(parser: OptionParser,
+  def invalidArguments(parser: scopt.OptionParser,
       args: String*) {
     config = new Config()
     expect(false) {

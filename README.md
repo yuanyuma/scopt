@@ -8,37 +8,34 @@ mentioned [in this thread](http://old.nabble.com/-scala--CLI-library--ts19391923
 [this thread](http://old.nabble.com/Parsing-command-lines-argument-in-a-%22scalaesque%22-way-tp26592006p26595257.html)
 which is available [as a gist](http://gist.github.com/246481) or [here](http://harnly.net/tmp/OptionsParser.scala).
 
-scala-tools.org Nexus
----------------------
+Sonatype
+--------
 
     libraryDependencies += "com.github.scopt" %% "scopt" % "1.1.3"
-    
-If you prefer the Annotation approach
--------------------------------------
-
-Since hacking on scopt I've now moved to the [Annotation Approach via Karaf](https://github.com/jstrachan/scopt/blob/master/Karaf.md) you might like to check that out if you find limitations in scopt.
 
 Usage
 -----
 
 Create an *OptionParser* and customise it with the options you need, passing in functions to process each option or argument.
 
-    val parser = new OptionParser("scopt") {
-      intOpt("f", "foo", "foo is an integer property", {v: Int => config.foo = v})
-      opt("o", "output", "<file>", "output is a string property", {v: String => config.bar = v})
-      booleanOpt("xyz", "xyz is a boolean property", {v: Boolean => config.xyz = v})
-      keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>",
-        {(key: String, value: String) => { config.libname = key; config.libfile = value } })
-      arg("<singlefile>", "<singlefile> is an argument", {v: String => config.whatnot = v})
-      // arglist("<file>...", "arglist allows variable number of arguments",
-      //   {v: String => config.files = (v :: config.files).reverse })
-    }
-    if (parser.parse(args)) {
-       // do stuff
-    }
-    else {
-      // arguments are bad, usage message will have been displayed
-    }
+```scala
+val parser = new OptionParser("scopt", "1.x") {
+  intOpt("f", "foo", "foo is an integer property", {v: Int => config.foo = v})
+  opt("o", "output", "<file>", "output is a string property", {v: String => config.bar = v})
+  booleanOpt("xyz", "xyz is a boolean property", {v: Boolean => config.xyz = v})
+  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>",
+    {(key: String, value: String) => { config.libname = key; config.libfile = value } })
+  arg("<singlefile>", "<singlefile> is an argument", {v: String => config.whatnot = v})
+  // arglist("<file>...", "arglist allows variable number of arguments",
+  //   {v: String => config.files = (v :: config.files).reverse })
+}
+if (parser.parse(args)) {
+  // do stuff
+}
+else {
+  // arguments are bad, usage message will have been displayed
+}
+```
 
 The above generates the following usage text:
 
@@ -55,16 +52,39 @@ The above generates the following usage text:
       <singlefile>
             <singlefile> is an argument
 
+Immutable Parser
+----------------
+
+scopt now provides immutable parser:
+
+```scala
+val parser = new scopt.immutable.OptionParser[Config]("scopt", "2.x") { def options = Seq(
+  intOpt("f", "foo", "foo is an integer property") { (v: Int, c: Config) => c.copy(foo = v) },
+  opt("o", "output", "output") { (v: String, c: Config) => c.copy(bar = v) },
+  booleanOpt("xyz", "xyz is a boolean property") { (v: Boolean, c: Config) => c.copy(xyz = v) },
+  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>")
+    { (key: String, value: String, c: Config) => c.copy(libname = key, libfile = value) },
+  keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>")
+    { (key: String, value: Int, c: Config) => c.copy(maxlibname = key, maxcount = value) },
+  arg("<file>", "some argument") { (v: String, c: Config) => c.copy(whatnot = v) }
+) }
+// parser.parse returns Option[C]
+parser.parse(args, Config()) map { config =>
+  // do stuff
+} getOrElse {
+  // arguments are bad, usage message will have been displayed
+}
+```
+
 Building
 --------
 
-You should be able to use [sbt](http://code.google.com/p/simple-build-tool/) to build scopt.
-
+sbt to build scopt.
 
 License
 -------
 
-Do whatever you like with it :), or use MIT License.
+MIT License.
 
 Changes
 -------

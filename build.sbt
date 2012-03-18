@@ -1,6 +1,6 @@
 name := "scopt"
 
-version := "1.1.3"
+version := "2.0.0-SNAPSHOT"
 
 organization := "com.github.scopt"
 
@@ -25,25 +25,40 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 	deps :+ ("org.scalatest" % libName % testVersion % "test")
 }
 
+seq(lsSettings :_*)
+
+LsKeys.tags in LsKeys.lsync := Seq("cli", "command-line", "parsing", "parser")
+
+// scaladoc fix
+unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
+
+pomExtra :=
+  (<scm>
+    <url>git@github.com:scopt/scopt.git</url>
+    <connection>scm:git:git@github.com:scopt/scopt.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>eed3si9n</id>
+      <name>Eugene Yokota</name>
+      <url>http://eed3si9n.com</url>
+    </developer>
+  </developers>)
+
+// --- Sonatype settings ---
+
 publishMavenStyle := true
 
 publishArtifact in (Compile, packageBin) := true
 
-publishArtifact in (Test, packageBin) := false
+publishArtifact in Test := false
 
-publishArtifact in (Compile, packageDoc) := false
-
-publishArtifact in (Compile, packageSrc) := false
-
-publishTo <<= (version) { version: String =>
-  val nexus = "http://nexus.scala-tools.org/content/repositories/"
-  if (version.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus+"snapshots/") 
-  else                                   Some("releases" at nexus+"releases/")
+publishTo <<= version { (v: String) =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT")) 
+    Some("snapshots" at nexus + "content/repositories/snapshots") 
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
-
-
-seq(lsSettings :_*)
-
-LsKeys.tags in LsKeys.lsync := Seq("cli", "command-line", "parsing", "parser")
+pomIncludeRepository := { x => false }
