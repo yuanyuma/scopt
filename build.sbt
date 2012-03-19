@@ -1,8 +1,10 @@
 name := "scopt"
 
-version := "2.0.0-SNAPSHOT"
+version := "2.0.0"
 
 organization := "com.github.scopt"
+
+homepage := Some(url("https://github.com/scopt/scopt"))
 
 licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
 
