@@ -244,10 +244,10 @@ case class OptionParser(
       { (k: String, v: Boolean, _) => action(k, v) }))
   
   def help(shortopt: String, longopt: String, description: String) =
-    add(new FlagOptionDefinition(Some(shortopt), longopt, description, {this.showUsage; sys.exit}))
+    add(new FlagOptionDefinition(Some(shortopt), longopt, description, {this.showUsage; exit}))
 
   def help(shortopt: Option[String], longopt: String, description: String) =
-    add(new FlagOptionDefinition(shortopt, longopt, description, {this.showUsage; sys.exit}))
+    add(new FlagOptionDefinition(shortopt, longopt, description, {this.showUsage; exit}))
   
   def separator(description: String) =
     add(new SeparatorDefinition(description))
