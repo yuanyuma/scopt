@@ -1,6 +1,6 @@
 name := "scopt"
 
-version := "2.0.0"
+version := "2.0.1"
 
 organization := "com.github.scopt"
 
@@ -30,6 +30,9 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 seq(lsSettings :_*)
 
 LsKeys.tags in LsKeys.lsync := Seq("cli", "command-line", "parsing", "parser")
+
+externalResolvers in LsKeys.lsync := Seq(
+  "sonatype-public" at "https://oss.sonatype.org/content/repositories/public")
 
 // scaladoc fix
 unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
