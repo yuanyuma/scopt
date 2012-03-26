@@ -16,7 +16,8 @@ case class Config(var foo: Int = -1,
   var maxlibname: String = null,
   var maxcount: Int = -1,
   var whatnot: String = null,
-  var files: List[String] = Nil)
+  var files: List[String] = Nil,
+  var packageDir: Boolean = false)
 
 @RunWith(classOf[JUnitRunner])
 class OptionsTest extends FunSuite {
@@ -30,6 +31,8 @@ class OptionsTest extends FunSuite {
       {(key: String, value: String) => { config.libname = key; config.libfile = value } })
     keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>",
       {(key: String, value: Int) => { config.maxlibname = key; config.maxcount = value } })
+    opt("package-dir", "generates package directories",
+      { config.packageDir = true })
     arg("<file>", "some argument", {v: String => config.whatnot = v})
   }
   
@@ -41,6 +44,7 @@ class OptionsTest extends FunSuite {
     validArguments(parser1, Config(libname = "key", libfile = "value", whatnot = "drink"), "--lib:key=value", "drink")
     validArguments(parser1, Config(maxlibname = "key", maxcount = 5, whatnot = "drink"), "--max:key=5", "drink")
     validArguments(parser1, Config(xyz = true, whatnot = "drink"), "--xyz", "true", "drink")
+    validArguments(parser1, Config(whatnot = "blah", packageDir = true), "blah", "--package-dir")
   }
 
   test("invalid arguments fail") {

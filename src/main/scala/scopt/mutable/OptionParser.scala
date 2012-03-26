@@ -105,8 +105,7 @@ case class OptionParser(
    * @param action callback function
    */      
   def opt(shortopt: String, longopt: String, description: String, action: => Unit) =
-    add(new FlagOptionDefinition(Some(shortopt), longopt, description,
-      { (u: Unit) => action }))
+    add(new FlagOptionDefinition(Some(shortopt), longopt, description, action))
 
   /** adds a flag option invoked by `--longopt`.
    * @param longopt long option
@@ -114,7 +113,7 @@ case class OptionParser(
    * @param action callback function
    */
   def opt(longopt: String, description: String, action: => Unit) =
-    add(new FlagOptionDefinition(None, longopt, description, { (u: Unit) => action }))
+    add(new FlagOptionDefinition(None, longopt, description, action))
       
   // we have to give these typed options separate names, because of &^@$! type erasure
   def intOpt(shortopt: String, longopt: String, description: String, action: Int => Unit) =
