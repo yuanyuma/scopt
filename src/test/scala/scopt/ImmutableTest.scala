@@ -30,7 +30,8 @@ class ImmutableTest extends FunSuite {
     keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>")
       { (key: String, value: Int, c: Config) => c.copy(maxlibname = key, maxcount = value) },
     booleanOpt("xyz", "xyz is a boolean property") { (v: Boolean, c: Config) => c.copy(xyz = v) },
-    flag("v", "verbose", "verbose is a flag") { _.copy(verbose = true) }
+    flag("v", "verbose", "verbose is a flag") { _.copy(verbose = true) },
+    help("?", "help", "Show a usage message and exit")
   )}
 
   test("valid arguments are parsed correctly") {
