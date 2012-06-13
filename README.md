@@ -11,7 +11,11 @@ which is available [as a gist](http://gist.github.com/246481) or [here](http://h
 Sonatype
 --------
 
-    libraryDependencies += "com.github.scopt" %% "scopt" % "2.0.1"
+```scala
+libraryDependencies += "com.github.scopt" %% "scopt" % "2.1.0"
+
+resolvers ++= "sonatype-public" at "https://oss.sonatype.org/content/groups/public"
+```
 
 Usage
 -----
@@ -89,4 +93,4 @@ MIT License.
 Changes
 -------
 
-See [notes](https://github.com/jstrachan/scopt/tree/master/notes).
+See [notes](https://github.com/scopt/scopt/tree/master/notes).
