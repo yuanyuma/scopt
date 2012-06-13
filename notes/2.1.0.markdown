@@ -1,0 +1,3 @@
+- Fixed signature of `opt(String, String, String)`. [#2][2]
+
+  [2]: https://github.com/scopt/scopt/issues/2

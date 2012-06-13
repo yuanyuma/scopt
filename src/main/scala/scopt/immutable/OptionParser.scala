@@ -21,7 +21,7 @@ abstract case class OptionParser[C](
    * @param description description in the usage text
    * @param action callback function
    */
-  def opt[C](shortopt: String, longopt: String, description: String)(action: (String, C) => C) =
+  def opt(shortopt: String, longopt: String, description: String)(action: (String, C) => C) =
     new ArgOptionDefinition(Some(shortopt), longopt, defaultValueName, description, action)
 
   /** adds a `String` option invoked by `--longopt x`.
