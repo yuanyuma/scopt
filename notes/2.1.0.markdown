@@ -1,3 +1,7 @@
-- Fixed signature of `opt(String, String, String)`. [#2][2]
+- Fixes the signature of `opt(String, String, String)`. [#2][2]
+- Fixes `help` and `flag`. [#3][3]/[#4][4]/[#6][6] contributed by [@kxbmap][@kxbmap]
 
   [2]: https://github.com/scopt/scopt/issues/2
+  [4]: https://github.com/scopt/scopt/issues/4
+  [6]: https://github.com/scopt/scopt/pull/6
+  [@kxbmap]: https://github.com/kxbmap
