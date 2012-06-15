@@ -34,7 +34,7 @@ On the other hand, the mutable parsers are expected to modify a config object in
 
 ### Immutable Parser
 
-Here's how you create a `scopt.immutable.OptionParser`.
+Here's how you create a `scopt.immutable.OptionParser`. See [Scaladoc API](http://scopt.github.com/scopt/latest/api/) for the details on various builder methods.
 
 ```scala
 val parser = new scopt.immutable.OptionParser[Config]("scopt", "2.x") { def options = Seq(
