@@ -3,6 +3,31 @@ package scopt.immutable
 import scopt.generic._
 import GenericOptionParser._
 
+/** scopt.immutable.OptionParser is instantiated within your object,
+ * set up by an implementing 
+ * <a href="options:Seq[OptionDefinition[C]]"><code>options</code></a> method by returning a sequence of invocations of 
+ * the various builder methods such as
+ * <a href="#opt(String,String,String)((String, C) ⇒ C):ArgOptionDefinition[C]"><code>opt</code></a> method or
+ * <a href="#arg(String,String)((String, C) ⇒ C):Argument[C]"><code>arg</code></a> method.
+ * {{{
+ * val parser = new scopt.immutable.OptionParser[Config]("scopt", "2.x") { def options = Seq(
+ *   intOpt("f", "foo", "foo is an integer property") { (v: Int, c: Config) => c.copy(foo = v) },
+ *   opt("o", "output", "output") { (v: String, c: Config) => c.copy(bar = v) },
+ *   booleanOpt("xyz", "xyz is a boolean property") { (v: Boolean, c: Config) => c.copy(xyz = v) },
+ *   keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>")
+ *     { (key: String, value: String, c: Config) => c.copy(libname = key, libfile = value) },
+ *   keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>")
+ *     { (key: String, value: Int, c: Config) => c.copy(maxlibname = key, maxcount = value) },
+ *   arg("<file>", "some argument") { (v: String, c: Config) => c.copy(whatnot = v) }
+ * ) }
+ * // parser.parse returns Option[C]
+ * parser.parse(args, Config()) map { config =>
+ *   // do stuff
+ * } getOrElse {
+ *   // arguments are bad, usage message will have been displayed
+ * }
+ * }}}
+ */
 abstract case class OptionParser[C](
   programName: Option[String] = None,
   version: Option[String] = None,

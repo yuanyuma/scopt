@@ -67,3 +67,13 @@ publishTo <<= version { (v: String) =>
 }
 
 pomIncludeRepository := { x => false }
+
+// site
+
+site.settings
+
+site.includeScaladoc()
+
+ghpages.settings
+
+git.remoteRepo := "git@github.com:scopt/scopt.git"

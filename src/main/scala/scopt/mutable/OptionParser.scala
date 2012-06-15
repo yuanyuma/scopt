@@ -2,7 +2,7 @@ package scopt.mutable
 
 import scopt.generic._
 
-/** OptionParser is instantiated within your object,
+/** scopt.mutable.OptionParser is instantiated within your object,
  * set up by an (ordered) sequence of invocations of 
  * the various builder methods such as
  * <a href="#opt(String,String,String,String,(String) ⇒ Unit):Unit"><code>opt</code></a> method or
