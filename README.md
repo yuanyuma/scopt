@@ -20,23 +20,37 @@ resolvers += "sonatype-public" at "https://oss.sonatype.org/content/groups/publi
 Usage
 -----
 
-Create an *OptionParser* and customise it with the options you need, passing in functions to process each option or argument.
+scopt provides two flavors of parsers: immutable and mutable.
+Either case, first you need a case class that represents the configuration:
 
 ```scala
-val parser = new OptionParser("scopt", "1.x") {
-  intOpt("f", "foo", "foo is an integer property", {v: Int => config.foo = v})
-  opt("o", "output", "<file>", "output is a string property", {v: String => config.bar = v})
-  booleanOpt("xyz", "xyz is a boolean property", {v: Boolean => config.xyz = v})
-  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>",
-    {(key: String, value: String) => { config.libname = key; config.libfile = value } })
-  arg("<singlefile>", "<singlefile> is an argument", {v: String => config.whatnot = v})
-  // arglist("<file>...", "arglist allows variable number of arguments",
-  //   {v: String => config.files = (v :: config.files).reverse })
-}
-if (parser.parse(args)) {
+case class Config(foo: Int = -1, bar: String = "", xyz: Boolean = false,
+  libname: String = "", libfile: String = "", maxlibname: String = "",
+  maxcount: Int = -1, whatnot: String = "")
+```
+
+An immutable parser lets you pass around a config object as an argument into callback closures.
+On the other hand, the mutable parsers are expected to modify a config object in place.
+
+### Immutable Parser
+
+Here's how you create a `scopt.immutable.OptionParser`.
+
+```scala
+val parser = new scopt.immutable.OptionParser[Config]("scopt", "2.x") { def options = Seq(
+  intOpt("f", "foo", "foo is an integer property") { (v: Int, c: Config) => c.copy(foo = v) },
+  opt("o", "output", "output") { (v: String, c: Config) => c.copy(bar = v) },
+  booleanOpt("xyz", "xyz is a boolean property") { (v: Boolean, c: Config) => c.copy(xyz = v) },
+  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>")
+    { (key: String, value: String, c: Config) => c.copy(libname = key, libfile = value) },
+  keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>")
+    { (key: String, value: Int, c: Config) => c.copy(maxlibname = key, maxcount = value) },
+  arg("<file>", "some argument") { (v: String, c: Config) => c.copy(whatnot = v) }
+) }
+// parser.parse returns Option[C]
+parser.parse(args, Config()) map { config =>
   // do stuff
-}
-else {
+} getOrElse {
   // arguments are bad, usage message will have been displayed
 }
 ```
@@ -56,26 +70,25 @@ The above generates the following usage text:
       <singlefile>
             <singlefile> is an argument
 
-Immutable Parser
-----------------
+### Mutable Parser
 
-scopt now provides immutable parser:
+Create a `scopt.mutable.OptionParser` and customise it with the options you need, passing in functions to process each option or argument.
 
 ```scala
-val parser = new scopt.immutable.OptionParser[Config]("scopt", "2.x") { def options = Seq(
-  intOpt("f", "foo", "foo is an integer property") { (v: Int, c: Config) => c.copy(foo = v) },
-  opt("o", "output", "output") { (v: String, c: Config) => c.copy(bar = v) },
-  booleanOpt("xyz", "xyz is a boolean property") { (v: Boolean, c: Config) => c.copy(xyz = v) },
-  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>")
-    { (key: String, value: String, c: Config) => c.copy(libname = key, libfile = value) },
-  keyIntValueOpt(None, "max", "<libname>", "<max>", "maximum count for <libname>")
-    { (key: String, value: Int, c: Config) => c.copy(maxlibname = key, maxcount = value) },
-  arg("<file>", "some argument") { (v: String, c: Config) => c.copy(whatnot = v) }
-) }
-// parser.parse returns Option[C]
-parser.parse(args, Config()) map { config =>
+val parser = new scopt.mutable.OptionParser("scopt", "1.x") {
+  intOpt("f", "foo", "foo is an integer property", { v: Int => config.foo = v })
+  opt("o", "output", "<file>", "output is a string property", { v: String => config.bar = v })
+  booleanOpt("xyz", "xyz is a boolean property", { v: Boolean => config.xyz = v })
+  keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>",
+    {(key: String, value: String) => { config.libname = key; config.libfile = value } })
+  arg("<singlefile>", "<singlefile> is an argument", { v: String => config.whatnot = v })
+  // arglist("<file>...", "arglist allows variable number of arguments",
+  //   { v: String => config.files = (v :: config.files).reverse })
+}
+if (parser.parse(args)) {
   // do stuff
-} getOrElse {
+}
+else {
   // arguments are bad, usage message will have been displayed
 }
 ```
