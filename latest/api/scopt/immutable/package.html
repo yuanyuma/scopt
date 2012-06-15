@@ -59,7 +59,12 @@
         <a href="OptionParser.html"><span class="name">OptionParser</span></a><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="programName">programName: Option[String]</span>, <span name="version">version: Option[String]</span>, <span name="errorOnUnknownArgument">errorOnUnknownArgument: Boolean</span>)</span><span class="result"> extends GenericOptionParser[C] with Product with Serializable</span>
       </span>
       </h4>
-      <p class="comment cmt">scopt.</p>
+      <p class="comment cmt"><code>scopt.immutable.OptionParser</code> is instantiated within your object,
+set up by implementing
+<a href="options:Seq[OptionDefinition[C]]"><code>options</code></a> method that returns a sequence of invocations of
+the various builder methods such as
+<a href="#opt(String,String,String)((String, C) ⇒ C):ArgOptionDefinition[C]"><code>opt</code></a> method or
+<a href="#arg(String,String)((String, C) ⇒ C):Argument[C]"><code>arg</code></a> method.</a href="#arg(String,String)((String, C) ⇒ C):Argument[C]"></a href="#opt(String,String,String)((String, C) ⇒ C):ArgOptionDefinition[C]"></a href="options:Seq[OptionDefinition[C]]"></p>
     </li></ol>
             </div>
 
