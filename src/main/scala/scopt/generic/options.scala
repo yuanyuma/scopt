@@ -45,7 +45,7 @@ object Read {
   }
 }
 
-private[scopt] trait OptionDefKind {}
+private[scopt] sealed trait OptionDefKind {}
 private[scopt] case object Opt extends OptionDefKind
 private[scopt] case object Arg extends OptionDefKind
 private[scopt] case object Sep extends OptionDefKind
