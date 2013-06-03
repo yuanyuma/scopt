@@ -47,8 +47,9 @@ object Read {
 
 private[scopt] sealed trait OptionDefKind {}
 private[scopt] case object Opt extends OptionDefKind
+private[scopt] case object Note extends OptionDefKind
 private[scopt] case object Arg extends OptionDefKind
-private[scopt] case object Sep extends OptionDefKind
+private[scopt] case object Cmd extends OptionDefKind  
 
 private[scopt] trait GenericOptionParser[C] {
   type Def[A] <: OptionDefinition[A, C]
@@ -61,28 +62,34 @@ private[scopt] trait GenericOptionParser[C] {
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
   protected def makeDef[A: Read](kind: OptionDefKind, name: String): Def[A]
-  protected def nonArgs: Seq[Def[_]] = options filter {_.kind != Arg}
+  protected def nonArgs: Seq[Def[_]] = options filter { case x => x.kind == Opt || x.kind == Note }
   protected def arguments: Seq[Def[_]] = options filter {_.kind == Arg}
+  protected def commands: Seq[Def[_]] = options filter {_.kind == Cmd}
 
   /** adds an option invoked by `--name x`.
-   * @param name0 name of the option
+   * @param name name of the option
    */
   def opt[A: Read](name: String): Def[A] = makeDef(Opt, name)
 
   /** adds an option invoked by `-x value` or `--name value`.
    * @param x name of the short option
-   * @param name0 name of the option
+   * @param name name of the option
    */
-  def opt[A: Read](x: Char, name0: String): Def[A] =
-    opt[A](name0) shortOpt(x)
+  def opt[A: Read](x: Char, name: String): Def[A] =
+    opt[A](name) shortOpt(x)
 
   /** adds usage text. */
-  def note(x: String): Def[Unit] = makeDef[Unit](Sep, "") text(x)
+  def note(x: String): Def[Unit] = makeDef[Unit](Note, "") text(x)
 
   /** adds an argument invoked by an option without `-` or `--`.
-   * @param name0 name in the usage text
+   * @param name name in the usage text
    */  
   def arg[A: Read](name: String): Def[A] = makeDef(Arg, name) required()
+
+  /** adds a command invoked by an option without `-` or `--`.
+   * @param name name of the command
+   */  
+  def cmd(name: String): Def[Unit] = makeDef[Unit](Cmd, name)
 
   def usage: String = {
     import OptionDefinition._
@@ -90,12 +97,13 @@ private[scopt] trait GenericOptionParser[C] {
     val versionText = programName map { pg =>
       version map { NL + pg + " " + _ } getOrElse { "" }
     } getOrElse { "" }
-    val optionText = if (nonArgs.isEmpty) {""} else {"[options] "}
+    val commandText = if (commands.isEmpty) "" else commands map {_.name} mkString("[", "|", "] ")
+    val optionText = if (nonArgs.isEmpty) "" else "[options] "
     val argumentList = arguments map {_.argName} mkString(" ")
-    val descriptions = (nonArgs map {_.usage}) ++ (arguments map {_.usage})
+    val descriptions = (nonArgs map {_.usage}) ++ (arguments map {_.usage}) ++ (commands map {_.usage})
 
-    versionText + NL + "Usage: " + prorgamText + optionText + argumentList + NLNL +
-    "  " + descriptions.mkString(NL + "  ") + NL
+    versionText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
+    descriptions.mkString(NL) + NL
   }
 
   def showUsage = Console.err.println(usage)
@@ -110,9 +118,10 @@ private[scopt] trait GenericOptionParser[C] {
    */
   def parse(args: Seq[String], init: C): Option[C] = {
     var i = 0
+    val pendingCommands = ListBuffer() ++ commands
     val pendingArgs = ListBuffer() ++ arguments
     val pendingOptions = ListBuffer() ++ nonArgs
-    val occurrences = ListMap[OptionDefinition[_, C], Int]().withDefaultValue(0)
+    val occurrences = ListMap[Def[_], Int]().withDefaultValue(0)
     var _config: C = init
     var _error = false
 
@@ -131,6 +140,8 @@ private[scopt] trait GenericOptionParser[C] {
           xs foreach reportError
       }
     }
+    def findCommand(cmd: String): Option[Def[_]] =
+      pendingCommands find {_.name == cmd}
     while (i < args.length) {
       pendingOptions find {_.tokensToRead(i, args) > 0} match {
         case Some(option) =>
@@ -149,6 +160,13 @@ private[scopt] trait GenericOptionParser[C] {
         case None =>
           args(i) match {
             case arg if arg startsWith "-"  => handleError("Unknown option " + arg)
+            case arg if findCommand(arg).isDefined =>
+              val cmd = findCommand(arg).get
+              occurrences(cmd) += 1
+              if (occurrences(cmd) >= cmd.getMaxOccurs) {
+                pendingCommands -= cmd
+              }
+              handleArgument(cmd, "")                            
             case arg if pendingArgs.isEmpty => handleError("Unknown argument '" + arg + "'")
             case arg =>
               val first = pendingArgs.head
@@ -261,16 +279,18 @@ private[scopt] trait GenericOptionParser[C] {
       else Some(args(i))
     def usage: String =
       kind match {
-        case Sep => _desc
-        case Arg => name + NLTB + _desc
+        case Note => _desc
+        case Cmd =>
+          NL + "Command: " + name + NL + _desc
+        case Arg => WW + name + NLTB + _desc
         case Opt if read.arity == 2 =>
-          (_shortOpt map { o => "-" + o + ":" + keyValueString + " | " } getOrElse { "" }) +
+          WW + (_shortOpt map { o => "-" + o + ":" + keyValueString + " | " } getOrElse { "" }) +
           fullName + ":" + keyValueString + NLTB + _desc
         case Opt if read.arity == 1 =>
-          (_shortOpt map { o => "-" + o + " " + valueString + " | " } getOrElse { "" }) +
+          WW + (_shortOpt map { o => "-" + o + " " + valueString + " | " } getOrElse { "" }) +
           fullName + " " + valueString + NLTB + _desc
         case Opt =>
-          (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) + 
+          WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) + 
           fullName + NLTB + _desc    
       }    
     def keyValueString: String = (_keyName getOrElse defaultKeyName) + "=" + valueString 
@@ -278,6 +298,7 @@ private[scopt] trait GenericOptionParser[C] {
     def shortDescription: String =
       kind match {
         case Opt => "option " + fullName
+        case Cmd => "command " + fullName
         case _   => "argument " + fullName
       }
     def fullName: String =
@@ -295,6 +316,7 @@ private[scopt] trait GenericOptionParser[C] {
   private[scopt] object OptionDefinition {
     val UNBOUNDED = 1024
     val NL = System.getProperty("line.separator")
+    val WW = "  "
     val TB = "        "
     val NLTB = NL + TB
     val NLNL = NL + NL

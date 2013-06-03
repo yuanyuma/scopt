@@ -59,6 +59,9 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse "b" out of a b                                        ${unboundedArgs("a", "b")}
     parse nothing out of Nil                                    ${emptyArgs()}
 
+  cmd("update") action { x => x } should
+    parse () out of update                                      ${cmdParser("update")}
+
   help("help") should
     print usage text --help                                     ${helpParser("--help")}
                                                                 """
@@ -179,6 +182,14 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     (result.get.a === "") and (result.get.b === "")
   }
 
+  val cmdParser1 = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def options = Seq(
+    cmd("update") action { (x, c) => c.copy(flag = true) }
+  ) }
+  def cmdParser(args: String*) = {
+    val result = cmdParser1.parse(args.toSeq, Config())
+    result.get.flag === true
+  }
+
   def helpParser(args: String*) = {
     case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
@@ -196,17 +207,17 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
       } keyValueName("<libname>", "<max>") text("maximum count for <libname>"),
       opt[Unit]("verbose") action { (_, c) =>
         c.copy(verbose = true) } text("verbose is a flag"),
+      cmd("update") action { (_, c) =>
+        c.copy(mode = "update") } text("update is a command"),
       note("some notes.\n"),
       help("help") text("prints this usage text"),
-      arg[String]("<mode>") action { (x, c) =>
-        c.copy(mode = x) } text("required argument"),
       arg[String]("<file>...") unbounded() optional() action { (x, c) =>
         c.copy(files = c.files :+ x) } text("optional unbounded args")
     ) }
     parser.parse(args.toSeq, Config())
     parser.usage === """
 scopt 3.x
-Usage: scopt [options] <mode> [<file>...]
+Usage: scopt [update] [options] [<file>...]
 
   -f <value> | --foo <value>
         foo is an integer property
@@ -218,14 +229,15 @@ Usage: scopt [options] <mode> [<file>...]
         maximum count for <libname>
   --verbose
         verbose is a flag
-  some notes.
+some notes.
 
   --help
         prints this usage text
-  <mode>
-        required argument
   <file>...
         optional unbounded args
+
+Command: update
+update is a command
 """
   }
 
