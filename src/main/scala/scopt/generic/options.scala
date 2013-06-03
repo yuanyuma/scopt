@@ -49,22 +49,26 @@ private[scopt] sealed trait OptionDefKind {}
 private[scopt] case object Opt extends OptionDefKind
 private[scopt] case object Note extends OptionDefKind
 private[scopt] case object Arg extends OptionDefKind
-private[scopt] case object Cmd extends OptionDefKind  
+private[scopt] case object Cmd extends OptionDefKind
+private[scopt] case object Head extends OptionDefKind 
 
 private[scopt] trait GenericOptionParser[C] {
   type Def[A] <: OptionDefinition[A, C]
 
   def options: Seq[Def[_]]
-  def version: Option[String]
-  def programName: Option[String]
+  def programName: String
   def errorOnUnknownArgument: Boolean
   def success: Either[String, Unit] = OptionDefinition.makeSuccess[String]
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
   protected def makeDef[A: Read](kind: OptionDefKind, name: String): Def[A]
+  protected def heads: Seq[Def[_]] = options filter {_.kind == Head}
   protected def nonArgs: Seq[Def[_]] = options filter { case x => x.kind == Opt || x.kind == Note }
   protected def arguments: Seq[Def[_]] = options filter {_.kind == Arg}
   protected def commands: Seq[Def[_]] = options filter {_.kind == Cmd}
+
+  /** adds usage text. */
+  def head(xs: String*): Def[Unit] = makeDef[Unit](Head, "") text(xs.mkString(" "))
 
   /** adds an option invoked by `--name x`.
    * @param name name of the option
@@ -93,16 +97,14 @@ private[scopt] trait GenericOptionParser[C] {
 
   def usage: String = {
     import OptionDefinition._
-    val prorgamText = programName map { _ + " " } getOrElse { "" }
-    val versionText = programName map { pg =>
-      version map { NL + pg + " " + _ } getOrElse { "" }
-    } getOrElse { "" }
+    val prorgamText = if (programName == "") "" else programName + " "
+    val versionText = (heads map {_.usage}).mkString(NL)
     val commandText = if (commands.isEmpty) "" else commands map {_.name} mkString("[", "|", "] ")
     val optionText = if (nonArgs.isEmpty) "" else "[options] "
     val argumentList = arguments map {_.argName} mkString(" ")
     val descriptions = (nonArgs map {_.usage}) ++ (arguments map {_.usage}) ++ (commands map {_.usage})
 
-    versionText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
+    NL + versionText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
     descriptions.mkString(NL) + NL
   }
 
@@ -279,6 +281,7 @@ private[scopt] trait GenericOptionParser[C] {
       else Some(args(i))
     def usage: String =
       kind match {
+        case Head => _desc
         case Note => _desc
         case Cmd =>
           NL + "Command: " + name + NL + _desc

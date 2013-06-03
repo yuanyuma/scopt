@@ -8,7 +8,7 @@ import scopt.generic._
  * <a href="#opt[A](Char,String)(Read[A]):Def[A]"><code>opt</code></a> method or
  * <a href="#arg[A](String)(Read[A]):Def[A]"><code>arg</code></a> method.
  * {{{
- * val parser = new scopt.OptionParser("scopt", "3.x") {
+ * val parser = new scopt.OptionParser("scopt") {
  *   opt[Int]('f', "foo") action { x =>
  *     c = c.copy(foo = x) } text("foo is an integer property")
  *   opt[String]('o', "out") required() valueName("<file>") action { x =>
@@ -36,20 +36,11 @@ import scopt.generic._
  * }
  * }}}
  */
-case class OptionParser(
-        programName: Option[String],
-        version: Option[String],
-        errorOnUnknownArgument: Boolean) extends GenericOptionParser[Unit] {
+case class OptionParser(programName: String) extends GenericOptionParser[Unit] {
   import OptionDefinition._
 
-  type Def[A] = OptionDef[A]
-  def this() = this(None, None, true)
-  def this(programName: String) = this(Some(programName), None, true)
-  def this(programName: String, version: String) = this(Some(programName), Some(version), true)
-  def this(errorOnUnknownArgument: Boolean) = this(None, None, errorOnUnknownArgument)
-  def this(programName: String, errorOnUnknownArgument: Boolean) =
-    this(Some(programName), None , errorOnUnknownArgument)
-  
+  type Def[A] = OptionDef[A]  
+  def errorOnUnknownArgument: Boolean = true
   val options = new scala.collection.mutable.ListBuffer[OptionDef[_]]
 
   case class OptionDef[A: Read](

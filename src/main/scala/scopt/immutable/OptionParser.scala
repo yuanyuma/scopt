@@ -9,7 +9,7 @@ import scopt.generic._
  * <a href="#opt[A](Char,String)(Read[A]):Def[A]"><code>opt</code></a> method or
  * <a href="#arg[A](String)(Read[A]):Def[A]"><code>arg</code></a> method.
  * {{{
- * val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def options = Seq(
+ * val parser = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
  *   opt[Int]('f', "foo") action { (x, c) =>
  *     c.copy(foo = x) } text("foo is an integer property"),
  *   opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
@@ -37,20 +37,11 @@ import scopt.generic._
  * }
  * }}}
  */
-abstract case class OptionParser[C](
-    programName: Option[String] = None,
-    version: Option[String] = None,
-    errorOnUnknownArgument: Boolean = true) extends GenericOptionParser[C] {
+abstract case class OptionParser[C](programName: String) extends GenericOptionParser[C] {
   import OptionDefinition._
 
   type Def[A] = OptionDef[A]
-  
-  def this() = this(None, None, true)
-  def this(programName: String) = this(Some(programName), None, true)
-  def this(programName: String, version: String) = this(Some(programName), Some(version), true)
-  def this(errorOnUnknownArgument: Boolean) = this(None, None, errorOnUnknownArgument)
-  def this(programName: String, errorOnUnknownArgument: Boolean) =
-    this(Some(programName), None , errorOnUnknownArgument)
+  def errorOnUnknownArgument: Boolean = true
 
   case class OptionDef[A: Read](
     id: Int,

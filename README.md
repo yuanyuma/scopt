@@ -32,7 +32,8 @@ On the other hand, the mutable parsers are expected to modify a config object in
 Here's how you create a `scopt.immutable.OptionParser`. See [Scaladoc API](http://scopt.github.com/scopt/latest/api/) for the details on various builder methods.
 
 ```scala
-val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def options = Seq(
+val parser = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
+  head("scopt", "3.x"),
   opt[Int]('f', "foo") action { (x, c) =>
     c.copy(foo = x) } text("foo is an integer property"),
   opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
@@ -45,10 +46,10 @@ val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def opti
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>"),
   opt[Unit]("verbose") action { (_, c) =>
     c.copy(verbose = true) } text("verbose is a flag"),
+  cmd("update") action { (_, c) =>
+    c.copy(mode = "update") } text("update is a command"),
   note("some notes.\n"),
   help("help") text("prints this usage text"),
-  arg[String]("<mode>") action { (x, c) =>
-    c.copy(mode = x) } text("required argument"),
   arg[String]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
 ) }
@@ -64,7 +65,7 @@ The above generates the following usage text:
 
 ```
 scopt 3.x
-Usage: scopt [options] <mode> [<file>...]
+Usage: scopt [update] [options] [<file>...]
 
   -f <value> | --foo <value>
         foo is an integer property
@@ -76,14 +77,15 @@ Usage: scopt [options] <mode> [<file>...]
         maximum count for <libname>
   --verbose
         verbose is a flag
-  some notes.
+some notes.
 
   --help
         prints this usage text
-  <mode>
-        required argument
   <file>...
         optional unbounded args
+
+Command: update
+update is a command
 ```
 
 #### Options
@@ -136,7 +138,8 @@ the second function always fails.
 Create a `scopt.mutable.OptionParser` and customize it with the options you need, passing in functions to process each option or argument.
 
 ```scala
-val parser = new scopt.mutable.OptionParser("scopt", "3.x") {
+val parser = new scopt.mutable.OptionParser("scopt") {
+  head("scopt", "3.x")
   opt[Int]('f', "foo") action { x =>
     c = c.copy(foo = x) } text("foo is an integer property")
   opt[String]('o', "out") required() valueName("<file>") action { x =>
@@ -149,10 +152,10 @@ val parser = new scopt.mutable.OptionParser("scopt", "3.x") {
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Unit]("verbose") action { _ =>
     c = c.copy(verbose = true) } text("verbose is a flag")
+  cmd("update") action { _ =>
+    c = c.copy(mode = "update") } text("update is a command")
   note("some notes.\n")
   help("help") text("prints this usage text")
-  arg[String]("<mode>") action { x =>
-    c = c.copy(mode = x) } text("required argument")
   arg[String]("<file>...") unbounded() optional() action { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
 }
