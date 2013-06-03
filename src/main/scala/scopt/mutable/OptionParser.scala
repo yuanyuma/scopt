@@ -8,15 +8,25 @@ import scopt.generic._
  * <a href="#opt(String,String,String,String,(String) ⇒ Unit):Unit"><code>opt</code></a> method or
  * <a href="#arg(String,String,(String) ⇒ Unit):Unit"><code>arg</code></a> method.
  * {{{
- * val parser = new OptionParser("scopt") {
- *   intOpt("f", "foo", "foo is an integer property", {v: Int => config.foo = v})
- *   opt("o", "output", "<file>", "output is a string property", {v: String => config.bar = v})
- *   booleanOpt("xyz", "xyz is a boolean property", {v: Boolean => config.xyz = v})
- *   keyValueOpt("l", "lib", "<libname>", "<filename>", "load library <libname>",
- *     {(key: String, value: String) => { config.libname = key; config.libfile = value } })
- *   arg("<singlefile>", "<singlefile> is an argument", {v: String => config.whatnot = v})
- *   // arglist("<file>...", "arglist allows variable number of arguments",
- *   //   {v: String => config.files = (v :: config.files).reverse })
+ * val parser = new scopt.OptionParser("scopt", "3.x") {
+ *   opt[Int]('f', "foo") action { x =>
+ *     c = c.copy(foo = x) } text("foo is an integer property")
+ *   opt[String]('o', "out") required() valueName("<file>") action { x =>
+ *     c = c.copy(out = x) } text("out is a required string property")
+ *   opt[Boolean]("xyz") action { x =>
+ *     c = c.copy(xyz = x) } text("xyz is a boolean property")
+ *   opt[(String, Int)]("max") action { case (k, v) =>
+ *     c = c.copy(libName = k, maxCount = v) } validate { x =>
+ *     if (x._2 > 0) success else failure("Value <max> must be >0") 
+ *   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
+ *   opt[Unit]("verbose") action { _ =>
+ *     c = c.copy(verbose = true) } text("verbose is a flag")
+ *   note("some notes.\n")
+ *   help("help") text("prints this usage text")
+ *   arg[String]("<mode>") required() action { x =>
+ *     c = c.copy(mode = x) } text("required argument")
+ *   arg[String]("<file>...") unbounded() action { x =>
+ *     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
  * }
  * if (parser.parse(args)) {
  *   // do stuff
@@ -30,8 +40,9 @@ case class OptionParser(
         programName: Option[String],
         version: Option[String],
         errorOnUnknownArgument: Boolean) extends GenericOptionParser[Unit] {
-  import GenericOptionParser._
+  import OptionDefinition._
 
+  type Def[A] = OptionDef[A]
   def this() = this(None, None, true)
   def this(programName: String) = this(Some(programName), None, true)
   def this(programName: String, version: String) = this(Some(programName), Some(version), true)
@@ -39,8 +50,70 @@ case class OptionParser(
   def this(programName: String, errorOnUnknownArgument: Boolean) =
     this(Some(programName), None , errorOnUnknownArgument)
   
-  val options = new scala.collection.mutable.ListBuffer[OptionDefinition[Unit]]
+  val options = new scala.collection.mutable.ListBuffer[OptionDef[_]]
 
+  case class OptionDef[A: Read](
+    id: Int,
+    kind: OptionDefKind,
+    name: String,
+    _shortOpt: Option[Char] = None,
+    _keyName: Option[String] = None,
+    _valueName: Option[String] = None,
+    _desc: String = "",
+    _action: (A => Unit) = { (a: A) => () },
+    _validations: Seq[A => Either[String, Unit]] = Seq(),
+    _minOccurs: Int = 0,
+    _maxOccurs: Int = 1) extends OptionDefinition[A, Unit] {
+    /** Adds callback function. */
+    def action(f: A => Unit): OptionDef[A] =
+      updateOption(copy(_action = (a: A) => { _action(a); f(a) }))
+    /** Adds short option -x. */
+    def shortOpt(x: Char): OptionDef[A] =
+      updateOption(copy(_shortOpt = Some(x)))
+    /** Requires the option to appear at least `n` times. */
+    def minOccurs(n: Int): OptionDef[A] =
+      updateOption(copy(_minOccurs = n))
+    /** Requires the option to appear at least once. */
+    def required(): OptionDef[A] = minOccurs(1)
+    /** Chanages the option to be optional. */
+    def optional(): OptionDef[A] = minOccurs(0)
+    /** Allows the argument to appear at most `n` times. */
+    def maxOccurs(n: Int): OptionDef[A] =
+      updateOption(copy(_maxOccurs = n))
+    /** Allows the argument to appear multiple times. */
+    def unbounded(): OptionDef[A] = maxOccurs(UNBOUNDED)
+    /** Adds description in the usage text. */
+    def text(x: String): OptionDef[A] =
+      updateOption(copy(_desc = x))
+    /** Adds value name used in the usage text. */
+    def valueName(x: String): OptionDef[A] =
+      updateOption(copy(_valueName = Some(x)))
+    /** Adds key name used in the usage text. */
+    def keyName(x: String): OptionDef[A] =
+      updateOption(copy(_keyName = Some(x)))
+    /** Adds key and value names used in the usage text. */
+    def keyValueName(k: String, v: String): OptionDef[A] =
+      keyName(k) valueName(v)
+    /** Adds custom validation. */
+    def validate(f: A => Either[String, Unit]) =
+      updateOption(copy(_validations = _validations :+ f))
+
+    def callback: (A, Unit) => Unit =
+      { (a, c) => _action(a) }
+    def getMinOccurs: Int = _minOccurs
+    def getMaxOccurs: Int = _maxOccurs
+  }
+
+  protected def makeDef[A: Read](kind: OptionDefKind, name: String): Def[A] =
+    updateOption(OptionDef[A](id = generateId, kind = kind, name = name))
+
+  protected def updateOption[A: Read](option: OptionDef[A]): OptionDef[A] = {
+    val idx = options indexWhere { _.id == option.id }
+    if (idx > -1) options(idx) = option
+    else options += option
+    option
+  }
+  
   /** parses the given `args`.
    * @return `true` if successful, `false` otherwise
    */
@@ -50,239 +123,9 @@ case class OptionParser(
       case None    => false
     }
 
-  // -------- Defining options ---------------
-  protected def add(option: OptionDefinition[Unit]) {
-    options += option
-  }
-
-  /** adds a `String` option invoked by `-shortopt x` or `--longopt x`.
-   * @param shortopt short option
-   * @param longopt long option
-   * @param description description in the usage text
-   * @param action callback function
+  /** adds an option invoked by `--name` that displays usage text.
+   * @param name0 name of the option
    */
-  def opt(shortopt: String, longopt: String, description: String, action: String => Unit) =
-    add(new ArgOptionDefinition(Some(shortopt), longopt, defaultValueName, description,
-      { (s: String, _) => action(s) }))
-
-  /** adds a `String` option invoked by `--longopt x`.
-   * @param longopt long option
-   * @param description description in the usage text
-   * @param action callback function
-   */
-  def opt(longopt: String, description: String, action: String => Unit) =
-    add(new ArgOptionDefinition(None, longopt, defaultValueName, description,
-      { (s: String, _) => action(s) }))
-
-  /** adds a `String` option invoked by `-shortopt x` or `--longopt x`.
-   * @param shortopt short option  
-   * @param longopt long option
-   * @param valueName value name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */      
-  def opt(shortopt: String, longopt: String, valueName: String,
-      description: String, action: String => Unit) =
-    add(new ArgOptionDefinition(Some(shortopt), longopt, valueName, description,
-      { (s: String, _) => action(s) }))
-
-  /** adds a `String` option invoked by `-shortopt x` or `--longopt x`.
-   * @param shortopt short option, or `None`  
-   * @param longopt long option
-   * @param valueName value name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */  
-  def opt(shortopt: Option[String], longopt: String, valueName: String,
-      description: String, action: String => Unit) =
-    add(new ArgOptionDefinition(shortopt, longopt, valueName, description,
-      { (s: String, _) => action(s) }))
-
-  /** adds a flag option invoked by `-shortopt` or `--longopt`.
-   * @param shortopt short option
-   * @param longopt long option
-   * @param description description in the usage text
-   * @param action callback function
-   */      
-  def opt(shortopt: String, longopt: String, description: String, action: => Unit) =
-    add(new FlagOptionDefinition(Some(shortopt), longopt, description, _ => action))
-
-  /** adds a flag option invoked by `--longopt`.
-   * @param longopt long option
-   * @param description description in the usage text
-   * @param action callback function
-   */
-  def opt(longopt: String, description: String, action: => Unit) =
-    add(new FlagOptionDefinition(None, longopt, description, _ => action))
-      
-  // we have to give these typed options separate names, because of &^@$! type erasure
-  def intOpt(shortopt: String, longopt: String, description: String, action: Int => Unit) =
-    add(new IntArgOptionDefinition(Some(shortopt), longopt, defaultValueName, description,
-      { (i: Int, _) => action(i) }))
-
-  def intOpt(longopt: String, description: String, action: Int => Unit) =
-    add(new IntArgOptionDefinition(None, longopt, defaultValueName, description,
-      { (i: Int, _) => action(i) }))
-      
-  def intOpt(shortopt: String, longopt: String, valueName: String,
-      description: String, action: Int => Unit) =
-    add(new IntArgOptionDefinition(Some(shortopt), longopt, valueName, description,
-      { (i: Int, _) => action(i) }))
-
-  def intOpt(shortopt: Option[String], longopt: String, valueName: String,
-      description: String, action: Int => Unit) =
-    add(new IntArgOptionDefinition(shortopt, longopt, valueName, description,
-      { (i: Int, _) => action(i) }))
-      
-  def doubleOpt(shortopt: String, longopt: String, description: String, action: Double => Unit) =
-    add(new DoubleArgOptionDefinition(Some(shortopt), longopt, defaultValueName, description,
-      { (d: Double, _) => action(d) }))
-
-  def doubleOpt(longopt: String, description: String, action: Double => Unit) =
-    add(new DoubleArgOptionDefinition(None, longopt, defaultValueName, description,
-      { (d: Double, _) => action(d) }))
-      
-  def doubleOpt(shortopt: String, longopt: String, valueName: String,
-      description: String, action: Double => Unit) =
-    add(new DoubleArgOptionDefinition(Some(shortopt), longopt, valueName, description,
-      { (d: Double, _) => action(d) }))
-
-  def doubleOpt(shortopt: Option[String], longopt: String, valueName: String,
-      description: String, action: Double => Unit) =
-    add(new DoubleArgOptionDefinition(shortopt, longopt, valueName, description,
-      { (d: Double, _) => action(d) }))
-    
-  def booleanOpt(shortopt: String, longopt: String, description: String, action: Boolean => Unit) =
-    add(new BooleanArgOptionDefinition(Some(shortopt), longopt, defaultValueName, description,
-      { (b: Boolean, _) => action(b) }))
-
-  def booleanOpt(longopt: String, description: String, action: Boolean => Unit) =
-    add(new BooleanArgOptionDefinition(None, longopt, defaultValueName, description,
-      { (b: Boolean, _) => action(b) }))
-  
-  def booleanOpt(shortopt: String, longopt: String, valueName: String,
-      description: String, action: Boolean => Unit) =
-    add(new BooleanArgOptionDefinition(Some(shortopt), longopt, valueName, description,
-      { (b: Boolean, _) => action(b) }))
-
-  def booleanOpt(shortopt: Option[String], longopt: String, valueName: String,
-      description: String, action: Boolean => Unit) =
-    add(new BooleanArgOptionDefinition(shortopt, longopt, valueName, description,
-      { (b: Boolean, _) => action(b) }))
-      
-  def keyValueOpt(shortopt: String, longopt: String, description: String, action: (String, String) => Unit) =
-    add(new KeyValueArgOptionDefinition(Some(shortopt), longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: String, _) => action(k, v) }))
-
-  def keyValueOpt(longopt: String, description: String, action: (String, String) => Unit) =
-    add(new KeyValueArgOptionDefinition(None, longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: String, _) => action(k, v) }))
-  
-  def keyValueOpt(shortopt: String, longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, String) => Unit) =
-    add(new KeyValueArgOptionDefinition(Some(shortopt), longopt, keyName, valueName, description,
-      { (k: String, v: String, _) => action(k, v) }))
-
-  def keyValueOpt(shortopt: Option[String], longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, String) => Unit) =
-    add(new KeyValueArgOptionDefinition(shortopt, longopt, keyName, valueName, description,
-      { (k: String, v: String, _) => action(k, v) }))
-  
-  def keyIntValueOpt(shortopt: String, longopt: String, description: String, action: (String, Int) => Unit) =
-    add(new KeyIntValueArgOptionDefinition(Some(shortopt), longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Int, _) => action(k, v) }))
-
-  def keyIntValueOpt(longopt: String, description: String, action: (String, Int) => Unit) =
-    add(new KeyIntValueArgOptionDefinition(None, longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Int, _) => action(k, v) }))
-  
-  def keyIntValueOpt(shortopt: String, longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Int) => Unit) =
-    add(new KeyIntValueArgOptionDefinition(Some(shortopt), longopt, keyName, valueName, description,
-      { (k: String, v: Int, _) => action(k, v) }))
-
-  def keyIntValueOpt(shortopt: Option[String], longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Int) => Unit) =
-    add(new KeyIntValueArgOptionDefinition(shortopt, longopt, keyName, valueName, description,
-      { (k: String, v: Int, _) => action(k, v) }))
-  
-  def keyDoubleValueOpt(shortopt: String, longopt: String, description: String, action: (String, Double) => Unit) =
-    add(new KeyDoubleValueArgOptionDefinition(Some(shortopt), longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Double, _) => action(k, v) }))
-
-  def keyDoubleValueOpt(longopt: String, description: String, action: (String, Double) => Unit) =
-    add(new KeyDoubleValueArgOptionDefinition(None, longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Double, _) => action(k, v) }))
-    
-  def keyDoubleValueOpt(shortopt: String, longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Double) => Unit) =
-    add(new KeyDoubleValueArgOptionDefinition(Some(shortopt), longopt, keyName, valueName, description,
-      { (k: String, v: Double, _) => action(k, v) }))
-
-  def keyDoubleValueOpt(shortopt: Option[String], longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Double) => Unit) =
-    add(new KeyDoubleValueArgOptionDefinition(shortopt, longopt, keyName, valueName, description,
-      { (k: String, v: Double, _) => action(k, v) }))
-
-  def keyBooleanValueOpt(shortopt: String, longopt: String, description: String, action: (String, Boolean) => Unit) =
-    add(new KeyBooleanValueArgOptionDefinition(Some(shortopt), longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Boolean, _) => action(k, v) }))
-
-  def keyBooleanValueOpt(longopt: String, description: String, action: (String, Boolean) => Unit) =
-    add(new KeyBooleanValueArgOptionDefinition(None, longopt, defaultKeyName, defaultValueName, description,
-      { (k: String, v: Boolean, _) => action(k, v) }))
-
-  def keyBooleanValueOpt(shortopt: String, longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Boolean) => Unit) =
-    add(new KeyBooleanValueArgOptionDefinition(Some(shortopt), longopt, keyName, valueName, description,
-      { (k: String, v: Boolean, _) => action(k, v) }))
-
-  def keyBooleanValueOpt(shortopt: Option[String], longopt: String, keyName: String, valueName: String,
-      description: String, action: (String, Boolean) => Unit) =
-    add(new KeyBooleanValueArgOptionDefinition(shortopt, longopt, keyName, valueName, description,
-      { (k: String, v: Boolean, _) => action(k, v) }))
-  
-  def help(shortopt: String, longopt: String, description: String) =
-    add(new FlagOptionDefinition(Some(shortopt), longopt, description, {_ => this.showUsage; exit}))
-
-  def help(shortopt: Option[String], longopt: String, description: String) =
-    add(new FlagOptionDefinition(shortopt, longopt, description, {_ => this.showUsage; exit}))
-  
-  def separator(description: String) =
-    add(new SeparatorDefinition(description))
-  
-  /** adds an argument invoked by an option without `-` or `--`.
-   * @param name name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */  
-  def arg(name: String, description: String, action: String => Unit) =
-    add(new Argument[Unit](name, description, 1, 1, { (s: String, _) => action(s) }))
-
-  /** adds an optional argument invoked by an option without `-` or `--`.
-   * @param name name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */  
-  def argOpt(name: String, description: String, action: String => Unit) =
-    add(new Argument(name, description, 0, 1,
-      { (s: String, _) => action(s) }))
-      
-  /** adds a list of arguments invoked by options without `-` or `--`.
-   * @param name name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */
-  def arglist(name: String, description: String, action: String => Unit) =
-    add(new Argument(name, description, 1, UNBOUNDED,
-      { (s: String, _) => action(s) }))
-
-  /** adds an optional list of arguments invoked by options without `-` or `--`.
-   * @param name name in the usage text
-   * @param description description in the usage text
-   * @param action callback function
-   */
-  def arglistOpt(name: String, description: String, action: String => Unit) =
-    add(new Argument(name, description, 0, UNBOUNDED,
-      { (s: String, _) => action(s) }))
+  def help(name0: String): OptionDef[Unit] =
+    opt[Unit](name0) action {_ => showUsage}
 }
