@@ -47,7 +47,7 @@ val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def opti
     c.copy(verbose = true) } text("verbose is a flag"),
   note("some notes.\n"),
   help("help") text("prints this usage text"),
-  arg[String]("<mode>") required() action { (x, c) =>
+  arg[String]("<mode>") action { (x, c) =>
     c.copy(mode = x) } text("required argument"),
   arg[String]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
@@ -86,9 +86,54 @@ Usage: scopt [options] <mode> [<file>...]
         optional unbounded args
 ```
 
+#### Options
+
+Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` where `A` is any type that is an instance of `Read` typeclass.
+
+- `Unit` works as a plain flag `--foo` or `-f`
+- `Int`, `Double`, and `String` accept a value like `--foo 80` or `--foo:80`
+- `Boolean` also accepts a value like `--foo true` or `--foo:1`
+- A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
+
+By default these options are optional.
+
+#### Arguments
+
+Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept single value and are required.
+
+#### Occurrence
+
+Each opt/arg carries occurrence information `minOccurs` and `maxOccurs`.
+`minOccurs` specify at least how many times an opt/arg must appear, and
+`maxOccurs` specify at most how many times an opt/arg may appear.
+
+Occurrence can be set using the methods on the opt/arg:
+
+```scala
+opt[String]('o', "out") required()
+opt[String]('o', "out") minOccurs(1) // same as above
+arg[String]("<mode>") optional()
+arg[String]("<mode>") minOccurs(0) // same as above
+arg[String]("<file>...") optional() unbounded()
+arg[String]("<file>...") minOccurs(0) maxOccurs(1024) // same as above
+```
+
+#### Validation
+
+Each opt/arg can carry multiple validation functions.
+
+```scala
+opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
+  if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
+  failure("Just because") }
+```
+
+The first function validates if the values are positive, and
+the second function always fails.
+
 ### Mutable Parser
 
-Create a `scopt.mutable.OptionParser` and customise it with the options you need, passing in functions to process each option or argument.
+Create a `scopt.mutable.OptionParser` and customize it with the options you need, passing in functions to process each option or argument.
 
 ```scala
 val parser = new scopt.mutable.OptionParser("scopt", "3.x") {
@@ -106,7 +151,7 @@ val parser = new scopt.mutable.OptionParser("scopt", "3.x") {
     c = c.copy(verbose = true) } text("verbose is a flag")
   note("some notes.\n")
   help("help") text("prints this usage text")
-  arg[String]("<mode>") required() action { x =>
+  arg[String]("<mode>") action { x =>
     c = c.copy(mode = x) } text("required argument")
   arg[String]("<file>...") unbounded() optional() action { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
