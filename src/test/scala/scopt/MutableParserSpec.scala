@@ -48,14 +48,14 @@ class MutableParserSpec extends Specification { def is =      s2"""
     if (x > 0) success else failure("Option --foo must be >0") } should
     fail to parse --foo 0                                       ${validFail("--foo", "0")}
 
-  arg[Int]("<port>") required() action { x => x } should
+  arg[Int]("<port>") action { x => x } should
     parse 80 out of 80                                          ${intArg("80")}
     be required and should fail to parse Nil                    ${intArgFail()}
 
   arg[String]("<a>"); arg[String]("<b>") action { x => x } should
     parse "b" out of a b                                        ${multipleArgs("a", "b")}
 
-  arg[String]("<a>") action { x => x} unbounded(); arg[String]("<b>") should
+  arg[String]("<a>") action { x => x} unbounded() optional(); arg[String]("<b>") optional() should
     parse "b" out of a b                                        ${unboundedArgs("a", "b")}
     parse nothing out of Nil                                    ${emptyArgs()}
 
@@ -178,7 +178,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def intArg(args: String*) = {
     var port = 0
     val parser = new scopt.OptionParser("scopt", "3.x") {
-      arg[Int]("<port>") required() action { x => port = x }
+      arg[Int]("<port>") action { x => port = x }
     }
     parser.parse(args.toSeq)
     port === 80
@@ -187,7 +187,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def intArgFail(args: String*) = {
     var port = 0
     val parser = new scopt.OptionParser("scopt", "3.x") {
-      arg[Int]("<port>") required() action { x => port = x }
+      arg[Int]("<port>") action { x => port = x }
     }
     parser.parse(args.toSeq) === false
   }
@@ -218,8 +218,8 @@ class MutableParserSpec extends Specification { def is =      s2"""
     var a = ""
     var b = ""
     val parser = new scopt.OptionParser("scopt", "3.x") {
-      arg[String]("<a>") action { x => a = x } unbounded()
-      arg[String]("<b>") action { x => b = x }
+      arg[String]("<a>") action { x => a = x } unbounded() optional()
+      arg[String]("<b>") action { x => b = x } optional()
     }
     parser.parse(args.toSeq) === true
   }
@@ -244,9 +244,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
         c = c.copy(verbose = true) } text("verbose is a flag")
       note("some notes.\n")
       help("help") text("prints this usage text")
-      arg[String]("<mode>") required() action { x =>
+      arg[String]("<mode>") action { x =>
         c = c.copy(mode = x) } text("required argument")
-      arg[String]("<file>...") unbounded() action { x =>
+      arg[String]("<file>...") unbounded() optional() action { x =>
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
     }
     parser.parse(args.toSeq)

@@ -70,6 +70,8 @@ pomIncludeRepository := { x => false }
 
 // site
 
+// to preview, preview-site
+
 site.settings
 
 site.includeScaladoc()

@@ -49,7 +49,7 @@ val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def opti
   help("help") text("prints this usage text"),
   arg[String]("<mode>") required() action { (x, c) =>
     c.copy(mode = x) } text("required argument"),
-  arg[String]("<file>...") unbounded() action { (x, c) =>
+  arg[String]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
 ) }
 // parser.parse returns Option[C]
@@ -108,7 +108,7 @@ val parser = new scopt.mutable.OptionParser("scopt", "3.x") {
   help("help") text("prints this usage text")
   arg[String]("<mode>") required() action { x =>
     c = c.copy(mode = x) } text("required argument")
-  arg[String]("<file>...") unbounded() action { x =>
+  arg[String]("<file>...") unbounded() optional() action { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
 }
 if (parser.parse(args)) {

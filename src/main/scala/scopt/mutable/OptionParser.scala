@@ -5,8 +5,8 @@ import scopt.generic._
 /** scopt.mutable.OptionParser is instantiated within your object,
  * set up by an (ordered) sequence of invocations of 
  * the various builder methods such as
- * <a href="#opt(String,String,String,String,(String) ⇒ Unit):Unit"><code>opt</code></a> method or
- * <a href="#arg(String,String,(String) ⇒ Unit):Unit"><code>arg</code></a> method.
+ * <a href="#opt[A](Char,String)(Read[A]):Def[A]"><code>opt</code></a> method or
+ * <a href="#arg[A](String)(Read[A]):Def[A]"><code>arg</code></a> method.
  * {{{
  * val parser = new scopt.OptionParser("scopt", "3.x") {
  *   opt[Int]('f', "foo") action { x =>

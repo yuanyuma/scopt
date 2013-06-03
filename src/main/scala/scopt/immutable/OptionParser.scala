@@ -4,10 +4,10 @@ import scopt.generic._
 
 /** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
  * set up by implementing 
- * <a href="options:Seq[OptionDefinition[C]]"><code>options</code></a> method that returns a sequence of invocations of 
+ * <a href="#options:Seq[Def[_]]"><code>options</code></a> method that returns a sequence of invocations of 
  * the various builder methods such as
- * <a href="#opt(String,String,String)((String, C) ⇒ C):ArgOptionDefinition[C]"><code>opt</code></a> method or
- * <a href="#arg(String,String)((String, C) ⇒ C):Argument[C]"><code>arg</code></a> method.
+ * <a href="#opt[A](Char,String)(Read[A]):Def[A]"><code>opt</code></a> method or
+ * <a href="#arg[A](String)(Read[A]):Def[A]"><code>arg</code></a> method.
  * {{{
  * val parser = new scopt.immutable.OptionParser[Config]("scopt", "3.x") { def options = Seq(
  *   opt[Int]('f', "foo") action { (x, c) =>
@@ -74,9 +74,9 @@ abstract case class OptionParser[C](
     def minOccurs(n: Int): OptionDef[A] =
       copy(_minOccurs = n)
     /** Requires the option to appear at least once. */
-    def required(): Def[A] = minOccurs(1)
+    def required(): OptionDef[A] = minOccurs(1)
     /** Chanages the option to be optional. */
-    def optional(): Def[A] = minOccurs(0)
+    def optional(): OptionDef[A] = minOccurs(0)
     /** Allows the argument to appear at most `n` times. */
     def maxOccurs(n: Int): OptionDef[A] =
       copy(_maxOccurs = n)

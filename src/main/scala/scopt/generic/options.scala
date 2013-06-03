@@ -82,7 +82,7 @@ private[scopt] trait GenericOptionParser[C] {
   /** adds an argument invoked by an option without `-` or `--`.
    * @param name0 name in the usage text
    */  
-  def arg[A: Read](name: String): Def[A] = makeDef(Arg, name)
+  def arg[A: Read](name: String): Def[A] = makeDef(Arg, name) required()
 
   def usage: String = {
     import OptionDefinition._
@@ -197,6 +197,8 @@ private[scopt] trait GenericOptionParser[C] {
     def minOccurs(n: Int): Def[A]
     def maxOccurs(n: Int): Def[A]
     def text(x: String): Def[A]
+    def required(): Def[A]
+    def optional(): Def[A]
 
     def callback: (A, C) => C
     def applyArgument(arg: String, config: C): Either[Seq[String], C] =
