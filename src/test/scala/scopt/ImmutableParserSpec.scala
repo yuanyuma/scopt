@@ -64,6 +64,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse () out of update --foo                                ${cmdParser("update", "--foo")}
     fail to parse --foo                                         ${cmdParserFail("--foo")}
 
+  cmd("update"); cmd("commit"); arg[String]("<a>") action { x => x} should
+    parse commit out of update commit                           ${cmdPosParser("update", "commit")}
+    fail to parse foo update                                    ${cmdPosParserFail("foo", "update")}
+
   help("help") should
     print usage text --help                                     ${helpParser("--help")}
                                                                 """
@@ -208,6 +212,21 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   def cmdParserFail(args: String*) = {
     val result = cmdParser1.parse(args.toSeq, Config())
     result === None
+  }
+
+  val cmdPosParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    cmd("update") action { (x, c) => c.copy(flag = true) }
+    cmd("commit")
+    arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
+  }
+  def cmdPosParser(args: String*) = {
+    val result = cmdPosParser1.parse(args.toSeq, Config())
+    result.get.a === "commit"
+  }
+  def cmdPosParserFail(args: String*) = {
+    val result = cmdPosParser1.parse(args.toSeq, Config())
+    result === None    
   }
 
   def helpParser(args: String*) = {

@@ -107,7 +107,7 @@ Command line arguments are defined using `arg[A]("<file>")`. It works similar to
 
 #### Commands
 
-Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get enabled in the presence of the command:
+Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get enabled in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level.
 
 ```scala
 cmd("update") action { (_, c) =>
@@ -115,7 +115,10 @@ cmd("update") action { (_, c) =>
   opt[Boolean]("xyz") action { (x, c) =>
     c.copy(xyz = x) } text("xyz is a boolean property")
 }
+arg[String]("<file>...") unbounded() optional()
 ```
+
+In the above, `update test.txt` would trigger the update command, but `test.txt update` won't.
 
 #### Occurrence
 

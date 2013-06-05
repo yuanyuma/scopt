@@ -211,6 +211,9 @@ abstract case class OptionParser[C](programName: String) {
     var _error = false
 
     def pushChildren(opt: OptionDef[_, C]) {
+      // commands are cleared to guarantee that it appears first
+      pendingCommands.clear
+
       pendingOptions ++= (nonArgs filter { x => x.getParentId == Some(opt.id) &&
         !pendingOptions.contains(x) })
       pendingArgs ++= (arguments filter { x => x.getParentId == Some(opt.id) &&
