@@ -133,11 +133,15 @@ abstract case class OptionParser[C](programName: String) {
    */  
   def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
 
-  /** adds an option invoked by `--name` that displays usage text.
+  /** adds an option invoked by `--name` that displays usage text and exits.
    * @param name0 name of the option
    */
   def help(name: String): OptionDef[Unit, C] =
-    opt[Unit](name) action { (x, c) => showUsage; c }
+    opt[Unit](name) action { (x, c) =>
+      showUsage
+      exit
+      c
+    }
 
   /** adds a command invoked by an option without `-` or `--`.
    * @param name name of the command

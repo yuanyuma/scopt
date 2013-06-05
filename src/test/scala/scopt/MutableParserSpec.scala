@@ -63,7 +63,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
     parse () out of update                                      ${cmdParser("update")}
 
   help("help") should
-    print usage text --help                                     ${helpParser("--help")}       
+    print usage text --help                                     ${helpParser()}       
                                                                 """
 
   def unitParser(args: String*) = {

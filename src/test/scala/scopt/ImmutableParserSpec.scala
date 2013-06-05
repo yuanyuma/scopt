@@ -69,7 +69,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     fail to parse foo update                                    ${cmdPosParserFail("foo", "update")}
 
   help("help") should
-    print usage text --help                                     ${helpParser("--help")}
+    print usage text --help                                     ${helpParser()}
                                                                 """
 
   def unitParser(args: String*) = {
