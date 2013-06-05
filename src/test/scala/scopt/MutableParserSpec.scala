@@ -1,4 +1,5 @@
 import org.specs2._
+import java.io.File
 
 class MutableParserSpec extends Specification { def is =      s2"""
   This is a specification to check the mutable parser
@@ -255,16 +256,16 @@ class MutableParserSpec extends Specification { def is =      s2"""
   }
 
   def helpParser(args: String*) = {
-    case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
+    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
-      mode: String = "", files: Seq[String] = Seq())
+      mode: String = "", files: Seq[File] = Seq())
     var c = Config()    
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
       opt[Int]('f', "foo") foreach { x =>
         c = c.copy(foo = x) } text("foo is an integer property")
-      opt[String]('o', "out") required() valueName("<file>") foreach { x =>
-        c = c.copy(out = x) } text("out is a required string property")
+      opt[File]('o', "out") required() valueName("<file>") foreach { x =>
+        c = c.copy(out = x) } text("out is a required file property")
       opt[(String, Int)]("max") foreach { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -273,7 +274,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
         c = c.copy(verbose = true) } text("verbose is a flag")
       note("some notes.\n")
       help("help") text("prints this usage text")
-      arg[String]("<file>...") unbounded() optional() foreach { x =>
+      arg[File]("<file>...") unbounded() optional() foreach { x =>
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
       cmd("update") foreach { _ =>
         c.copy(mode = "update") } text("update is a command.") children {
@@ -289,7 +290,7 @@ Usage: scopt [update] [options] [<file>...]
   -f <value> | --foo <value>
         foo is an integer property
   -o <file> | --out <file>
-        out is a required string property
+        out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose

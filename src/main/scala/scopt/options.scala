@@ -8,6 +8,10 @@ trait Read[A] {
   def reads: String => A
 }
 object Read {
+  import java.util.{Locale, Calendar, GregorianCalendar}
+  import java.text.SimpleDateFormat
+  import java.io.File
+  import java.net.URI
   def reads[A](f: String => A): Read[A] = new Read[A] {
     val arity = 1
     val reads = f
@@ -26,6 +30,21 @@ object Read {
       case s       =>
         throw new IllegalArgumentException("'" + s + "' is not a boolean.")
     }}
+  implicit val longRead: Read[Long]           = reads { _.toLong }
+  implicit val bigIntRead: Read[BigInt]       = reads { BigInt(_) }
+  implicit val bigDecimalRead: Read[BigDecimal] = reads { BigDecimal(_) }
+  implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
+  def calendarRead(pattern: String): Read[Calendar] = calendarRead(pattern, Locale.getDefault)
+  def calendarRead(pattern: String, locale: Locale): Read[Calendar] =
+    reads { s =>
+      val fmt = new SimpleDateFormat(pattern)
+      val c = new GregorianCalendar
+      c.setTime(fmt.parse(s))
+      c
+    }
+  implicit val fileRead: Read[File]           = reads { new File(_) }
+  implicit val uriRead: Read[URI]             = reads { new URI(_) }
+
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
     val arity = 2
     val reads = { (s: String) =>

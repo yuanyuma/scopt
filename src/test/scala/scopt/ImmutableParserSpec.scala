@@ -1,4 +1,7 @@
 import org.specs2._
+import java.util.{Calendar, GregorianCalendar}
+import java.io.File
+import java.net.URI
 
 class ImmutableParserSpec extends Specification { def is =      s2"""
   This is a specification to check the immutable parser
@@ -30,6 +33,20 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse true out of --foo 1                                   ${trueParser("--foo", "1")}
     parse true out of --foo:1                                   ${trueParser("--foo:1")}
     fail to parse --foo bar                                     ${boolParserFail("--foo", "bar")}
+
+  opt[BigDecimal]("foo") action { x => x } should
+    parse 1.0 out of --foo 1.0                                  ${bigDecimalParser("--foo", "1.0")}
+    fail to parse --foo bar                                     ${bigDecimalParserFail("--foo", "bar")}
+
+  opt[Calendar]("foo") action { x => x } should
+    parse 2000-01-01 out of --foo 2000-01-01                    ${calendarParser("--foo", "2000-01-01")}
+    fail to parse --foo bar                                     ${calendarParserFail("--foo", "bar")}
+
+  opt[File]("foo") action { x => x } should
+    parse test.txt out of --foo test.txt                        ${fileParser("--foo", "test.txt")}
+
+  opt[URI]("foo") action { x => x } should
+    parse http://github.com/ out of --foo http://github.com/    ${uriParser("--foo", "http://github.com/")}
 
   opt[(String, Int)]("foo") action { x => x } should
     parse ("k", 1) out of --foo k=1                             ${pairParser("--foo", "k=1")}
@@ -127,6 +144,50 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   def boolParserFail(args: String*) = {
     val result = boolParser1.parse(args.toSeq, Config())
     result === None
+  }
+
+  val bigDecimalParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[BigDecimal]("foo") action { (x, c) => c.copy(bigDecimalValue = x) }
+  }
+  def bigDecimalParser(args: String*) = {
+    val result = bigDecimalParser1.parse(args.toSeq, Config())
+    result.get.bigDecimalValue === BigDecimal("1.0")
+  }
+  def bigDecimalParserFail(args: String*) = {
+    val result = bigDecimalParser1.parse(args.toSeq, Config())
+    result === None
+  }
+
+  val calendarParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Calendar]("foo") action { (x, c) => c.copy(calendarValue = x) }
+  }
+  def calendarParser(args: String*) = {
+    val result = calendarParser1.parse(args.toSeq, Config())
+    result.get.calendarValue.getTime === new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime
+  }
+  def calendarParserFail(args: String*) = {
+    val result = calendarParser1.parse(args.toSeq, Config())
+    result === None
+  }
+
+  val fileParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[File]("foo") action { (x, c) => c.copy(fileValue = x) }
+  }
+  def fileParser(args: String*) = {
+    val result = fileParser1.parse(args.toSeq, Config())
+    result.get.fileValue === new File("test.txt")
+  }
+  
+  val uriParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[URI]("foo") action { (x, c) => c.copy(uriValue = x) }
+  }
+  def uriParser(args: String*) = {
+    val result = uriParser1.parse(args.toSeq, Config())
+    result.get.uriValue === new URI("http://github.com/")
   }
 
   val pairParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -230,15 +291,15 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   }
 
   def helpParser(args: String*) = {
-    case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
+    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
-      mode: String = "", files: Seq[String] = Seq())
+      mode: String = "", files: Seq[File] = Seq())
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
         c.copy(foo = x) } text("foo is an integer property")
-      opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
-        c.copy(out = x) } text("out is a required string property")
+      opt[File]('o', "out") required() valueName("<file>") action { (x, c) =>
+        c.copy(out = x) } text("out is a required file property")
       opt[(String, Int)]("max") action { case ((k, v), c) =>
         c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -247,7 +308,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
         c.copy(verbose = true) } text("verbose is a flag")
       note("some notes.\n")
       help("help") text("prints this usage text")
-      arg[String]("<file>...") unbounded() optional() action { (x, c) =>
+      arg[File]("<file>...") unbounded() optional() action { (x, c) =>
         c.copy(files = c.files :+ x) } text("optional unbounded args")
       cmd("update") action { (_, c) =>
         c.copy(mode = "update") } text("update is a command.") children {
@@ -263,7 +324,7 @@ Usage: scopt [update] [options] [<file>...]
   -f <value> | --foo <value>
         foo is an integer property
   -o <file> | --out <file>
-        out is a required string property
+        out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
@@ -285,5 +346,9 @@ update is a command.
 
   case class Config(flag: Boolean = false, intValue: Int = 0, stringValue: String = "",
     doubleValue: Double = 0.0, boolValue: Boolean = false,
+    bigDecimalValue: BigDecimal = BigDecimal("0.0"),
+    calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
+    fileValue: File = new File("."),
+    uriValue: URI = new URI("http://localhost"),
     key: String = "", a: String = "", b: String = "")
 }

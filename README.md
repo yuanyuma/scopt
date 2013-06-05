@@ -19,9 +19,10 @@ scopt provides two styles of parsering immutable and mutable.
 Either case, first you need a case class that represents the configuration:
 
 ```scala
-case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
+import java.io.File
+case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
   libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
-  mode: String = "", files: Seq[String] = Seq())
+  mode: String = "", files: Seq[File] = Seq())
 ```
 
 In immutable parsing style, a config object is passed around as an argument into `action` callbacks.
@@ -36,8 +37,8 @@ val parser = new scopt.OptionParser[Config]("scopt") {
   head("scopt", "3.x")
   opt[Int]('f', "foo") action { (x, c) =>
     c.copy(foo = x) } text("foo is an integer property")
-  opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
-    c.copy(out = x) } text("out is a required string property")
+  opt[File]('o', "out") required() valueName("<file>") action { (x, c) =>
+    c.copy(out = x) } text("out is a required file property")
   opt[(String, Int)]("max") action { case ((k, v), c) =>
     c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -46,7 +47,7 @@ val parser = new scopt.OptionParser[Config]("scopt") {
     c.copy(verbose = true) } text("verbose is a flag")
   note("some notes.\n")
   help("help") text("prints this usage text")
-  arg[String]("<file>...") unbounded() optional() action { (x, c) =>
+  arg[File]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") action { (_, c) =>
     c.copy(mode = "update") } text("update is a command.") children {
@@ -71,7 +72,7 @@ Usage: scopt [update] [options] [<file>...]
   -f <value> | --foo <value>
         foo is an integer property
   -o <file> | --out <file>
-        out is a required string property
+        out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
@@ -95,9 +96,12 @@ update is a command.
 Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` where `A` is any type that is an instance of `Read` typeclass.
 
 - `Unit` works as a plain flag `--foo` or `-f`
-- `Int`, `Double`, and `String` accept a value like `--foo 80` or `--foo:80`
-- `Boolean` also accepts a value like `--foo true` or `--foo:1`
+- `Int`, `Long`, `Double`, `String`, `BigInt`, `BigDecimal`, `java.io.File`, and `java.net.URI` accept a value like `--foo 80` or `--foo:80`
+- `Boolean` accepts a value like `--foo true` or `--foo:1`
+- `java.util.Calendar` accepts a value like `--foo 2000-01-01`
 - A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
+
+This could be extended by defining `Read` instances in the scope.
 
 By default these options are optional.
 
@@ -159,8 +163,8 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
   head("scopt", "3.x")
   opt[Int]('f', "foo") foreach { x =>
     c = c.copy(foo = x) } text("foo is an integer property")
-  opt[String]('o', "out") required() valueName("<file>") foreach { x =>
-    c = c.copy(out = x) } text("out is a required string property")
+  opt[java.io.File]('o', "out") required() valueName("<file>") foreach { x =>
+    c = c.copy(out = x) } text("out is a required file property")
   opt[(String, Int)]("max") foreach { case (k, v) =>
     c = c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -169,7 +173,7 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
     c = c.copy(verbose = true) } text("verbose is a flag")
   note("some notes.\n")
   help("help") text("prints this usage text")
-  arg[String]("<file>...") unbounded() optional() foreach { x =>
+  arg[java.io.File]("<file>...") unbounded() optional() foreach { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") foreach { _ =>
     c.copy(mode = "update") } text("update is a command.") children {
