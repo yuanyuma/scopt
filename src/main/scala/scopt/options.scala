@@ -151,8 +151,9 @@ abstract case class OptionParser[C](programName: String) {
     val optionText = if (nonArgs.isEmpty) "" else "[options] "
     val argumentList = arguments map {_.argName} mkString(" ")
     val commandText = if (commands.isEmpty) "" else commands filterNot {_.hasParent} map {_.name} mkString("[", "|", "] ")
-    val sorted = nonArgs ++ arguments ++ commands
-    val (unseen, xs) = (nonArgs ++ arguments ++ commands) partition {_.hasParent} match {
+    // val sorted = nonArgs ++ arguments ++ commands
+    val unsorted = options filter {_.kind != Head}
+    val (unseen, xs) = unsorted partition {_.hasParent} match {
       case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
     }
     while (!unseen.isEmpty) {

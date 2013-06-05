@@ -271,15 +271,15 @@ class MutableParserSpec extends Specification { def is =      s2"""
       } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
       opt[Unit]("verbose") foreach { _ =>
         c = c.copy(verbose = true) } text("verbose is a flag")
+      note("some notes.\n")
+      help("help") text("prints this usage text")
+      arg[String]("<file>...") unbounded() optional() foreach { x =>
+        c = c.copy(files = c.files :+ x) } text("optional unbounded args")
       cmd("update") foreach { _ =>
         c.copy(mode = "update") } text("update is a command.") children {
         opt[Boolean]("xyz") foreach { x =>
           c = c.copy(xyz = x) } text("xyz is a boolean property")
       }
-      note("some notes.\n")
-      help("help") text("prints this usage text")
-      arg[String]("<file>...") unbounded() optional() foreach { x =>
-        c = c.copy(files = c.files :+ x) } text("optional unbounded args")
     }
     parser.parse(args.toSeq)
     parser.usage === """

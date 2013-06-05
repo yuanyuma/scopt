@@ -44,15 +44,15 @@ val parser = new scopt.OptionParser[Config]("scopt") {
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Unit]("verbose") action { (_, c) =>
     c.copy(verbose = true) } text("verbose is a flag")
+  note("some notes.\n")
+  help("help") text("prints this usage text")
+  arg[String]("<file>...") unbounded() optional() action { (x, c) =>
+    c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") action { (_, c) =>
     c.copy(mode = "update") } text("update is a command.") children {
     opt[Boolean]("xyz") action { (x, c) =>
       c.copy(xyz = x) } text("xyz is a boolean property")
   }
-  note("some notes.\n")
-  help("help") text("prints this usage text")
-  arg[String]("<file>...") unbounded() optional() action { (x, c) =>
-    c.copy(files = c.files :+ x) } text("optional unbounded args")
 }
 // parser.parse returns Option[C]
 parser.parse(args, Config()) map { config =>
@@ -167,15 +167,15 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Unit]("verbose") foreach { _ =>
     c = c.copy(verbose = true) } text("verbose is a flag")
+  note("some notes.\n")
+  help("help") text("prints this usage text")
+  arg[String]("<file>...") unbounded() optional() foreach { x =>
+    c = c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") foreach { _ =>
     c.copy(mode = "update") } text("update is a command.") children {
     opt[Boolean]("xyz") foreach { x =>
       c = c.copy(xyz = x) } text("xyz is a boolean property")
   }
-  note("some notes.\n")
-  help("help") text("prints this usage text")
-  arg[String]("<file>...") unbounded() optional() foreach { x =>
-    c = c.copy(files = c.files :+ x) } text("optional unbounded args")
 }
 if (parser.parse(args)) {
   // do stuff
