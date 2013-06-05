@@ -67,18 +67,18 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
                                                                 """
 
   def unitParser(args: String*) = {
-    val parser = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-      head("scopt", "3.x"),
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
       opt[Unit]('f', "foo") action { (x, c) => c.copy(flag = true) }
-    ) }
+    }
     val result = parser.parse(args.toSeq, Config())
     result.get.flag === true
   }
 
-  val intParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val intParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) }
-  ) }
+  }
   def intParser(args: String*) = {
     val result = intParser1.parse(args.toSeq, Config())
     result.get.intValue === 1
@@ -88,19 +88,19 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
-  val stringParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val stringParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[String]("foo") action { (x, c) => c.copy(stringValue = x) }
-  ) }
+  }
   def stringParser(args: String*) = {
     val result = stringParser1.parse(args.toSeq, Config())
     result.get.stringValue === "bar"
   }
 
-  val doubleParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val doubleParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[Double]("foo") action { (x, c) => c.copy(doubleValue = x) }
-  ) }
+  }
   def doubleParser(args: String*) = {
     val result = doubleParser1.parse(args.toSeq, Config())
     result.get.doubleValue === 1.0
@@ -110,10 +110,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
-  val boolParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val boolParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[Boolean]("foo") action { (x, c) => c.copy(boolValue = x) }
-  ) }
+  }
   def trueParser(args: String*) = {
     val result = boolParser1.parse(args.toSeq, Config())
     result.get.boolValue === true
@@ -123,10 +123,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
-  val pairParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val pairParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[(String, Int)]("foo") action { case ((k, v), c) => c.copy(key = k, intValue = v) }
-  ) }
+  }
   def pairParser(args: String*) = {
     val result = pairParser1.parse(args.toSeq, Config())
     (result.get.key === "k") and (result.get.intValue === 1)
@@ -136,30 +136,30 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
-  val requireParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val requireParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[String]("foo") required() action { (x, c) => c.copy(stringValue = x) }
-  ) }
+  }
   def requiredFail(args: String*) = {
     val result = requireParser1.parse(args.toSeq, Config())
     result === None
   }
 
-  val validParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val validParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
       if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
       failure("Just because") }
-  ) }
+  }
   def validFail(args: String*) = {
     val result = validParser1.parse(args.toSeq, Config())
     result === None
   }
 
-  val intArgParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val intArgParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     arg[Int]("<port>") action { (x, c) => c.copy(intValue = x) }
-  ) }
+  }
   def intArg(args: String*) = {
     val result = intArgParser1.parse(args.toSeq, Config())
     result.get.intValue === 80
@@ -169,21 +169,21 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
-  val multipleArgsParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
-    arg[String]("<a>") action { (x, c) => c.copy(a = x) },
+  val multipleArgsParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    arg[String]("<a>") action { (x, c) => c.copy(a = x) }
     arg[String]("<b>") action { (x, c) => c.copy(b = x) }
-  ) }
+  }
   def multipleArgs(args: String*) = {
     val result = multipleArgsParser1.parse(args.toSeq, Config())
     (result.get.a === "a") and (result.get.b === "b")
   }
 
-  val unboundedArgsParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
-    arg[String]("<a>") action { (x, c) => c.copy(a = x) } unbounded() optional(),
+  val unboundedArgsParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    arg[String]("<a>") action { (x, c) => c.copy(a = x) } unbounded() optional()
     arg[String]("<b>") action { (x, c) => c.copy(b = x) } optional()
-  ) }
+  }
   def unboundedArgs(args: String*) = {
     val result = unboundedArgsParser1.parse(args.toSeq, Config())
     (result.get.a === "b") and (result.get.b === "")
@@ -193,10 +193,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     (result.get.a === "") and (result.get.b === "")
   }
 
-  val cmdParser1 = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-    head("scopt", "3.x"),
+  val cmdParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
     cmd("update") action { (x, c) => c.copy(flag = true) }
-  ) }
+  }
   def cmdParser(args: String*) = {
     val result = cmdParser1.parse(args.toSeq, Config())
     result.get.flag === true
@@ -206,27 +206,27 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
       mode: String = "", files: Seq[String] = Seq())
-    val parser = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-      head("scopt", "3.x"),
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
-        c.copy(foo = x) } text("foo is an integer property"),
+        c.copy(foo = x) } text("foo is an integer property")
       opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
-        c.copy(out = x) } text("out is a required string property"),
+        c.copy(out = x) } text("out is a required string property")
       opt[Boolean]("xyz") action { (x, c) =>
-        c.copy(xyz = x) } text("xyz is a boolean property"),
+        c.copy(xyz = x) } text("xyz is a boolean property")
       opt[(String, Int)]("max") action { case ((k, v), c) =>
         c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
-      } keyValueName("<libname>", "<max>") text("maximum count for <libname>"),
+      } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
       opt[Unit]("verbose") action { (_, c) =>
-        c.copy(verbose = true) } text("verbose is a flag"),
+        c.copy(verbose = true) } text("verbose is a flag")
       cmd("update") action { (_, c) =>
-        c.copy(mode = "update") } text("update is a command"),
-      note("some notes.\n"),
-      help("help") text("prints this usage text"),
+        c.copy(mode = "update") } text("update is a command")
+      note("some notes.\n")
+      help("help") text("prints this usage text")
       arg[String]("<file>...") unbounded() optional() action { (x, c) =>
         c.copy(files = c.files :+ x) } text("optional unbounded args")
-    ) }
+    }
     parser.parse(args.toSeq, Config())
     parser.usage === """
 scopt 3.x

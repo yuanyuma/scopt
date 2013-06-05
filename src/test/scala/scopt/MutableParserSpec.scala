@@ -3,11 +3,11 @@ import org.specs2._
 class MutableParserSpec extends Specification { def is =      s2"""
   This is a specification to check the mutable parser
 
-  opt[Unit]('f', "foo") action { x => x } should
+  opt[Unit]('f', "foo") foreach { x => x } should
     parse () out of --foo                                       ${unitParser("--foo")}
     parse () out of -f                                          ${unitParser("-f")}
 
-  opt[Int]('f', "foo") action { x => x } should
+  opt[Int]('f', "foo") foreach { x => x } should
     parse 1 out of --foo 1                                      ${intParser("--foo", "1")}
     parse 1 out of --foo:1                                      ${intParser("--foo:1")}
     parse 1 out of -f 1                                         ${intParser("-f", "1")}
@@ -15,51 +15,51 @@ class MutableParserSpec extends Specification { def is =      s2"""
     fail to parse --foo                                         ${intParserFail{"--foo"}}
     fail to parse --foo bar                                     ${intParserFail("--foo", "bar")}
 
-  opt[String]("foo") action { x => x } should
+  opt[String]("foo") foreach { x => x } should
     parse "bar" out of --foo bar                                ${stringParser("--foo", "bar")}
     parse "bar" out of --foo:bar                                ${stringParser("--foo:bar")}
 
-  opt[Double]("foo") action { x => x } should
+  opt[Double]("foo") foreach { x => x } should
     parse 1.0 out of --foo 1.0                                  ${doubleParser("--foo", "1.0")}
     parse 1.0 out of --foo:1.0                                  ${doubleParser("--foo:1.0")}
     fail to parse --foo bar                                     ${doubleParserFail("--foo", "bar")}
 
-  opt[Boolean]("foo") action { x => x } should
+  opt[Boolean]("foo") foreach { x => x } should
     parse true out of --foo true                                ${trueParser("--foo", "true")}
     parse true out of --foo:true                                ${trueParser("--foo:true")}
     parse true out of --foo 1                                   ${trueParser("--foo", "1")}
     parse true out of --foo:1                                   ${trueParser("--foo:1")}
     fail to parse --foo bar                                     ${boolParserFail("--foo", "bar")}
 
-  opt[(String, Int)]("foo") action { x => x } should
+  opt[(String, Int)]("foo") foreach { x => x } should
     parse ("k", 1) out of --foo k=1                             ${pairParser("--foo", "k=1")}
     parse ("k", 1) out of --foo:k=1                             ${pairParser("--foo:k=1")}
     fail to parse --foo                                         ${pairParserFail("--foo")}
     fail to parse --foo bar                                     ${pairParserFail("--foo", "bar")}
     fail to parse --foo k=bar                                   ${pairParserFail("--foo", "k=bar")}
 
-  opt[String]("foo") required() action { x => x } should
+  opt[String]("foo") required() foreach { x => x } should
     fail to parse Nil                                           ${requiredFail()}
 
   unknown options should
     fail to parse by default                                    ${intParserFail("-z", "bar")}
 
-  opt[(String, Int)]("foo") action { x => x } validate { x =>
+  opt[(String, Int)]("foo") foreach { x => x } validate { x =>
     if (x > 0) success else failure("Option --foo must be >0") } should
     fail to parse --foo 0                                       ${validFail("--foo", "0")}
 
-  arg[Int]("<port>") action { x => x } should
+  arg[Int]("<port>") foreach { x => x } should
     parse 80 out of 80                                          ${intArg("80")}
     be required and should fail to parse Nil                    ${intArgFail()}
 
-  arg[String]("<a>"); arg[String]("<b>") action { x => x } should
+  arg[String]("<a>"); arg[String]("<b>") foreach { x => x } should
     parse "b" out of a b                                        ${multipleArgs("a", "b")}
 
-  arg[String]("<a>") action { x => x} unbounded() optional(); arg[String]("<b>") optional() should
+  arg[String]("<a>") foreach { x => x} unbounded() optional(); arg[String]("<b>") optional() should
     parse "b" out of a b                                        ${unboundedArgs("a", "b")}
     parse nothing out of Nil                                    ${emptyArgs()}
 
-  cmd("update") action { x => x } should
+  cmd("update") foreach { x => x } should
     parse () out of update                                      ${cmdParser("update")}
 
   help("help") should
@@ -68,9 +68,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def unitParser(args: String*) = {
     var foo = false
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Unit]('f', "foo") action { _ => foo = true }
+      opt[Unit]('f', "foo") foreach { _ => foo = true }
     }
     val result = parser.parse(args.toSeq)
     (result === true) and (foo === true)
@@ -78,9 +78,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def intParser(args: String*) = {
     var foo = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") action { x => foo = x }
+      opt[Int]('f', "foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq)
     foo === 1
@@ -88,18 +88,18 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def intParserFail(args: String*) = {
     var foo = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") action { x => foo = x }
+      opt[Int]('f', "foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq) === false
   }
 
   def stringParser(args: String*) = {
     var foo = ""
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo") action { x => foo = x }
+      opt[String]("foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq)
     foo === "bar"
@@ -107,9 +107,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def doubleParser(args: String*) = {
     var foo = 0.0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo") action { x => foo = x }
+      opt[Double]("foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq)
     foo === 1.0
@@ -117,18 +117,18 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def doubleParserFail(args: String*) = {
     var foo = 0.0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo") action { x => foo = x }
+      opt[Double]("foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq) === false
   }
 
   def trueParser(args: String*) = {
     var foo = false
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo") action { x => foo = x }
+      opt[Boolean]("foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq)
     foo === true
@@ -136,9 +136,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def boolParserFail(args: String*) = {
     var foo = false
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo") action { x => foo = x }
+      opt[Boolean]("foo") foreach { x => foo = x }
     }
     parser.parse(args.toSeq) === false
   }
@@ -146,9 +146,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def pairParser(args: String*) = {
     var foo = ""
     var value = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo") action { case (k, v) =>
+      opt[(String, Int)]("foo") foreach { case (k, v) =>
         foo = k
         value = v
       }
@@ -160,9 +160,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def pairParserFail(args: String*) = {
     var foo = ""
     var value = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo") action { case (k, v) =>
+      opt[(String, Int)]("foo") foreach { case (k, v) =>
         foo = k
         value = v
       }
@@ -172,18 +172,18 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def requiredFail(args: String*) = {
     var foo = ""
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo") required() action { x => foo = x }
+      opt[String]("foo") required() foreach { x => foo = x }
     }
     parser.parse(args.toSeq) === false
   }
 
   def validFail(args: String*) = {
     var foo = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") action { x => foo = x } validate { x =>
+      opt[Int]('f', "foo") foreach { x => foo = x } validate { x =>
         if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
         failure("Just because") }
     }
@@ -192,9 +192,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def intArg(args: String*) = {
     var port = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>") action { x => port = x }
+      arg[Int]("<port>") foreach { x => port = x }
     }
     parser.parse(args.toSeq)
     port === 80
@@ -202,9 +202,9 @@ class MutableParserSpec extends Specification { def is =      s2"""
 
   def intArgFail(args: String*) = {
     var port = 0
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>") action { x => port = x }
+      arg[Int]("<port>") foreach { x => port = x }
     }
     parser.parse(args.toSeq) === false
   }
@@ -212,10 +212,10 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def multipleArgs(args: String*) = {
     var a = ""
     var b = ""
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") action { x => a = x }
-      arg[String]("<b>") action { x => b = x }
+      arg[String]("<a>") foreach { x => a = x }
+      arg[String]("<b>") foreach { x => b = x }
     }
     parser.parse(args.toSeq)
     (a === "a") and (b === "b")
@@ -224,10 +224,10 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def unboundedArgs(args: String*) = {
     var a = ""
     var b = ""
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") action { x => a = x } unbounded()
-      arg[String]("<b>") action { x => b = x }
+      arg[String]("<a>") foreach { x => a = x } unbounded()
+      arg[String]("<b>") foreach { x => b = x }
     }
     parser.parse(args.toSeq)
     (a === "b") and (b === "")
@@ -236,19 +236,19 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def emptyArgs(args: String*) = {
     var a = ""
     var b = ""
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") action { x => a = x } unbounded() optional()
-      arg[String]("<b>") action { x => b = x } optional()
+      arg[String]("<a>") foreach { x => a = x } unbounded() optional()
+      arg[String]("<b>") foreach { x => b = x } optional()
     }
     parser.parse(args.toSeq) === true
   }
 
   def cmdParser(args: String*) = {
     var foo = false
-    val parser = new scopt.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      cmd("update") action { _ => foo = true }
+      cmd("update") foreach { _ => foo = true }
     }
     val result = parser.parse(args.toSeq)
     (result === true) and (foo === true)
@@ -259,25 +259,25 @@ class MutableParserSpec extends Specification { def is =      s2"""
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
       mode: String = "", files: Seq[String] = Seq())
     var c = Config()    
-    val parser = new scopt.mutable.OptionParser("scopt") {
+    val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") action { x =>
+      opt[Int]('f', "foo") foreach { x =>
         c = c.copy(foo = x) } text("foo is an integer property")
-      opt[String]('o', "out") required() valueName("<file>") action { x =>
+      opt[String]('o', "out") required() valueName("<file>") foreach { x =>
         c = c.copy(out = x) } text("out is a required string property")
-      opt[Boolean]("xyz") action { x =>
+      opt[Boolean]("xyz") foreach { x =>
         c = c.copy(xyz = x) } text("xyz is a boolean property")
-      opt[(String, Int)]("max") action { case (k, v) =>
+      opt[(String, Int)]("max") foreach { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
       } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-      opt[Unit]("verbose") action { _ =>
+      opt[Unit]("verbose") foreach { _ =>
         c = c.copy(verbose = true) } text("verbose is a flag")
-      cmd("update") action { _ =>
+      cmd("update") foreach { _ =>
         c = c.copy(mode = "update") } text("update is a command")
       note("some notes.\n")
       help("help") text("prints this usage text")
-      arg[String]("<file>...") unbounded() optional() action { x =>
+      arg[String]("<file>...") unbounded() optional() foreach { x =>
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
     }
     parser.parse(args.toSeq)

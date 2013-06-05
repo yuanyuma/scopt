@@ -15,7 +15,7 @@ resolvers += "sonatype-public" at "https://oss.sonatype.org/content/groups/publi
 Usage
 -----
 
-scopt provides two flavors of parsers: immutable and mutable.
+scopt provides two styles of parsering immutable and mutable.
 Either case, first you need a case class that represents the configuration:
 
 ```scala
@@ -24,35 +24,33 @@ case class Config(foo: Int = -1, out: String = "", xyz: Boolean = false,
   mode: String = "", files: Seq[String] = Seq())
 ```
 
-An immutable parser lets you pass around a config object as an argument into callback closures.
-On the other hand, the mutable parsers are expected to modify a config object in place.
+In immutable parsing style, a config object is passed around as an argument into `action` callbacks.
+On the other hand, in mutable parsing style you are expected to modify the config object in place.
 
-### Immutable Parser
+### Immutable parsing
 
-Here's how you create a `scopt.immutable.OptionParser`. See [Scaladoc API](http://scopt.github.com/scopt/latest/api/) for the details on various builder methods.
+Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.com/scopt/latest/api/) for the details on various builder methods.
 
 ```scala
-val parser = new scopt.immutable.OptionParser[Config]("scopt") { def options = Seq(
-  head("scopt", "3.x"),
+val parser = new scopt.OptionParser[Config]("scopt") {
+  head("scopt", "3.x")
   opt[Int]('f', "foo") action { (x, c) =>
-    c.copy(foo = x) } text("foo is an integer property"),
+    c.copy(foo = x) } text("foo is an integer property")
   opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
-    c.copy(out = x) } text("out is a required string property"),
+    c.copy(out = x) } text("out is a required string property")
   opt[Boolean]("xyz") action { (x, c) =>
-    c.copy(xyz = x) } text("xyz is a boolean property"),
+    c.copy(xyz = x) } text("xyz is a boolean property")
   opt[(String, Int)]("max") action { case ((k, v), c) =>
     c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
-  } keyValueName("<libname>", "<max>") text("maximum count for <libname>"),
+  } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Unit]("verbose") action { (_, c) =>
-    c.copy(verbose = true) } text("verbose is a flag"),
-  cmd("update") action { (_, c) =>
-    c.copy(mode = "update") } text("update is a command"),
-  note("some notes.\n"),
-  help("help") text("prints this usage text"),
+    c.copy(verbose = true) } text("verbose is a flag")
+  note("some notes.\n")
+  help("help") text("prints this usage text")
   arg[String]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
-) }
+}
 // parser.parse returns Option[C]
 parser.parse(args, Config()) map { config =>
   // do stuff
@@ -101,7 +99,7 @@ By default these options are optional.
 
 #### Arguments
 
-Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept single value and are required.
+Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept a single value and are required.
 
 #### Occurrence
 
@@ -133,30 +131,30 @@ opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
 The first function validates if the values are positive, and
 the second function always fails.
 
-### Mutable Parser
+### Mutable parsing
 
-Create a `scopt.mutable.OptionParser` and customize it with the options you need, passing in functions to process each option or argument.
+Create a `scopt.OptionParser[Unit]` and customize it with the options you need, passing in functions to process each option or argument. Use `foreach` instead of `action`.
 
 ```scala
-val parser = new scopt.mutable.OptionParser("scopt") {
+val parser = new scopt.OptionParser[Unit]("scopt") {
   head("scopt", "3.x")
-  opt[Int]('f', "foo") action { x =>
+  opt[Int]('f', "foo") foreach { x =>
     c = c.copy(foo = x) } text("foo is an integer property")
-  opt[String]('o', "out") required() valueName("<file>") action { x =>
+  opt[String]('o', "out") required() valueName("<file>") foreach { x =>
     c = c.copy(out = x) } text("out is a required string property")
-  opt[Boolean]("xyz") action { x =>
+  opt[Boolean]("xyz") foreach { x =>
     c = c.copy(xyz = x) } text("xyz is a boolean property")
-  opt[(String, Int)]("max") action { case (k, v) =>
+  opt[(String, Int)]("max") foreach { case (k, v) =>
     c = c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-  opt[Unit]("verbose") action { _ =>
+  opt[Unit]("verbose") foreach { _ =>
     c = c.copy(verbose = true) } text("verbose is a flag")
-  cmd("update") action { _ =>
+  cmd("update") foreach { _ =>
     c = c.copy(mode = "update") } text("update is a command")
   note("some notes.\n")
   help("help") text("prints this usage text")
-  arg[String]("<file>...") unbounded() optional() action { x =>
+  arg[String]("<file>...") unbounded() optional() foreach { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
 }
 if (parser.parse(args)) {
