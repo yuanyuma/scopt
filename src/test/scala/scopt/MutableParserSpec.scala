@@ -306,7 +306,6 @@ Command: update
 update is a command.
 
   --xyz <value>
-        xyz is a boolean property
-"""
+        xyz is a boolean property"""
   }
 }

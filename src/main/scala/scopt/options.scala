@@ -152,8 +152,13 @@ abstract case class OptionParser[C](programName: String) {
    */  
   def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
 
+  /** adds a command invoked by an option without `-` or `--`.
+   * @param name name of the command
+   */  
+  def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
+
   /** adds an option invoked by `--name` that displays usage text and exits.
-   * @param name0 name of the option
+   * @param name name of the option
    */
   def help(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
@@ -162,15 +167,30 @@ abstract case class OptionParser[C](programName: String) {
       c
     }
 
-  /** adds a command invoked by an option without `-` or `--`.
-   * @param name name of the command
-   */  
-  def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
+  /** adds an option invoked by `--name` that displays header text and exits.
+   * @param name name of the option
+   */
+  def version(name: String): OptionDef[Unit, C] =
+    opt[Unit](name) action { (x, c) =>
+      showHeader
+      exit
+      c
+    }
 
+  def showHeader {
+    System.err.println(header)
+  }
+  def header: String = {
+    import OptionDef._
+    NL + (heads map {_.usage}).mkString(NL)
+  }
+
+  def showUsage {
+    System.err.println(usage)
+  }
   def usage: String = {
     import OptionDef._
     val prorgamText = if (programName == "") "" else programName + " "
-    val headsText = (heads map {_.usage}).mkString(NL)
     val optionText = if (nonArgs.isEmpty) "" else "[options] "
     val argumentList = arguments map {_.argName} mkString(" ")
     val commandText = if (commands.isEmpty) "" else commands filterNot {_.hasParent} map {_.name} mkString("[", "|", "] ")
@@ -189,11 +209,9 @@ abstract case class OptionParser[C](programName: String) {
       }
     }
     val descriptions = xs map {_.usage}
-    NL + headsText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
-    descriptions.mkString(NL) + NL
+    header + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
+    descriptions.mkString(NL)
   }
-
-  def showUsage = Console.err.println(usage)
 
   /** call this to express success in custom validation. */
   def success: Either[String, Unit] = OptionDef.makeSuccess[String]
