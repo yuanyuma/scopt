@@ -283,8 +283,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
       }
     }
     parser.parse(args.toSeq)
-    parser.usage === """
-scopt 3.x
+    parser.usage === """scopt 3.x
 Usage: scopt [update] [options] [<file>...]
 
   -f <value> | --foo <value>

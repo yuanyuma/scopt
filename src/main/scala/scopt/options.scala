@@ -182,7 +182,7 @@ abstract case class OptionParser[C](programName: String) {
   }
   def header: String = {
     import OptionDef._
-    NL + (heads map {_.usage}).mkString(NL)
+    (heads map {_.usage}).mkString(NL)
   }
 
   def showUsage {

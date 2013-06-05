@@ -317,8 +317,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
       }
     }
     parser.parse(args.toSeq, Config())
-    val expectedUsage = """
-scopt 3.x
+    val expectedUsage = """scopt 3.x
 Usage: scopt [update] [options] [<file>...]
 
   -f <value> | --foo <value>
@@ -341,8 +340,7 @@ update is a command.
 
   --xyz <value>
         xyz is a boolean property"""
-    val expectedHeader = """
-scopt 3.x"""
+    val expectedHeader = """scopt 3.x"""
 
     (parser.header === expectedHeader) and (parser.usage === expectedUsage)
   }
