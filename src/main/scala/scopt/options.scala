@@ -147,13 +147,25 @@ abstract case class OptionParser[C](programName: String) {
   def usage: String = {
     import OptionDef._
     val prorgamText = if (programName == "") "" else programName + " "
-    val versionText = (heads map {_.usage}).mkString(NL)
-    val commandText = if (commands.isEmpty) "" else commands map {_.name} mkString("[", "|", "] ")
+    val headsText = (heads map {_.usage}).mkString(NL)
     val optionText = if (nonArgs.isEmpty) "" else "[options] "
     val argumentList = arguments map {_.argName} mkString(" ")
-    val descriptions = (nonArgs map {_.usage}) ++ (arguments map {_.usage}) ++ (commands map {_.usage})
-
-    NL + versionText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
+    val commandText = if (commands.isEmpty) "" else commands filterNot {_.hasParent} map {_.name} mkString("[", "|", "] ")
+    val sorted = nonArgs ++ arguments ++ commands
+    val (unseen, xs) = (nonArgs ++ arguments ++ commands) partition {_.hasParent} match {
+      case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
+    }
+    while (!unseen.isEmpty) {
+      for {
+        x <- xs
+      } {
+        val cs = unseen filter {_.getParentId == Some(x.id)}
+        unseen --= cs
+        xs.insertAll((xs indexOf x) + 1, cs)
+      }
+    }
+    val descriptions = xs map {_.usage}
+    NL + headsText + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
     descriptions.mkString(NL) + NL
   }
 
@@ -164,7 +176,7 @@ abstract case class OptionParser[C](programName: String) {
   /** call this to express failure in custom validation. */
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
-  protected val options = new scala.collection.mutable.ListBuffer[OptionDef[_, C]]
+  protected val options = new ListBuffer[OptionDef[_, C]]
   protected def heads: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Head}
   protected def nonArgs: Seq[OptionDef[_, C]] = options.toSeq filter { case x => x.kind == Opt || x.kind == Note }
   protected def arguments: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Arg}
@@ -191,13 +203,21 @@ abstract case class OptionParser[C](programName: String) {
    */
   def parse(args: Seq[String], init: C): Option[C] = {
     var i = 0
-    val pendingCommands = ListBuffer() ++ commands
-    val pendingArgs = ListBuffer() ++ arguments
-    val pendingOptions = ListBuffer() ++ nonArgs
+    val pendingOptions = ListBuffer() ++ (nonArgs filterNot {_.hasParent})
+    val pendingArgs = ListBuffer() ++ (arguments filterNot {_.hasParent})
+    val pendingCommands = ListBuffer() ++ (commands filterNot {_.hasParent})
     val occurrences = ListMap[OptionDef[_, C], Int]().withDefaultValue(0)
     var _config: C = init
     var _error = false
 
+    def pushChildren(opt: OptionDef[_, C]) {
+      pendingOptions ++= (nonArgs filter { x => x.getParentId == Some(opt.id) &&
+        !pendingOptions.contains(x) })
+      pendingArgs ++= (arguments filter { x => x.getParentId == Some(opt.id) &&
+        !pendingArgs.contains(x) })
+      pendingCommands ++= (commands filter { x => x.getParentId == Some(opt.id) &&
+        !pendingCommands.contains(x) })
+    }
     def handleError(msg: String) {
       if (errorOnUnknownArgument) {
         _error = true
@@ -207,10 +227,18 @@ abstract case class OptionParser[C](programName: String) {
     }
     def handleArgument(opt: OptionDef[_, C], arg: String) {
       opt.applyArgument(arg, _config) match {
-        case Right(c) => _config = c
+        case Right(c) =>
+          _config = c
+          pushChildren(opt)
         case Left(xs) =>
           _error = true
           xs foreach reportError
+      }
+    }
+    def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]) {
+      occurrences(opt) += 1
+      if (occurrences(opt) >= opt.getMaxOccurs) {
+        pending -= opt
       }
     }
     def findCommand(cmd: String): Option[OptionDef[_, C]] =
@@ -218,10 +246,7 @@ abstract case class OptionParser[C](programName: String) {
     while (i < args.length) {
       pendingOptions find {_.tokensToRead(i, args) > 0} match {
         case Some(option) =>
-          occurrences(option) += 1
-          if (occurrences(option) >= option.getMaxOccurs) {
-            pendingOptions -= option
-          }
+          handleOccurrence(option, pendingOptions)
           option(i, args) match {
             case Right(v) =>          handleArgument(option, v)
             case Left(outOfBounds) => handleError(outOfBounds)
@@ -235,18 +260,12 @@ abstract case class OptionParser[C](programName: String) {
             case arg if arg startsWith "-"  => handleError("Unknown option " + arg)
             case arg if findCommand(arg).isDefined =>
               val cmd = findCommand(arg).get
-              occurrences(cmd) += 1
-              if (occurrences(cmd) >= cmd.getMaxOccurs) {
-                pendingCommands -= cmd
-              }
+              handleOccurrence(cmd, pendingCommands)
               handleArgument(cmd, "")                            
             case arg if pendingArgs.isEmpty => handleError("Unknown argument '" + arg + "'")
             case arg =>
               val first = pendingArgs.head
-              occurrences(first) += 1
-              if (occurrences(first) >= first.getMaxOccurs) {
-                pendingArgs.remove(0)
-              }
+              handleOccurrence(first, pendingArgs)
               handleArgument(first, arg)
           }
       }
@@ -281,6 +300,7 @@ class OptionDef[A: Read, C](
   _desc: String,
   _action: (A, C) => C,
   _validations: Seq[A => Either[String, Unit]],
+  _parentId: Option[Int],
   _minOccurs: Int,
   _maxOccurs: Int) {
   import OptionDef._
@@ -289,7 +309,7 @@ class OptionDef[A: Read, C](
     this(_parser = parser, _id = OptionDef.generateId, _kind = kind, _name = name,
       _shortOpt = None, _keyName = None, _valueName = None,
       _desc = "", _action = { (a: A, c: C) => c },
-      _validations = Seq(), _minOccurs = 0, _maxOccurs = 1)
+      _validations = Seq(), _parentId = None, _minOccurs = 0, _maxOccurs = 1)
 
   private[scopt] def copy(
     _parser: OptionParser[C] = this._parser,
@@ -302,11 +322,12 @@ class OptionDef[A: Read, C](
     _desc: String = this._desc,
     _action: (A, C) => C = this._action,
     _validations: Seq[A => Either[String, Unit]] = this._validations,
+    _parentId: Option[Int] = this._parentId,
     _minOccurs: Int = this._minOccurs,
     _maxOccurs: Int = this._maxOccurs): OptionDef[A, C] =
     new OptionDef(_parser = _parser, _id = _id, _kind = _kind, _name = _name, _shortOpt = _shortOpt,
       _keyName = _keyName, _valueName = _valueName, _desc = _desc, _action = _action,
-      _validations = _validations, _minOccurs = _minOccurs, _maxOccurs = _maxOccurs)
+      _validations = _validations, _parentId = _parentId, _minOccurs = _minOccurs, _maxOccurs = _maxOccurs)
 
   private[this] def read: Read[A] = implicitly[Read[A]]
   
@@ -320,6 +341,8 @@ class OptionDef[A: Read, C](
       f(a)
       c2
     }))
+
+  override def toString: String = fullName
 
   /** Adds short option -x. */
   def shortOpt(x: Char): OptionDef[A, C] =
@@ -351,6 +374,14 @@ class OptionDef[A: Read, C](
   /** Adds custom validation. */
   def validate(f: A => Either[String, Unit]) =
     _parser.updateOption(copy(_validations = _validations :+ f))
+  
+  private[scopt] def parent(x: OptionDef[_, C]): OptionDef[A, C] =
+    _parser.updateOption(copy(_parentId = Some(x.id)))
+  /** Adds opt/arg under this command. */
+  def children(xs: OptionDef[_, C]*): OptionDef[A, C] = {
+    xs foreach {_.parent(this)}
+    this
+  }
 
   private[scopt] val kind: OptionDefKind = _kind
   private[scopt] val id: Int = _id
@@ -359,6 +390,8 @@ class OptionDef[A: Read, C](
   private[scopt] def getMinOccurs: Int = _minOccurs
   private[scopt] def getMaxOccurs: Int = _maxOccurs
   private[scopt] def shortOptOrBlank: String = _shortOpt map {_.toString} getOrElse("")
+  private[scopt] def hasParent: Boolean = _parentId.isDefined
+  private[scopt] def getParentId: Option[Int] = _parentId
 
   private[scopt] def applyArgument(arg: String, config: C): Either[Seq[String], C] =
     try {
@@ -423,7 +456,7 @@ class OptionDef[A: Read, C](
       case Head => _desc
       case Note => _desc
       case Cmd =>
-        NL + "Command: " + name + NL + _desc
+        NL + "Command: " + name + NL + { if (_desc == "") "" else _desc + NL }
       case Arg => WW + name + NLTB + _desc
       case Opt if read.arity == 2 =>
         WW + (_shortOpt map { o => "-" + o + ":" + keyValueString + " | " } getOrElse { "" }) +

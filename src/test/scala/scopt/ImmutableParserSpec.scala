@@ -59,8 +59,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse "b" out of a b                                        ${unboundedArgs("a", "b")}
     parse nothing out of Nil                                    ${emptyArgs()}
 
-  cmd("update") action { x => x } should
+  cmd("update") action { x => x } children { opt[Unit]("foo") action { x => x} } should
     parse () out of update                                      ${cmdParser("update")}
+    parse () out of update --foo                                ${cmdParser("update", "--foo")}
+    fail to parse --foo                                         ${cmdParserFail("--foo")}
 
   help("help") should
     print usage text --help                                     ${helpParser("--help")}
@@ -195,11 +197,17 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
 
   val cmdParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    cmd("update") action { (x, c) => c.copy(flag = true) }
+    cmd("update") action { (x, c) => c.copy(flag = true) } children {
+      opt[Unit]("foo") action { (x, c) => c.copy(stringValue = "foo") }
+    }
   }
   def cmdParser(args: String*) = {
     val result = cmdParser1.parse(args.toSeq, Config())
     result.get.flag === true
+  }
+  def cmdParserFail(args: String*) = {
+    val result = cmdParser1.parse(args.toSeq, Config())
+    result === None
   }
 
   def helpParser(args: String*) = {
@@ -212,8 +220,6 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
         c.copy(foo = x) } text("foo is an integer property")
       opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
         c.copy(out = x) } text("out is a required string property")
-      opt[Boolean]("xyz") action { (x, c) =>
-        c.copy(xyz = x) } text("xyz is a boolean property")
       opt[(String, Int)]("max") action { case ((k, v), c) =>
         c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -221,7 +227,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
       opt[Unit]("verbose") action { (_, c) =>
         c.copy(verbose = true) } text("verbose is a flag")
       cmd("update") action { (_, c) =>
-        c.copy(mode = "update") } text("update is a command")
+        c.copy(mode = "update") } text("update is a command.") children {
+        opt[Boolean]("xyz") action { (x, c) =>
+          c.copy(xyz = x) } text("xyz is a boolean property")
+      }
       note("some notes.\n")
       help("help") text("prints this usage text")
       arg[String]("<file>...") unbounded() optional() action { (x, c) =>
@@ -236,8 +245,6 @@ Usage: scopt [update] [options] [<file>...]
         foo is an integer property
   -o <file> | --out <file>
         out is a required string property
-  --xyz <value>
-        xyz is a boolean property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
@@ -250,7 +257,10 @@ some notes.
         optional unbounded args
 
 Command: update
-update is a command
+update is a command.
+
+  --xyz <value>
+        xyz is a boolean property
 """
   }
 

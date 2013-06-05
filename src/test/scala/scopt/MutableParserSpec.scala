@@ -265,8 +265,6 @@ class MutableParserSpec extends Specification { def is =      s2"""
         c = c.copy(foo = x) } text("foo is an integer property")
       opt[String]('o', "out") required() valueName("<file>") foreach { x =>
         c = c.copy(out = x) } text("out is a required string property")
-      opt[Boolean]("xyz") foreach { x =>
-        c = c.copy(xyz = x) } text("xyz is a boolean property")
       opt[(String, Int)]("max") foreach { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -274,7 +272,10 @@ class MutableParserSpec extends Specification { def is =      s2"""
       opt[Unit]("verbose") foreach { _ =>
         c = c.copy(verbose = true) } text("verbose is a flag")
       cmd("update") foreach { _ =>
-        c = c.copy(mode = "update") } text("update is a command")
+        c.copy(mode = "update") } text("update is a command.") children {
+        opt[Boolean]("xyz") foreach { x =>
+          c = c.copy(xyz = x) } text("xyz is a boolean property")
+      }
       note("some notes.\n")
       help("help") text("prints this usage text")
       arg[String]("<file>...") unbounded() optional() foreach { x =>
@@ -289,8 +290,6 @@ Usage: scopt [update] [options] [<file>...]
         foo is an integer property
   -o <file> | --out <file>
         out is a required string property
-  --xyz <value>
-        xyz is a boolean property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
@@ -303,7 +302,10 @@ some notes.
         optional unbounded args
 
 Command: update
-update is a command
+update is a command.
+
+  --xyz <value>
+        xyz is a boolean property
 """
   }
 }

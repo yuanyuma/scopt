@@ -38,14 +38,17 @@ val parser = new scopt.OptionParser[Config]("scopt") {
     c.copy(foo = x) } text("foo is an integer property")
   opt[String]('o', "out") required() valueName("<file>") action { (x, c) =>
     c.copy(out = x) } text("out is a required string property")
-  opt[Boolean]("xyz") action { (x, c) =>
-    c.copy(xyz = x) } text("xyz is a boolean property")
   opt[(String, Int)]("max") action { case ((k, v), c) =>
     c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Unit]("verbose") action { (_, c) =>
     c.copy(verbose = true) } text("verbose is a flag")
+  cmd("update") action { (_, c) =>
+    c.copy(mode = "update") } text("update is a command.") children {
+    opt[Boolean]("xyz") action { (x, c) =>
+      c.copy(xyz = x) } text("xyz is a boolean property")
+  }
   note("some notes.\n")
   help("help") text("prints this usage text")
   arg[String]("<file>...") unbounded() optional() action { (x, c) =>
@@ -69,8 +72,6 @@ Usage: scopt [update] [options] [<file>...]
         foo is an integer property
   -o <file> | --out <file>
         out is a required string property
-  --xyz <value>
-        xyz is a boolean property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
@@ -83,7 +84,10 @@ some notes.
         optional unbounded args
 
 Command: update
-update is a command
+update is a command.
+
+  --xyz <value>
+        xyz is a boolean property
 ```
 
 #### Options
@@ -100,6 +104,18 @@ By default these options are optional.
 #### Arguments
 
 Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept a single value and are required.
+
+#### Commands
+
+Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get enabled in the presence of the command:
+
+```scala
+cmd("update") action { (_, c) =>
+  c.copy(mode = "update") } text("update is a command.") children {
+  opt[Boolean]("xyz") action { (x, c) =>
+    c.copy(xyz = x) } text("xyz is a boolean property")
+}
+```
 
 #### Occurrence
 
@@ -142,8 +158,6 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
     c = c.copy(foo = x) } text("foo is an integer property")
   opt[String]('o', "out") required() valueName("<file>") foreach { x =>
     c = c.copy(out = x) } text("out is a required string property")
-  opt[Boolean]("xyz") foreach { x =>
-    c = c.copy(xyz = x) } text("xyz is a boolean property")
   opt[(String, Int)]("max") foreach { case (k, v) =>
     c = c.copy(libName = k, maxCount = v) } validate { x =>
     if (x._2 > 0) success else failure("Value <max> must be >0") 
@@ -151,7 +165,10 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
   opt[Unit]("verbose") foreach { _ =>
     c = c.copy(verbose = true) } text("verbose is a flag")
   cmd("update") foreach { _ =>
-    c = c.copy(mode = "update") } text("update is a command")
+    c.copy(mode = "update") } text("update is a command.") children {
+    opt[Boolean]("xyz") foreach { x =>
+      c = c.copy(xyz = x) } text("xyz is a boolean property")
+  }
   note("some notes.\n")
   help("help") text("prints this usage text")
   arg[String]("<file>...") unbounded() optional() foreach { x =>
