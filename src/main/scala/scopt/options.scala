@@ -173,7 +173,7 @@ abstract case class OptionParser[C](programName: String) {
   def version(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
       showHeader
-      exit
+      sys.exit
       c
     }
 
