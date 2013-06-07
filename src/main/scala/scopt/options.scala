@@ -315,7 +315,18 @@ abstract case class OptionParser[C](programName: String) {
           } // if
         case None =>
           args(i) match {
-            case arg if arg startsWith "-"  => handleError("Unknown option " + arg)
+            case arg if arg startsWith "--" => handleError("Unknown option " + arg)
+            case arg if arg startsWith "-"  =>
+              val cs = (arg drop 1).toSeq
+              if (cs.isEmpty) handleError("Unknown option " + arg)
+              else cs foreach { c =>
+                pendingOptions find {_.shortOptTokens("-" + c.toString) == 1} match {
+                  case Some(option) =>
+                    handleOccurrence(option, pendingOptions)
+                    handleArgument(option, "")
+                  case None => handleError("Unknown option " + "-" + c.toString)
+                }
+              }
             case arg if findCommand(arg).isDefined =>
               val cmd = findCommand(arg).get
               handleOccurrence(cmd, pendingCommands)

@@ -98,12 +98,12 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 - `Unit` works as a plain flag `--foo` or `-f`
 - `Int`, `Long`, `Double`, `String`, `BigInt`, `BigDecimal`, `java.io.File`, and `java.net.URI` accept a value like `--foo 80` or `--foo:80`
 - `Boolean` accepts a value like `--foo true` or `--foo:1`
-- `java.util.Calendar` accepts a value like `--foo 2000-01-01`
+- `java.util.Calendar` accepts a value like `--foo 2000-12-01`
 - A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
 
 This could be extended by defining `Read` instances in the scope.
 
-By default these options are optional.
+By default these options are optional. Also, plain flags `opt[Unit]`, short options can be grouped as `-fb` to mean `--foo --bar`.
 
 #### Arguments
 
