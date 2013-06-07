@@ -15,7 +15,7 @@ resolvers += "sonatype-public" at "https://oss.sonatype.org/content/groups/publi
 Usage
 -----
 
-scopt provides two styles of parsering immutable and mutable.
+scopt provides two styles of parsing: immutable and mutable.
 Either case, first you need a case class that represents the configuration:
 
 ```scala

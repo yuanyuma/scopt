@@ -163,7 +163,7 @@ abstract case class OptionParser[C](programName: String) {
   def help(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
       showUsage
-      exit
+      sys.exit
       c
     }
 
