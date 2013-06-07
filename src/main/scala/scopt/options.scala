@@ -190,11 +190,6 @@ abstract case class OptionParser[C](programName: String) {
   }
   def usage: String = {
     import OptionDef._
-    val prorgamText = if (programName == "") "" else programName + " "
-    val optionText = if (nonArgs.isEmpty) "" else "[options] "
-    val argumentList = arguments map {_.argName} mkString(" ")
-    val commandText = if (commands.isEmpty) "" else commands filterNot {_.hasParent} map {_.name} mkString("[", "|", "] ")
-    // val sorted = nonArgs ++ arguments ++ commands
     val unsorted = options filter {_.kind != Head}
     val (unseen, xs) = unsorted partition {_.hasParent} match {
       case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
@@ -209,8 +204,26 @@ abstract case class OptionParser[C](programName: String) {
       }
     }
     val descriptions = xs map {_.usage}
-    header + NL + "Usage: " + prorgamText + commandText + optionText + argumentList + NLNL +
+    (if (header == "") "" else header + NL) +
+    "Usage: " + commandExample(None) + NLNL +
     descriptions.mkString(NL)
+  }
+  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
+    (cmd.getParentId map { x =>
+      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
+    } getOrElse {""}) + cmd.name
+  private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
+    val name = cmd map {commandName} getOrElse programName
+    val parentId = cmd map {_.id}
+    val cs = commands filter {_.getParentId == parentId}
+    val commandText = if (cs.isEmpty) "" else cs map {_.name} mkString("[", "|", "] ")
+    val os = options.toSeq filter { case x => x.kind == Opt && x.getParentId == parentId }
+    val as = arguments filter {_.getParentId == parentId}
+    val optionText = if (os.isEmpty) "" else "[options] "
+    val argumentList = 
+      if (cs exists { case x => arguments exists {_.getParentId == Some(x.id)}}) "<args>..."
+      else as map {_.argName} mkString(" ")
+    (if (name == "") "" else name + " ") + commandText + optionText + argumentList
   }
 
   /** call this to express success in custom validation. */
@@ -501,7 +514,7 @@ class OptionDef[A: Read, C](
       case Head => _desc
       case Note => _desc
       case Cmd =>
-        NL + "Command: " + name + NL + { if (_desc == "") "" else _desc + NL }
+        "Command: " + _parser.commandExample(Some(this)) +  NL + _desc
       case Arg => WW + name + NLTB + _desc
       case Opt if read.arity == 2 =>
         WW + (_shortOpt map { o => "-" + o + ":" + keyValueString + " | " } getOrElse { "" }) +

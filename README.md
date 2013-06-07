@@ -109,21 +109,6 @@ By default these options are optional.
 
 Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept a single value and are required.
 
-#### Commands
-
-Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get enabled in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level.
-
-```scala
-cmd("update") action { (_, c) =>
-  c.copy(mode = "update") } text("update is a command.") children {
-  opt[Boolean]("xyz") action { (x, c) =>
-    c.copy(xyz = x) } text("xyz is a boolean property")
-}
-arg[String]("<file>...") unbounded() optional()
-```
-
-In the above, `update test.txt` would trigger the update command, but `test.txt update` won't.
-
 #### Occurrence
 
 Each opt/arg carries occurrence information `minOccurs` and `maxOccurs`.
@@ -153,6 +138,32 @@ opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
 
 The first function validates if the values are positive, and
 the second function always fails.
+
+#### Commands
+
+Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get inserted in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level. It is generally recommended to avoid mixing args both in parent level and commands to avoid confusion.
+
+```scala
+arg[String]("<file>...") unbounded() optional()
+cmd("update") action { (_, c) =>
+  c.copy(mode = "update") } text("update is a command.") children {
+  opt[Boolean]("xyz") action { (x, c) =>
+    c.copy(xyz = x) } text("xyz is a boolean property")
+}
+```
+
+In the above, `update test.txt` would trigger the update command, but `test.txt update` won't.
+
+Commands could be nested into another command as follows:
+
+```scala
+cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
+  c.copy(flag = true) } children {
+  cmd("update") children {
+    arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
+  }     
+}
+```
 
 ### Mutable parsing
 
