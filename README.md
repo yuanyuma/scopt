@@ -103,7 +103,7 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 
 This could be extended by defining `Read` instances in the scope.
 
-By default these options are optional. Also, plain flags `opt[Unit]`, short options can be grouped as `-fb` to mean `--foo --bar`.
+By default these options are optional. Also, for plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--foo --bar`.
 
 #### Arguments
 
