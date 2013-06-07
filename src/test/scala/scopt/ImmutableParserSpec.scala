@@ -81,8 +81,8 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse () out of update --foo                                ${cmdParser("update", "--foo")}
     fail to parse --foo                                         ${cmdParserFail("--foo")}
 
-  cmd("update"); cmd("commit"); arg[String]("<a>") action { x => x} should
-    parse commit out of update commit                           ${cmdPosParser("update", "commit")}
+  cmd("update") children { arg[String]("<a>") } ; cmd("commit"); arg[String]("<b>") action { x => x} should
+    parse commit out of update foo commit                       ${cmdPosParser("update", "foo", "commit")}
     fail to parse foo update                                    ${cmdPosParserFail("foo", "update")}
 
   help("help") should
@@ -277,13 +277,15 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
 
   val cmdPosParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    cmd("update") action { (x, c) => c.copy(flag = true) }
+    cmd("update") action { (x, c) => c.copy(flag = true) } children {
+      arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
+    }
     cmd("commit")
-    arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
+    arg[String]("<b>") action { (x, c) => c.copy(b = x) } 
   }
   def cmdPosParser(args: String*) = {
     val result = cmdPosParser1.parse(args.toSeq, Config())
-    result.get.a === "commit"
+    result.get.b === "commit"
   }
   def cmdPosParserFail(args: String*) = {
     val result = cmdPosParser1.parse(args.toSeq, Config())

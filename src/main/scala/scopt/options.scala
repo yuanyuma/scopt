@@ -256,11 +256,11 @@ abstract case class OptionParser[C](programName: String) {
       // commands are cleared to guarantee that it appears first
       pendingCommands.clear
 
-      pendingOptions ++= (nonArgs filter { x => x.getParentId == Some(opt.id) &&
+      pendingOptions insertAll (0, nonArgs filter { x => x.getParentId == Some(opt.id) &&
         !pendingOptions.contains(x) })
-      pendingArgs ++= (arguments filter { x => x.getParentId == Some(opt.id) &&
+      pendingArgs insertAll (0, arguments filter { x => x.getParentId == Some(opt.id) &&
         !pendingArgs.contains(x) })
-      pendingCommands ++= (commands filter { x => x.getParentId == Some(opt.id) &&
+      pendingCommands insertAll (0, commands filter { x => x.getParentId == Some(opt.id) &&
         !pendingCommands.contains(x) })
     }
     def handleError(msg: String) {
