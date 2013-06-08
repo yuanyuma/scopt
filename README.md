@@ -222,7 +222,7 @@ Credits
 - January 13, 2008: Aaron Harnly creates [aaronharnly/scala-options](https://github.com/aaronharnly/scala-options).
 - December 1, 2009: Tim Perrett introduces it [as a gist](http://gist.github.com/246481) on [Parsing command lines argument in a "scalaesque" way](http://www.scala-lang.org/node/4380).
 - January 10, 2010: James Strachan takes the code, adds usage text, sbt build, etc and creates [jstrachan/scopt](https://github.com/jstrachan/scopt), which is also mentioned in [Scala CLI Library?](http://www.scala-lang.org/node/4959).
-- March 4th, 2010: Eugene Yokota joins scopt project to improve usage text, add support for key=value option argument list.
+- March 4th, 2010: Eugene Yokota joins scopt project, improves usage text, and adds support for key=value option and argument list.
 - May 27, 2011: scopt 1.0.0 is released to scala-tools.org.
 - March 18, 2012: Eugene adds immutable parser, forks the project to [scopt/scopt](https://github.com/scopt/scopt), and releases scopt 2.0.0.
 - June 7, 2013: Eugene rewrites scopt from scratch for polymorphic options, and releases scopt 3.0.0.
