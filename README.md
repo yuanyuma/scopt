@@ -105,6 +105,12 @@ This could be extended by defining `Read` instances in the scope.
 
 By default these options are optional. Also, for plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--foo --bar`.
 
+#### Help, Version, and Notes
+
+There are special options with predefined action called `help("help")` and `version("version")`, which prints usage text and header text respectively.
+
+`note("...")` is used add given string to the usage text.
+
 #### Arguments
 
 Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept a single value and are required.
