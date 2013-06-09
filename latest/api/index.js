@@ -1,1 +1,0 @@
-Index.PACKAGES = {"scopt" : [], "scopt.immutable" : [{"case class" : "scopt\/immutable\/OptionParser.html", "name" : "scopt.immutable.OptionParser"}], "scopt.mutable" : [{"case class" : "scopt\/mutable\/OptionParser.html", "name" : "scopt.mutable.OptionParser"}]};
