@@ -85,28 +85,30 @@ private[scopt] case object Head extends OptionDefKind
 /** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
  * set up by an (ordered) sequence of invocations of 
  * the various builder methods such as
- * <a href="#opt[A](Char,String)(Read[A]):Def[A]"><code>opt</code></a> method or
- * <a href="#arg[A](String)(Read[A]):Def[A]"><code>arg</code></a> method.
+ * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A]"><code>opt</code></a> method or
+ * <a href="#arg[A](String)(Read[A]):OptionDef[A]"><code>arg</code></a> method.
  * {{{
- * val parser = new scopt.OptionParser("scopt") {
- *   opt[Int]('f', "foo") action { x =>
- *     c = c.copy(foo = x) } text("foo is an integer property")
- *   opt[String]('o', "out") required() valueName("<file>") action { x =>
- *     c = c.copy(out = x) } text("out is a required string property")
- *   opt[Boolean]("xyz") action { x =>
- *     c = c.copy(xyz = x) } text("xyz is a boolean property")
- *   opt[(String, Int)]("max") action { case (k, v) =>
- *     c = c.copy(libName = k, maxCount = v) } validate { x =>
+ * val parser = new scopt.OptionParser[Config]("scopt") {
+ *   head("scopt", "3.x")
+ *   opt[Int]('f', "foo") action { (x, c) =>
+ *     c.copy(foo = x) } text("foo is an integer property")
+ *   opt[File]('o', "out") required() valueName("<file>") action { (x, c) =>
+ *     c.copy(out = x) } text("out is a required file property")
+ *   opt[(String, Int)]("max") action { case ((k, v), c) =>
+ *     c.copy(libName = k, maxCount = v) } validate { x =>
  *     if (x._2 > 0) success else failure("Value <max> must be >0") 
  *   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
- *   opt[Unit]("verbose") action { _ =>
- *     c = c.copy(verbose = true) } text("verbose is a flag")
+ *   opt[Unit]("verbose") action { (_, c) =>
+ *     c.copy(verbose = true) } text("verbose is a flag")
  *   note("some notes.\n")
  *   help("help") text("prints this usage text")
- *   arg[String]("<mode>") required() action { x =>
- *     c = c.copy(mode = x) } text("required argument")
- *   arg[String]("<file>...") unbounded() action { x =>
- *     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
+ *   arg[File]("<file>...") unbounded() optional() action { (x, c) =>
+ *     c.copy(files = c.files :+ x) } text("optional unbounded args")
+ *   cmd("update") action { (_, c) =>
+ *     c.copy(mode = "update") } text("update is a command.") children {
+ *     opt[Boolean]("xyz") action { (x, c) =>
+ *       c.copy(xyz = x) } text("xyz is a boolean property")
+ *   }
  * }
  * // parser.parse returns Option[C]
  * parser.parse(args, Config()) map { config =>
