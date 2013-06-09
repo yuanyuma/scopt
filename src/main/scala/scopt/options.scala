@@ -85,8 +85,8 @@ private[scopt] case object Head extends OptionDefKind
 /** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
  * set up by an (ordered) sequence of invocations of 
  * the various builder methods such as
- * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A]"><code>opt</code></a> method or
- * <a href="#arg[A](String)(Read[A]):OptionDef[A]"><code>arg</code></a> method.
+ * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A,C]"><code>opt</code></a> method or
+ * <a href="#arg[A](String)(Read[A]):OptionDef[A,C]"><code>arg</code></a> method.
  * {{{
  * val parser = new scopt.OptionParser[Config]("scopt") {
  *   head("scopt", "3.x")

@@ -72,10 +72,11 @@ pomIncludeRepository := { x => false }
 // site
 
 // to preview, preview-site
+// to push, ghpages-push-site
 
 site.settings
 
-site.includeScaladoc()
+site.includeScaladoc("3.0.0/api")
 
 ghpages.settings
 
