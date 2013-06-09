@@ -30,7 +30,7 @@ On the other hand, in mutable parsing style you are expected to modify the confi
 
 ### Immutable parsing
 
-Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.com/scopt/latest/api/) for the details on various builder methods.
+Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.io/scopt/3.0.0/api/#scopt.OptionParser) for the details on various builder methods.
 
 ```scala
 val parser = new scopt.OptionParser[Config]("scopt") {
