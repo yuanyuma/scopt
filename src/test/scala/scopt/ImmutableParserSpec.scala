@@ -10,8 +10,9 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse () out of --foo                                       ${unitParser("--foo")}
     parse () out of -f                                          ${unitParser("-f")} 
 
-  opt[Unit]('f', "foo") action { x => x }; opt[Unit]('b', "bar") should
-    parse () out of -fb                                         ${groupParser("-fb")}
+  opt[Unit]('a', "alice"); opt[Unit]('b', "bob"); opt[Unit]("alicebob") abbr("ab") action { x => x } should
+    parse () out of -ab                                         ${groupParser("-ab")}
+    parse () out of -abab                                       ${groupParser("-abab")}
 
   opt[Int]('f', "foo") action { x => x } should
     parse 1 out of --foo 1                                      ${intParser("--foo", "1")}
@@ -119,8 +120,9 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
 
   val groupParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[Unit]('f', "foo") action { (x, c) => c.copy(flag = true) }
-    opt[Unit]('b', "bar")
+    opt[Unit]('a', "alice")
+    opt[Unit]('b', "bob")
+    opt[Unit]("alicebob") abbr("ab") action { (x, c) => c.copy(flag = true) }
   }
   def groupParser(args: String*) = {
     val result = groupParser1.parse(args.toSeq, Config())

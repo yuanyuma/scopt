@@ -103,7 +103,17 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 
 This could be extended by defining `Read` instances in the scope.
 
-By default these options are optional. Also, for plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--foo --bar`.
+By default these options are optional. 
+
+#### Short options
+
+For plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--foo --bar`.
+
+`opt` accepts only a single characeter, but using `abbr("ab")` a string can be used too:
+
+```scala
+opt[Unit]("no-keepalive") abbr("nk") action { (x, c) => c.copy(keepalive = false) }
+```
 
 #### Help, Version, and Notes
 

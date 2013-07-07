@@ -144,7 +144,7 @@ abstract case class OptionParser[C](programName: String) {
    * @param name name of the option
    */
   def opt[A: Read](x: Char, name: String): OptionDef[A, C] =
-    opt[A](name) shortOpt(x)
+    opt[A](name) abbr(x.toString)
 
   /** adds usage text. */
   def note(x: String): OptionDef[Unit, C] = makeDef[Unit](Note, "") text(x)
@@ -303,6 +303,22 @@ abstract case class OptionParser[C](programName: String) {
     }
     def findCommand(cmd: String): Option[OptionDef[_, C]] =
       pendingCommands find {_.name == cmd}
+    // greedy match
+    def handleShortOptions(g0: String): Unit = {
+      val gs =  (0 to g0.size - 1).toSeq map { n => g0.substring(0, g0.size - n) }
+      gs flatMap { g => pendingOptions map {(g, _)} } find { case (g, opt) =>
+        opt.shortOptTokens("-" + g) == 1
+      } match {
+        case Some(p) =>
+          val (g, option) = p
+          handleOccurrence(option, pendingOptions)
+          handleArgument(option, "")
+          if (g0.drop(g.size) != "") {
+            handleShortOptions(g0 drop g.size)
+          }
+        case None => handleError("Unknown option " + "-" + g0)
+      }
+    }
     while (i < args.length) {
       pendingOptions find {_.tokensToRead(i, args) > 0} match {
         case Some(option) =>
@@ -319,16 +335,8 @@ abstract case class OptionParser[C](programName: String) {
           args(i) match {
             case arg if arg startsWith "--" => handleError("Unknown option " + arg)
             case arg if arg startsWith "-"  =>
-              val cs = (arg drop 1).toSeq
-              if (cs.isEmpty) handleError("Unknown option " + arg)
-              else cs foreach { c =>
-                pendingOptions find {_.shortOptTokens("-" + c.toString) == 1} match {
-                  case Some(option) =>
-                    handleOccurrence(option, pendingOptions)
-                    handleArgument(option, "")
-                  case None => handleError("Unknown option " + "-" + c.toString)
-                }
-              }
+              if (arg == "-") handleError("Unknown option " + arg)
+              else handleShortOptions(arg drop 1)
             case arg if findCommand(arg).isDefined =>
               val cmd = findCommand(arg).get
               handleOccurrence(cmd, pendingCommands)
@@ -365,7 +373,7 @@ class OptionDef[A: Read, C](
   _id: Int,
   _kind: OptionDefKind,
   _name: String,
-  _shortOpt: Option[Char],
+  _shortOpt: Option[String],
   _keyName: Option[String],
   _valueName: Option[String],
   _desc: String,
@@ -387,7 +395,7 @@ class OptionDef[A: Read, C](
     _id: Int = this._id,
     _kind: OptionDefKind = this._kind,
     _name: String = this._name,
-    _shortOpt: Option[Char] = this._shortOpt,
+    _shortOpt: Option[String] = this._shortOpt,
     _keyName: Option[String] = this._keyName,
     _valueName: Option[String] = this._valueName,
     _desc: String = this._desc,
@@ -416,7 +424,7 @@ class OptionDef[A: Read, C](
   override def toString: String = fullName
 
   /** Adds short option -x. */
-  def shortOpt(x: Char): OptionDef[A, C] =
+  def abbr(x: String): OptionDef[A, C] =
     _parser.updateOption(copy(_shortOpt = Some(x)))
   /** Requires the option to appear at least `n` times. */
   def minOccurs(n: Int): OptionDef[A, C] =
@@ -460,7 +468,7 @@ class OptionDef[A: Read, C](
   private[scopt] def callback: (A, C) => C = _action
   private[scopt] def getMinOccurs: Int = _minOccurs
   private[scopt] def getMaxOccurs: Int = _maxOccurs
-  private[scopt] def shortOptOrBlank: String = _shortOpt map {_.toString} getOrElse("")
+  private[scopt] def shortOptOrBlank: String = _shortOpt getOrElse("")
   private[scopt] def hasParent: Boolean = _parentId.isDefined
   private[scopt] def getParentId: Option[Int] = _parentId
 
