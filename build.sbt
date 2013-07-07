@@ -1,6 +1,6 @@
 name := "scopt"
 
-version := "3.1.0-SNAPSHOT"
+version := "3.1.0"
 
 organization := "com.github.scopt"
 
@@ -76,7 +76,7 @@ pomIncludeRepository := { x => false }
 
 site.settings
 
-site.includeScaladoc("3.0.0/api")
+site.includeScaladoc("3.1.0/api")
 
 ghpages.settings
 
