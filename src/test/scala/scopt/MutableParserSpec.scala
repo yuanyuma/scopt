@@ -270,7 +270,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
   def helpParser(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq())
+      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
     var c = Config()    
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
@@ -289,10 +289,12 @@ class MutableParserSpec extends Specification { def is =      s2"""
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
       note("some notes.\n")
       cmd("update") foreach { _ =>
-        c.copy(mode = "update") } text("update is a command.") children {
+        c.copy(mode = "update") } text("update is a command.") children(
+        opt[Unit]("not-keepalive") abbr("nk") foreach { _ =>
+          c.copy(keepalive = false) } text("disable keepalive"),
         opt[Boolean]("xyz") foreach { x =>
           c = c.copy(xyz = x) } text("xyz is a boolean property")
-      }
+      )
     }
     parser.parse(args.toSeq)
     parser.usage === """scopt 3.x
@@ -314,6 +316,8 @@ some notes.
 
 Command: update [options]
 update is a command.
+  -nk | --not-keepalive
+        disable keepalive
   --xyz <value>
         xyz is a boolean property"""
   }

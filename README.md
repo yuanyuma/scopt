@@ -50,10 +50,12 @@ val parser = new scopt.OptionParser[Config]("scopt") {
   arg[File]("<file>...") unbounded() optional() action { (x, c) =>
     c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") action { (_, c) =>
-    c.copy(mode = "update") } text("update is a command.") children {
+    c.copy(mode = "update") } text("update is a command.") children(
+    opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
+      c.copy(keepalive = false) } text("disable keepalive"),
     opt[Boolean]("xyz") action { (x, c) =>
       c.copy(xyz = x) } text("xyz is a boolean property")
-  }
+  )
 }
 // parser.parse returns Option[C]
 parser.parse(args, Config()) map { config =>
@@ -87,6 +89,8 @@ some notes.
 Command: update
 update is a command.
 
+  -nk | --not-keepalive
+        disable keepalive
   --xyz <value>
         xyz is a boolean property
 ```
@@ -162,10 +166,12 @@ Commands may be defined using `cmd("update")`. Commands could be used to express
 ```scala
 arg[String]("<file>...") unbounded() optional()
 cmd("update") action { (_, c) =>
-  c.copy(mode = "update") } text("update is a command.") children {
+  c.copy(mode = "update") } text("update is a command.") children(
+  opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
+    c.copy(keepalive = false) } text("disable keepalive"),
   opt[Boolean]("xyz") action { (x, c) =>
     c.copy(xyz = x) } text("xyz is a boolean property")
-}
+)
 ```
 
 In the above, `update test.txt` would trigger the update command, but `test.txt update` won't.
@@ -174,11 +180,11 @@ Commands could be nested into another command as follows:
 
 ```scala
 cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
-  c.copy(flag = true) } children {
-  cmd("update") children {
+  c.copy(flag = true) } children(
+  cmd("update") children(
     arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
-  }     
-}
+  )     
+)
 ```
 
 ### Mutable parsing
@@ -203,10 +209,10 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
   arg[java.io.File]("<file>...") unbounded() optional() foreach { x =>
     c = c.copy(files = c.files :+ x) } text("optional unbounded args")
   cmd("update") foreach { _ =>
-    c.copy(mode = "update") } text("update is a command.") children {
+    c.copy(mode = "update") } text("update is a command.") children(
     opt[Boolean]("xyz") foreach { x =>
       c = c.copy(xyz = x) } text("xyz is a boolean property")
-  }
+  )
 }
 if (parser.parse(args)) {
   // do stuff

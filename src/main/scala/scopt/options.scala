@@ -105,10 +105,12 @@ private[scopt] case object Head extends OptionDefKind
  *   arg[File]("<file>...") unbounded() optional() action { (x, c) =>
  *     c.copy(files = c.files :+ x) } text("optional unbounded args")
  *   cmd("update") action { (_, c) =>
- *     c.copy(mode = "update") } text("update is a command.") children {
+ *     c.copy(mode = "update") } text("update is a command.") children(
+ *     opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
+ *       c.copy(keepalive = false) } text("disable keepalive"),
  *     opt[Boolean]("xyz") action { (x, c) =>
  *       c.copy(xyz = x) } text("xyz is a boolean property")
- *   }
+ *   )
  * }
  * // parser.parse returns Option[C]
  * parser.parse(args, Config()) map { config =>

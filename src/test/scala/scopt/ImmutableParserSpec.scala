@@ -80,17 +80,17 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse "b" out of a b                                        ${unboundedArgs("a", "b")}
     parse nothing out of Nil                                    ${emptyArgs()}
 
-  cmd("update") action { x => x } children { opt[Unit]("foo") action { x => x} } should
+  cmd("update") action { x => x } children( opt[Unit]("foo") action { x => x} ) should
     parse () out of update                                      ${cmdParser("update")}
     parse () out of update --foo                                ${cmdParser("update", "--foo")}
     fail to parse --foo                                         ${cmdParserFail("--foo")}
 
-  arg[String]("<a>") action { x => x}; cmd("update") children { arg[String]("<b>") } ; cmd("commit") should
-    parse commit out of update foo commit                       ${cmdPosParser("update", "foo", "commit")}
+  arg[String]("<a>") action { x => x}; cmd("update") children(arg[String]("<b>"), arg[String]("<c>")) ; cmd("commit") should
+    parse commit out of update foo bar commit                   ${cmdPosParser("update", "foo", "bar", "commit")}
     parse commit out of commit commit                           ${cmdPosParser("commit", "commit")}
     fail to parse foo update                                    ${cmdPosParserFail("foo", "update")}
 
-  cmd("backend") children { cmd("update") children { arg[String]("<a>") action { x => x} } } should
+  cmd("backend") children( cmd("update") children(arg[String]("<a>") action { x => x} )) should
     parse foo out of backend update foo                         ${nestedCmdParser("backend", "update", "foo")}
     fail to paser backend foo                                   ${nestedCmdParserFail("backend", "foo")}
 
@@ -294,9 +294,9 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
 
   val cmdParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    cmd("update") action { (x, c) => c.copy(flag = true) } children {
+    cmd("update") action { (x, c) => c.copy(flag = true) } children(
       opt[Unit]("foo") action { (x, c) => c.copy(stringValue = "foo") }
-    }
+    )
   }
   def cmdParser(args: String*) = {
     val result = cmdParser1.parse(args.toSeq, Config())
@@ -310,9 +310,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val cmdPosParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
-    cmd("update") action { (x, c) => c.copy(flag = true) } children {
-      arg[String]("<b>") action { (x, c) => c.copy(b = x) } 
-    }
+    cmd("update") action { (x, c) => c.copy(flag = true) } children(
+      arg[String]("<b>") action { (x, c) => c.copy(b = x) },
+      arg[String]("<c>")
+    )
     cmd("commit")
   }
   def cmdPosParser(args: String*) = {
@@ -327,11 +328,11 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val nestedCmdParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
-      c.copy(flag = true) } children {
-      cmd("update") children {
+      c.copy(flag = true) } children(
+      cmd("update") children(
         arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
-      }     
-    }
+      )
+    )
   }
   def nestedCmdParser(args: String*) = {
     val result = nestedCmdParser1.parse(args.toSeq, Config())
@@ -345,7 +346,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   def helpParser(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq())
+      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
@@ -363,10 +364,12 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
         c.copy(files = c.files :+ x) } text("optional unbounded args")
       note("some notes.\n")
       cmd("update") action { (_, c) =>
-        c.copy(mode = "update") } text("update is a command.") children {
+        c.copy(mode = "update") } text("update is a command.") children(
+        opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
+          c.copy(keepalive = false) } text("disable keepalive"),
         opt[Boolean]("xyz") action { (x, c) =>
           c.copy(xyz = x) } text("xyz is a boolean property")
-      }
+      )
     }
     parser.parse(args.toSeq, Config())
     val expectedUsage = """scopt 3.x
@@ -388,6 +391,8 @@ some notes.
 
 Command: update [options]
 update is a command.
+  -nk | --not-keepalive
+        disable keepalive
   --xyz <value>
         xyz is a boolean property"""
     val expectedHeader = """scopt 3.x"""
