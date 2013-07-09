@@ -85,11 +85,12 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     parse () out of update --foo                                ${cmdParser("update", "--foo")}
     fail to parse --foo                                         ${cmdParserFail("--foo")}
 
-   arg[String]("<a>") action { x => x}; cmd("update") children { arg[String]("<b>") } ; cmd("commit") should
+  arg[String]("<a>") action { x => x}; cmd("update") children { arg[String]("<b>") } ; cmd("commit") should
     parse commit out of update foo commit                       ${cmdPosParser("update", "foo", "commit")}
+    parse commit out of commit commit                           ${cmdPosParser("commit", "commit")}
     fail to parse foo update                                    ${cmdPosParserFail("foo", "update")}
 
-   cmd("backend") children { cmd("update") children { arg[String]("<a>") action { x => x} } } should
+  cmd("backend") children { cmd("update") children { arg[String]("<a>") action { x => x} } } should
     parse foo out of backend update foo                         ${nestedCmdParser("backend", "update", "foo")}
     fail to paser backend foo                                   ${nestedCmdParserFail("backend", "foo")}
 
