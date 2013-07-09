@@ -65,10 +65,12 @@ the various builder methods such as
   arg[File](<span class="lit">"<file>..."</span>) unbounded() optional() action { (x, c) <span class="kw">=&gt;</span>
     c.copy(files = c.files :+ x) } text(<span class="lit">"optional unbounded args"</span>)
   cmd(<span class="lit">"update"</span>) action { (_, c) <span class="kw">=&gt;</span>
-    c.copy(mode = <span class="lit">"update"</span>) } text(<span class="lit">"update is a command."</span>) children {
+    c.copy(mode = <span class="lit">"update"</span>) } text(<span class="lit">"update is a command."</span>) children(
+    opt[<span class="std">Unit</span>](<span class="lit">"not-keepalive"</span>) abbr(<span class="lit">"nk"</span>) action { (_, c) <span class="kw">=&gt;</span>
+      c.copy(keepalive = <span class="kw">false</span>) } text(<span class="lit">"disable keepalive"</span>),
     opt[<span class="std">Boolean</span>](<span class="lit">"xyz"</span>) action { (x, c) <span class="kw">=&gt;</span>
       c.copy(xyz = x) } text(<span class="lit">"xyz is a boolean property"</span>)
-  }
+  )
 }
 <span class="cmt">// parser.parse returns Option[C]</span>
 parser.parse(args, Config()) map { config <span class="kw">=&gt;</span>
