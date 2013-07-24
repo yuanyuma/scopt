@@ -79,6 +79,8 @@ class MutableParserSpec extends Specification { def is =      s2"""
     print usage text                                            ${showUsageParser()}
                                                                 """
 
+  import SpecUtil._
+
   def unitParser(args: String*) = {
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
@@ -287,7 +289,7 @@ class MutableParserSpec extends Specification { def is =      s2"""
       help("help") text("prints this usage text")
       arg[File]("<file>...") unbounded() optional() foreach { x =>
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
-      note("some notes.\n")
+      note("some notes.".newline)
       cmd("update") foreach { _ =>
         c.copy(mode = "update") } text("update is a command.") children(
         opt[Unit]("not-keepalive") abbr("nk") foreach { _ =>
@@ -332,13 +334,13 @@ update is a command.
     bos.toString("UTF-8")
   }
   def reportErrorParser(msg: String) = {
-    printParser(_.reportError(msg)) === "Error: foo\n"
+    printParser(_.reportError(msg)) === "Error: foo".newline
   }
   def reportWarningParser(msg: String) = {
-    printParser(_.reportWarning(msg)) === "Warning: foo\n"
+    printParser(_.reportWarning(msg)) === "Warning: foo".newline
   }
   def showHeaderParser() = {
-    printParser(_.showHeader) === "scopt 3.x\n"
+    printParser(_.showHeader) === "scopt 3.x".newline
   }
   def showUsageParser() = {
     printParser(_.showUsage) === """scopt 3.x
