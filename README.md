@@ -250,4 +250,4 @@ Credits
 Changes
 -------
 
-See [notes](https://github.com/scopt/scopt/tree/master/notes).
+See [notes](https://github.com/scopt/scopt/tree/scopt3/notes).
