@@ -1,4 +1,4 @@
-  [21]: https://github.com/scopt/scopt/issues/21
+  [21]: https://github.com/scopt/scopt/pull/21
   [22]: https://github.com/scopt/scopt/issues/22
   [24]: https://github.com/scopt/scopt/issues/24
   [27]: https://github.com/scopt/scopt/issues/27
@@ -17,7 +17,7 @@ This behavior can be reverted by overriding `showUsageOnError`.
 
 ### usage text prints to `Console.out`
 
-Usage text will print to `Console.out` instead of `Console.err` when invoked as `--help`. [#24][24] reported by [@Ceilican][Ceilican].
+Usage text will print to `Console.out` instead of `Console.err` when invoked as `--help`. [#24][24] reported by [@Ceilican][@Ceilican].
 
 ## new features
 
@@ -28,11 +28,11 @@ opt can now be `hidden()`.
     opt[Unit]("debug") hidden() action { (_, c) =>
       c.copy(debug = true) } text("this option is hidden in the usage text")
 
-[#21] contributed by [@tksk][@tksk].
+[#21][21] contributed by [@tksk][@tksk].
 
 ### check configuration
 
-To check consistency among the option values, scopt 3.2.0 introduces `checkConfig`.
+To check consistency among the provided `opt` values, scopt 3.2.0 introduces `checkConfig`.
 
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
