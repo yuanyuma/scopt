@@ -9,7 +9,7 @@ Sonatype
 ```scala
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.1.0"
 
-resolvers += "sonatype-public" at "https://oss.sonatype.org/content/groups/public"
+resolvers += Resolver.sonatypeRepo("public")
 ```
 
 Usage
@@ -46,7 +46,7 @@ val parser = new scopt.OptionParser[Config]("scopt") {
   opt[Unit]("verbose") action { (_, c) =>
     c.copy(verbose = true) } text("verbose is a flag")
   opt[Unit]("debug") hidden() action { (_, c) =>
-    c.copy(debug = true) } text("this option is hidden in any usage text")
+    c.copy(debug = true) } text("this option is hidden in the usage text")
   note("some notes.\n")
   help("help") text("prints this usage text")
   arg[File]("<file>...") unbounded() optional() action { (x, c) =>
@@ -154,6 +154,15 @@ arg[String]("<file>...") optional() unbounded()
 arg[String]("<file>...") minOccurs(0) maxOccurs(1024) // same as above
 ```
 
+#### Visibility
+
+Each opt/arg can be hidden from the usage text using `hidden()` method:
+
+```scala
+opt[Unit]("debug") hidden() action { (_, c) =>
+  c.copy(debug = true) } text("this option is hidden in the usage text")
+```
+
 #### Validation
 
 Each opt/arg can carry multiple validation functions.
@@ -226,7 +235,7 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
   opt[Unit]("verbose") foreach { _ =>
     c = c.copy(verbose = true) } text("verbose is a flag")
   opt[Unit]("debug") hidden() foreach { _ =>
-    c = c.copy(debug = true) } text("this option is hidden in any usage text")
+    c = c.copy(debug = true) } text("this option is hidden in the usage text")
   note("some notes.\n")
   help("help") text("prints this usage text")
   arg[java.io.File]("<file>...") unbounded() optional() foreach { x =>

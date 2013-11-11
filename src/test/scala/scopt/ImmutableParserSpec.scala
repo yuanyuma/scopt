@@ -410,7 +410,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
       opt[Unit]("verbose") action { (_, c) =>
         c.copy(verbose = true) } text("verbose is a flag")
       opt[Unit]("debug") hidden() action { (_, c) =>
-        c.copy(debug = true) } text("this option is hidden in any usage text")
+        c.copy(debug = true) } text("this option is hidden in the usage text")
       help("help") text("prints this usage text")
       arg[File]("<file>...") unbounded() optional() action { (x, c) =>
         c.copy(files = c.files :+ x) } text("optional unbounded args")
@@ -422,7 +422,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
         opt[Boolean]("xyz") action { (x, c) =>
           c.copy(xyz = x) } text("xyz is a boolean property"),
         opt[Unit]("debug-update") hidden() action { (_, c) =>
-          c.copy(debug = true) } text("this option is hidden in any usage text"),
+          c.copy(debug = true) } text("this option is hidden in the usage text"),
         checkConfig { c =>
           if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
       )

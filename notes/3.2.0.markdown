@@ -1,3 +1,4 @@
+  [21]: https://github.com/scopt/scopt/issues/21
   [22]: https://github.com/scopt/scopt/issues/22
   [24]: https://github.com/scopt/scopt/issues/24
   [27]: https://github.com/scopt/scopt/issues/27
@@ -5,12 +6,12 @@
   [@tksk]: https://github.com/tksk
   [@Ceilican]: https://github.com/Ceilican
 
-## breaking change
+## breaking changes
 
 ### shorter error message
 
-Instead of printing a wall of usage text on error, scopt 3.2.0 will by default print just the error message and "Try --help for more information" if `help("help")` is defined.
-This behavior can be reverted back overriding `showUsageOnError`.
+Instead of printing a wall of usage text on error, if `help("help")` option is defined, scopt 3.2.0 prints just the error message and suggests to "Try --help for more information."
+This behavior can be reverted by overriding `showUsageOnError`.
 
 [#22][22] requested by [@tksk][@tksk].
 
@@ -18,7 +19,16 @@ This behavior can be reverted back overriding `showUsageOnError`.
 
 Usage text will print to `Console.out` instead of `Console.err` when invoked as `--help`. [#24][24] reported by [@Ceilican][Ceilican].
 
-## enhancements
+## new features
+
+### hidden options
+
+opt can now be `hidden()`.
+
+    opt[Unit]("debug") hidden() action { (_, c) =>
+      c.copy(debug = true) } text("this option is hidden in the usage text")
+
+[#21] contributed by [@tksk][@tksk].
 
 ### check configuration
 

@@ -319,7 +319,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
       opt[Unit]("verbose") foreach { _ =>
         c = c.copy(verbose = true) } text("verbose is a flag")
       opt[Unit]("debug") hidden() foreach { _ =>
-        c = c.copy(debug = true) } text("this option is hidden in any usage text")
+        c = c.copy(debug = true) } text("this option is hidden in the usage text")
       help("help") text("prints this usage text")
       arg[File]("<file>...") unbounded() optional() foreach { x =>
         c = c.copy(files = c.files :+ x) } text("optional unbounded args")
@@ -331,7 +331,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
         opt[Boolean]("xyz") foreach { x =>
           c = c.copy(xyz = x) } text("xyz is a boolean property"),
         opt[Unit]("debug-update") hidden() foreach { _ =>
-          c = c.copy(debug = true) } text("this option is hidden in any usage text")
+          c = c.copy(debug = true) } text("this option is hidden in the usage text")
       )
     }
     parser.parse(args.toSeq)
