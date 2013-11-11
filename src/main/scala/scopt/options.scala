@@ -144,11 +144,11 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   
-  def reportError(msg: String) {
+  def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)
   }
   
-  def reportWarning(msg: String) {
+  def reportWarning(msg: String): Unit = {
     Console.err.println("Warning: " + msg)
   }
 
@@ -212,7 +212,7 @@ abstract case class OptionParser[C](programName: String) {
     (heads map {_.usage}).mkString(NL)
   }
 
-  def showUsage {
+  def showUsage: Unit = {
     Console.err.println(usage)
   }
   def usage: String = {
@@ -293,7 +293,7 @@ abstract case class OptionParser[C](programName: String) {
     var _config: C = init
     var _error = false
 
-    def pushChildren(opt: OptionDef[_, C]) {
+    def pushChildren(opt: OptionDef[_, C]): Unit = {
       // commands are cleared to guarantee that it appears first
       pendingCommands.clear
 
@@ -304,14 +304,14 @@ abstract case class OptionParser[C](programName: String) {
       pendingCommands insertAll (0, commands filter { x => x.getParentId == Some(opt.id) &&
         !pendingCommands.contains(x) })
     }
-    def handleError(msg: String) {
+    def handleError(msg: String): Unit = {
       if (errorOnUnknownArgument) {
         _error = true
         reportError(msg)
       }
       else reportWarning(msg)
     }
-    def handleArgument(opt: OptionDef[_, C], arg: String) {
+    def handleArgument(opt: OptionDef[_, C], arg: String): Unit = {
       opt.applyArgument(arg, _config) match {
         case Right(c) =>
           _config = c
@@ -321,7 +321,7 @@ abstract case class OptionParser[C](programName: String) {
           xs foreach reportError
       }
     }
-    def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]) {
+    def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]): Unit = {
       occurrences(opt) += 1
       if (occurrences(opt) >= opt.getMaxOccurs) {
         pending -= opt
