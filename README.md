@@ -65,7 +65,7 @@ val parser = new scopt.OptionParser[Config]("scopt") {
 parser.parse(args, Config()) map { config =>
   // do stuff
 } getOrElse {
-  // arguments are bad, usage message will have been displayed
+  // arguments are bad, error message will have been displayed
 }
 ```
 
@@ -125,7 +125,11 @@ opt[Unit]("no-keepalive") abbr("nk") action { (x, c) => c.copy(keepalive = false
 
 #### Help, Version, and Notes
 
-There are special options with predefined action called `help("help")` and `version("version")`, which prints usage text and header text respectively.
+There are special options with predefined action called `help("help")` and `version("version")`, which prints usage text and header text respectively. When `help("help")` is defined, parser will print out short error message when it fails instead of printing the entire usage text. This behavior could be changed by overriding `showUsageOnError` as follows:
+
+```scala
+override def showUsageOnError = true
+```
 
 `note("...")` is used add given string to the usage text.
 

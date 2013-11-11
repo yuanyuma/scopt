@@ -3,7 +3,7 @@ import java.util.{Calendar, GregorianCalendar}
 import java.io.{ByteArrayOutputStream, File}
 import java.net.URI
 
-class ImmutableParserSpec extends Specification { def is =      s2"""
+class ImmutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
   This is a specification to check the immutable parser
   
   opt[Unit]('f', "foo") action { x => x } should
@@ -123,6 +123,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     head("scopt", "3.x")
     opt[Unit]('f', "foo") action { (x, c) => c.copy(flag = true) }
     opt[Unit]("debug") action { (x, c) => c.copy(debug = true) }
+    help("help")
   }
   def unitParser(args: String*) = {
     val result = unitParser1.parse(args.toSeq, Config())
@@ -138,6 +139,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     opt[Unit]('a', "alice")
     opt[Unit]('b', "bob")
     opt[Unit]("alicebob") abbr("ab") action { (x, c) => c.copy(flag = true) }
+    help("help")
   }
   def groupParser(args: String*) = {
     val result = groupParser1.parse(args.toSeq, Config())
@@ -145,8 +147,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   }
 
   val intParser1 = new scopt.OptionParser[Config]("scopt") {
+    override def showUsageOnError = true
     head("scopt", "3.x")
     opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) }
+    help("help")
   }
   def intParser(args: String*) = {
     val result = intParser1.parse(args.toSeq, Config())
@@ -160,6 +164,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val stringParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[String]("foo") action { (x, c) => c.copy(stringValue = x) }
+    help("help")
   }
   def stringParser(args: String*) = {
     val result = stringParser1.parse(args.toSeq, Config())
@@ -169,6 +174,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val doubleParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Double]("foo") action { (x, c) => c.copy(doubleValue = x) }
+    help("help")
   }
   def doubleParser(args: String*) = {
     val result = doubleParser1.parse(args.toSeq, Config())
@@ -182,6 +188,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val boolParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Boolean]("foo") action { (x, c) => c.copy(boolValue = x) }
+    help("help")
   }
   def trueParser(args: String*) = {
     val result = boolParser1.parse(args.toSeq, Config())
@@ -195,6 +202,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val bigDecimalParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[BigDecimal]("foo") action { (x, c) => c.copy(bigDecimalValue = x) }
+    help("help")
   }
   def bigDecimalParser(args: String*) = {
     val result = bigDecimalParser1.parse(args.toSeq, Config())
@@ -208,6 +216,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val calendarParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Calendar]("foo") action { (x, c) => c.copy(calendarValue = x) }
+    help("help")
   }
   def calendarParser(args: String*) = {
     val result = calendarParser1.parse(args.toSeq, Config())
@@ -221,6 +230,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val fileParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[File]("foo") action { (x, c) => c.copy(fileValue = x) }
+    help("help")
   }
   def fileParser(args: String*) = {
     val result = fileParser1.parse(args.toSeq, Config())
@@ -230,6 +240,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val uriParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[URI]("foo") action { (x, c) => c.copy(uriValue = x) }
+    help("help")
   }
   def uriParser(args: String*) = {
     val result = uriParser1.parse(args.toSeq, Config())
@@ -239,6 +250,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val pairParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[(String, Int)]("foo") action { case ((k, v), c) => c.copy(key = k, intValue = v) }
+    help("help")
   }
   def pairParser(args: String*) = {
     val result = pairParser1.parse(args.toSeq, Config())
@@ -252,6 +264,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val requireParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[String]("foo") required() action { (x, c) => c.copy(stringValue = x) }
+    help("help")
   }
   def requiredFail(args: String*) = {
     val result = requireParser1.parse(args.toSeq, Config())
@@ -263,6 +276,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
       if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
       failure("Just because") }
+    help("help")
   }
   def validFail(args: String*) = {
     val result = validParser1.parse(args.toSeq, Config())
@@ -273,6 +287,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     head("scopt", "3.x")
     opt[Unit]('f', "foo") action { (x, c) => c.copy(flag = true) }
     checkConfig { c => if (c.flag) success else failure("flag is false") }
+    help("help")
   }
   def checkSuccess(args: String*) = {
     val result = checkParser1.parse(args.toSeq, Config())
@@ -286,6 +301,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
   val intArgParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     arg[Int]("<port>") action { (x, c) => c.copy(intValue = x) }
+    help("help")
   }
   def intArg(args: String*) = {
     val result = intArgParser1.parse(args.toSeq, Config())
@@ -300,6 +316,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     head("scopt", "3.x")
     arg[String]("<a>") action { (x, c) => c.copy(a = x) }
     arg[String]("<b>") action { (x, c) => c.copy(b = x) }
+    help("help")
   }
   def multipleArgs(args: String*) = {
     val result = multipleArgsParser1.parse(args.toSeq, Config())
@@ -310,6 +327,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     head("scopt", "3.x")
     arg[String]("<a>") action { (x, c) => c.copy(a = x) } unbounded() optional()
     arg[String]("<b>") action { (x, c) => c.copy(b = x) } optional()
+    help("help")
   }
   def unboundedArgs(args: String*) = {
     val result = unboundedArgsParser1.parse(args.toSeq, Config())
@@ -325,6 +343,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     cmd("update") action { (x, c) => c.copy(flag = true) } children(
       opt[Unit]("foo") action { (x, c) => c.copy(stringValue = "foo") }
     )
+    help("help")
   }
   def cmdParser(args: String*) = {
     val result = cmdParser1.parse(args.toSeq, Config())
@@ -343,6 +362,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
       arg[String]("<c>")
     )
     cmd("commit")
+    help("help")
   }
   def cmdPosParser(args: String*) = {
     val result = cmdPosParser1.parse(args.toSeq, Config())
@@ -362,6 +382,7 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
         checkConfig { c => if (c.a == "foo") success else failure("not foo") }
       )
     )
+    help("help")
   }
   def nestedCmdParser(args: String*) = {
     val result = nestedCmdParser1.parse(args.toSeq, Config())
@@ -439,22 +460,27 @@ update is a command.
     head("scopt", "3.x")
     help("help") text("prints this usage text")
   }
-  def printParser(body: scopt.OptionParser[Config] => Unit): String = {
-    val bos = new ByteArrayOutputStream()
-    Console.withErr(bos) { body(printParser1) }
-    bos.toString("UTF-8")
+  def printParserError(body: scopt.OptionParser[Config] => Unit): String = {
+    val errStream = new ByteArrayOutputStream()
+    Console.withErr(errStream) { body(printParser1) }
+    errStream.toString("UTF-8")
+  }
+  def printParserOut(body: scopt.OptionParser[Config] => Unit): String = {
+    val outStream = new ByteArrayOutputStream()
+    Console.withOut(outStream) { body(printParser1) }
+    outStream.toString("UTF-8")
   }
   def reportErrorParser(msg: String) = {
-    printParser(_.reportError(msg)) === "Error: foo".newline
+    printParserError(_.reportError(msg)) === "Error: foo".newline
   }
   def reportWarningParser(msg: String) = {
-    printParser(_.reportWarning(msg)) === "Warning: foo".newline
+    printParserError(_.reportWarning(msg)) === "Warning: foo".newline
   }
   def showHeaderParser() = {
-    printParser(_.showHeader) === "scopt 3.x".newline
+    printParserOut(_.showHeader) === "scopt 3.x".newline
   }
   def showUsageParser() = {
-    printParser(_.showUsage) === """scopt 3.x
+    printParserOut(_.showUsage) === """scopt 3.x
 Usage: scopt [options]
 
   --help

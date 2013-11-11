@@ -1,5 +1,24 @@
+  [22]: https://github.com/scopt/scopt/issues/22
+  [24]: https://github.com/scopt/scopt/issues/24
   [27]: https://github.com/scopt/scopt/issues/27
   [@zero-sum]: https://github.com/zero-sum
+  [@tksk]: https://github.com/tksk
+  [@Ceilican]: https://github.com/Ceilican
+
+## breaking change
+
+### shorter error message
+
+Instead of printing a wall of usage text on error, scopt 3.2.0 will by default print just the error message and "Try --help for more information" if `help("help")` is defined.
+This behavior can be reverted back overriding `showUsageOnError`.
+
+[#22][22] requested by [@tksk][@tksk].
+
+### usage text prints to `Console.out`
+
+Usage text will print to `Console.out` instead of `Console.err` when invoked as `--help`. [#24][24] reported by [@Ceilican][Ceilican].
+
+## enhancements
 
 ### check configuration
 
@@ -13,6 +32,7 @@ To check consistency among the option values, scopt 3.2.0 introduces `checkConfi
         c.copy(xyz = x) } text("xyz is a boolean property"),
       checkConfig { c =>
         if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
+      help("help") text("prints this usage text")
     }
 
 [#27][27] requested by [@zero-sum][@zero-sum].

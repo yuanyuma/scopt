@@ -142,7 +142,11 @@ private[scopt] case object Check extends OptionDefKind
 abstract case class OptionParser[C](programName: String) {
   import OptionDef._
 
+  protected val options = new ListBuffer[OptionDef[_, C]]
+  protected val helpOptions = new ListBuffer[OptionDef[_, C]]
+
   def errorOnUnknownArgument: Boolean = true
+  def showUsageOnError: Boolean = helpOptions.isEmpty
   
   def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)
@@ -150,6 +154,14 @@ abstract case class OptionParser[C](programName: String) {
   
   def reportWarning(msg: String): Unit = {
     Console.err.println("Warning: " + msg)
+  }
+
+  def showTryHelp: Unit = {
+    def oxford(xs: List[String]): String = xs match {
+      case a :: b :: Nil => a + " or " + b
+      case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
+    }
+    Console.err.println("Try " + oxford(helpOptions.toList map {_.fullName}) + " for more information.")
   }
 
   /** adds usage text. */
@@ -183,12 +195,16 @@ abstract case class OptionParser[C](programName: String) {
   /** adds an option invoked by `--name` that displays usage text and exits.
    * @param name name of the option
    */
-  def help(name: String): OptionDef[Unit, C] =
-    opt[Unit](name) action { (x, c) =>
+  def help(name: String): OptionDef[Unit, C] = {
+    val o = opt[Unit](name) action { (x, c) =>
       showUsage
       sys.exit
       c
     }
+    helpOptions += o
+    o
+  }
+    
 
   /** adds an option invoked by `--name` that displays header text and exits.
    * @param name name of the option
@@ -205,7 +221,7 @@ abstract case class OptionParser[C](programName: String) {
     makeDef[Unit](Check, "") validateConfig(f)
 
   def showHeader {
-    Console.err.println(header)
+    Console.out.println(header)
   }
   def header: String = {
     import OptionDef._
@@ -213,6 +229,9 @@ abstract case class OptionParser[C](programName: String) {
   }
 
   def showUsage: Unit = {
+    Console.out.println(usage)
+  }
+  def showUsageAsError: Unit = {
     Console.err.println(usage)
   }
   def usage: String = {
@@ -258,7 +277,6 @@ abstract case class OptionParser[C](programName: String) {
   /** call this to express failure in custom validation. */
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
-  protected val options = new ListBuffer[OptionDef[_, C]]
   protected def heads: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Head}
   protected def nonArgs: Seq[OptionDef[_, C]] = options.toSeq filter { case x => x.kind == Opt || x.kind == Note }
   protected def arguments: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Arg}
@@ -396,7 +414,8 @@ abstract case class OptionParser[C](programName: String) {
     }
     handleChecks(_config)
     if (_error) {
-      showUsage
+      if (showUsageOnError) showUsageAsError
+      else showTryHelp
       None
     }
     else Some(_config)
