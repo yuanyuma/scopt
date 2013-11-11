@@ -7,7 +7,7 @@ Sonatype
 --------
 
 ```scala
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.1.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 
 resolvers += Resolver.sonatypeRepo("public")
 ```
