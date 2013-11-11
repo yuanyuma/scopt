@@ -1,0 +1,18 @@
+  [27]: https://github.com/scopt/scopt/issues/27
+  [@zero-sum]: https://github.com/zero-sum
+
+### check configuration
+
+To check consistency among the option values, scopt 3.2.0 introduces `checkConfig`.
+
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
+      opt[Unit]('k', "keepalive") action { (x, c) =>
+        c.copy(keepalive= true) }
+      opt[Boolean]("xyz") action { (x, c) =>
+        c.copy(xyz = x) } text("xyz is a boolean property"),
+      checkConfig { c =>
+        if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
+    }
+
+[#27][27] requested by [@zero-sum][@zero-sum].

@@ -56,7 +56,9 @@ val parser = new scopt.OptionParser[Config]("scopt") {
     opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
       c.copy(keepalive = false) } text("disable keepalive"),
     opt[Boolean]("xyz") action { (x, c) =>
-      c.copy(xyz = x) } text("xyz is a boolean property")
+      c.copy(xyz = x) } text("xyz is a boolean property"),
+    checkConfig { c =>
+      if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
   )
 }
 // parser.parse returns Option[C]
@@ -161,6 +163,17 @@ opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
 The first function validates if the values are positive, and
 the second function always fails.
 
+#### Check configuration
+
+Consistency among the option values can be checked using `checkConfig`.
+
+```scala
+checkConfig { c =>
+  if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
+```
+
+These are called at the end of parsing.
+
 #### Commands
 
 Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get inserted in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level. It is generally recommended to avoid mixing args both in parent level and commands to avoid confusion.
@@ -172,7 +185,9 @@ cmd("update") action { (_, c) =>
   opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
     c.copy(keepalive = false) } text("disable keepalive"),
   opt[Boolean]("xyz") action { (x, c) =>
-    c.copy(xyz = x) } text("xyz is a boolean property")
+    c.copy(xyz = x) } text("xyz is a boolean property"),
+  checkConfig { c =>
+    if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
 )
 ```
 

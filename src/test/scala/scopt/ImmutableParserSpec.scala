@@ -72,6 +72,10 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     if (x > 0) success else failure("Option --foo must be >0") } should
     fail to parse --foo 0                                       ${validFail("--foo", "0")}
 
+  opt[Unit]('f', "foo") action { x => x }; checkConfig { c => if (c.flag) success else failure("flag is false") } should
+    parse () out of --foo                                       ${checkSuccess("--foo")}
+    fail to parse empty                                         ${checkFail()}
+
   arg[Int]("<port>") action { x => x } should
     parse 80 out of 80                                          ${intArg("80")}
     be required and should fail to parse Nil                    ${intArgFail()}
@@ -265,6 +269,20 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     result === None
   }
 
+  val checkParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Unit]('f', "foo") action { (x, c) => c.copy(flag = true) }
+    checkConfig { c => if (c.flag) success else failure("flag is false") }
+  }
+  def checkSuccess(args: String*) = {
+    val result = checkParser1.parse(args.toSeq, Config())
+    result.get.flag === true
+  }
+  def checkFail(args: String*) = {
+    val result = checkParser1.parse(args.toSeq, Config())
+    result === None
+  }
+
   val intArgParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     arg[Int]("<port>") action { (x, c) => c.copy(intValue = x) }
@@ -340,7 +358,8 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
     cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
       c.copy(flag = true) } children(
       cmd("update") children(
-        arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
+        arg[String]("<a>") action { (x, c) => c.copy(a = x) },
+        checkConfig { c => if (c.a == "foo") success else failure("not foo") }
       )
     )
   }
@@ -382,7 +401,9 @@ class ImmutableParserSpec extends Specification { def is =      s2"""
         opt[Boolean]("xyz") action { (x, c) =>
           c.copy(xyz = x) } text("xyz is a boolean property"),
         opt[Unit]("debug-update") hidden() action { (_, c) =>
-          c.copy(debug = true) } text("this option is hidden in any usage text")
+          c.copy(debug = true) } text("this option is hidden in any usage text"),
+        checkConfig { c =>
+          if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
       )
     }
     parser.parse(args.toSeq, Config())

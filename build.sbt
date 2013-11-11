@@ -1,6 +1,6 @@
 name := "scopt"
 
-version := "3.1.1-SNAPSHOT"
+version := "3.2.0-SNAPSHOT"
 
 organization := "com.github.scopt"
 
