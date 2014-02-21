@@ -109,7 +109,16 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 - `java.util.Calendar` accepts a value like `--foo 2000-12-01`
 - A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
 
-This could be extended by defining `Read` instances in the scope.
+This could be extended by defining `Read` instances in the scope. For example,
+
+```scala
+object WeekDays extends Enumeration {
+  type WeekDays = Value
+  val Mon, Tue, Wed, Thur, Fri, Sat, Sun = Value
+}
+implicit val weekDaysRead: scopt.Read[WeekDays.Value] =
+  scopt.Read.reads(WeekDays withName _)
+```
 
 By default these options are optional. 
 
