@@ -12,7 +12,7 @@ description := """a command line options parsing library"""
 
 scalaVersion := "2.11.0-RC3"
 
-crossScalaVersions := Seq("2.11.0-RC3", "2.11.0-RC1", "2.10.3", "2.10.3", "2.9.1", "2.9.2", "2.9.3")
+crossScalaVersions := Seq("2.11.0-RC3", "2.11.0-RC1", "2.10.3", "2.9.1", "2.9.2", "2.9.3")
 
 // libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 //   val testVersion = sv match {
