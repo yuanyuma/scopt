@@ -2,10 +2,14 @@ package scopt
 
 import collection.mutable.{ListBuffer, ListMap}
 
-trait Read[A] {
+trait Read[A] { self =>
   def arity: Int
   def tokensToRead: Int = if (arity == 0) 0 else 1
   def reads: String => A
+  def map[B](f: A => B): Read[B] = new Read[B] {
+    val arity = self.arity
+    val reads = self.reads andThen f
+  }
 }
 object Read {
   import java.util.{Locale, Calendar, GregorianCalendar}
