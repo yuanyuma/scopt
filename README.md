@@ -126,7 +126,7 @@ By default these options are optional.
 
 For plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--foo --bar`.
 
-`opt` accepts only a single characeter, but using `abbr("ab")` a string can be used too:
+`opt` accepts only a single character, but using `abbr("ab")` a string can be used too:
 
 ```scala
 opt[Unit]("no-keepalive") abbr("nk") action { (x, c) => c.copy(keepalive = false) }
