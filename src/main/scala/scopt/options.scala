@@ -66,6 +66,18 @@ object Read {
     val arity = 0
     val reads = { (s: String) => () }
   }
+
+  val sep = ","
+
+  // reads("1,2,3,4,5") == Seq(1,2,3,4,5)
+  implicit def seqRead[A: Read]: Read[Seq[A]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[A]].reads)
+  }
+
+  // reads("1=false,2=true") == Map(1 -> false, 2 -> true)
+  implicit def mapRead[K: Read, V: Read]: Read[Map[K,V]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K,V)]].reads).toMap
+  }
 }
 
 trait Zero[A] {
