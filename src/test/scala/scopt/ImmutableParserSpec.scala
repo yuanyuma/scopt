@@ -59,6 +59,14 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     fail to parse --foo bar                                     ${pairParserFail("--foo", "bar")}
     fail to parse --foo k=bar                                   ${pairParserFail("--foo", "k=bar")}
 
+  opt[Seq[Int]]("foo") action { x => x } should
+    parse Seq(1,2,3) out of --foo "1,2,3"                       ${seqParser("--foo","1,2,3")}
+    fail to parse --foo                                         ${seqParserFail("--foo")}
+
+  opt[Map[String,Boolean]]("foo") action { x => x } should
+    parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
+    fail to parse --foo                                         ${mapParserFail("foo")}
+
   opt[String]("foo") required() action { x => x } should
     fail to parse Nil                                           ${requiredFail()}
 
@@ -260,6 +268,36 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     val result = pairParser1.parse(args.toSeq, Config())
     result === None
   }
+
+  val seqParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Seq[Int]]("foo") action { case (s, c) => c.copy(seqInts = s) }
+    help("help")
+  }
+  def seqParser(args: String*) = {
+    val result = seqParser1.parse(args.toSeq, Config())
+    result.get.seqInts === Seq(1,2,3)
+  }
+  def seqParserFail(args: String*) = {
+    val result = seqParser1.parse(args.toSeq, Config())
+    result === None
+  }
+
+  val mapParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Map[String,Boolean]]("foo") action { case (s, c) => c.copy(mapStringToBool = s) }
+    help("help")
+  }
+  def mapParser(args: String*) = {
+    val result = mapParser1.parse(args.toSeq, Config())
+    result.get.mapStringToBool === Map("true" -> true,"false" -> false)
+  }
+  def mapParserFail(args: String*) = {
+    val result = mapParser1.parse(args.toSeq, Config())
+    result === None
+  }
+
+  //parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
 
   val requireParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
@@ -494,5 +532,7 @@ Usage: scopt [options]
     calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
     fileValue: File = new File("."),
     uriValue: URI = new URI("http://localhost"),
-    key: String = "", a: String = "", b: String = "")
+    key: String = "", a: String = "", b: String = "",
+    seqInts: Seq[Int] = Seq(),
+    mapStringToBool: Map[String,Boolean] = Map())
 }
