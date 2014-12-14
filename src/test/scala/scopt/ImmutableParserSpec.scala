@@ -434,7 +434,8 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   def helpParser(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
+      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
+      jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
@@ -445,6 +446,10 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
         c.copy(libName = k, maxCount = v) } validate { x =>
         if (x._2 > 0) success else failure("Value <max> must be >0") 
       } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
+      opt[Seq[File]]('j', "jars") valueName("<jar1>,<jar2>...") action { (x,c) =>
+         c.copy(jars = x) } text("jars to include")
+      opt[Map[String,String]]("kwargs") valueName("k1=v1,k2=v2...") action { (x, c) =>
+        c.copy(kwargs = x) } text("other arguments")
       opt[Unit]("verbose") action { (_, c) =>
         c.copy(verbose = true) } text("verbose is a flag")
       opt[Unit]("debug") hidden() action { (_, c) =>
@@ -475,6 +480,10 @@ Usage: scopt [update] [options] [<file>...]
         out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
+  -j <jar1>,<jar2>... | --jars <jar1>,<jar2>...
+        jars to include
+  --kwargs k1=v1,k2=v2...
+        other arguments
   --verbose
         verbose is a flag
   --help
