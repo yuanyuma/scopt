@@ -4,9 +4,16 @@
 
 ## comma-separated values
 
-scopt 3.3.0 adds support for comma-separated values that maps to `Seq[A]` and `Map[K, V]` where `A`, `K` and `V` support `Read`.
+scopt 3.3.0 adds support for comma-separated values that map to `Seq[A]` and `Map[K, V]` (where `A`, `K` and `V` are instance of `Read`).
 
 - A `Seq[File]` accepts a string containing comma-separated values such as `--jars foo.jar,bar.jar`
 - A `Map[String, String]` accepts a string containing comma-separated pairs like `--kwargs key1=val1,key2=val2`
+
+Here's how they can be used:
+
+    opt[Seq[File]]('j', "jars") valueName("<jar1>,<jar2>...") action { (x,c) =>
+      c.copy(jars = x) } text("jars to include")
+    opt[Map[String,String]]("kwargs") valueName("k1=v1,k2=v2...") action { (x, c) =>
+      c.copy(kwargs = x) } text("other arguments")
 
 [#56][56] by [@melrief][@melrief].
