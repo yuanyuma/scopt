@@ -1,6 +1,6 @@
 name := "scopt"
 
-version := "3.2.0"
+version := "3.3.0"
 
 organization := "com.github.scopt"
 
@@ -10,16 +10,16 @@ licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-lic
 
 description := """a command line options parsing library"""
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.4"
 
-crossScalaVersions := Seq("2.11.0", "2.10.3", "2.9.1", "2.9.2", "2.9.3")
+crossScalaVersions := Seq("2.11.4", "2.10.4", "2.9.1", "2.9.2", "2.9.3")
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   val testVersion = sv match {
     case "2.9.3" => "1.12.5-SNAPSHOT"
     case "2.9.2" => "1.12.3"
     case "2.9.1" => "1.12.4"
-    case "2.10.3" => "2.3.3"
+    case "2.10.4" => "2.3.3"
     case x if x startsWith "2.11" => "2.3.11"
     case _ => error("Unsupported Scala version " + sv)
   }

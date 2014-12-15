@@ -1,0 +1,12 @@
+  [56]: https://github.com/scopt/scopt/pull/56
+  [@melrief]: https://github.com/melrief
+
+
+## comma-separated values
+
+scopt 3.3.0 adds support for comma-separated values that maps to `Seq[A]` and `Map[K, V]` where `A`, `K` and `V` support `Read`.
+
+- A `Seq[File]` accepts a string containing comma-separated values such as `--jars foo.jar,bar.jar`
+- A `Map[String, String]` accepts a string containing comma-separated pairs like `--kwargs key1=val1,key2=val2`
+
+[#56][56] by [@melrief][@melrief].

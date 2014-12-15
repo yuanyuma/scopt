@@ -7,7 +7,7 @@ Sonatype
 --------
 
 ```scala
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
 
 resolvers += Resolver.sonatypeRepo("public")
 ```
@@ -30,7 +30,7 @@ On the other hand, in mutable parsing style you are expected to modify the confi
 
 ### Immutable parsing
 
-Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.io/scopt/3.1.0/api/#scopt.OptionParser) for the details on various builder methods.
+Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.io/scopt/3.3.0/api/#scopt.OptionParser) for the details on various builder methods.
 
 ```scala
 val parser = new scopt.OptionParser[Config]("scopt") {
@@ -44,7 +44,7 @@ val parser = new scopt.OptionParser[Config]("scopt") {
     if (x._2 > 0) success else failure("Value <max> must be >0") 
   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
   opt[Seq[File]]('j', "jars") valueName("<jar1>,<jar2>...") action { (x,c) =>
-     c.copy(jars = x) } text("jars to include")
+    c.copy(jars = x) } text("jars to include")
   opt[Map[String,String]]("kwargs") valueName("k1=v1,k2=v2...") action { (x, c) =>
     c.copy(kwargs = x) } text("other arguments")
   opt[Unit]("verbose") action { (_, c) =>
@@ -117,7 +117,7 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 - `java.util.Calendar` accepts a value like `--foo 2000-12-01`
 - A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
 - A `Seq[File]` accepts a string containing comma-separated values such as `--jars foo.jar,bar.jar`
-- A `Map[String,String]` accepts a string containing comma-separated pairs like `--kwargs key1=val1,key2=val2`
+- A `Map[String, String]` accepts a string containing comma-separated pairs like `--kwargs key1=val1,key2=val2`
 
 This could be extended by defining `Read` instances in the scope. For example,
 
