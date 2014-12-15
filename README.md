@@ -22,7 +22,8 @@ Either case, first you need a case class that represents the configuration:
 import java.io.File
 case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
   libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-  mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
+  mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
+  jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
 ```
 
 In immutable parsing style, a config object is passed around as an argument into `action` callbacks.
@@ -66,10 +67,12 @@ val parser = new scopt.OptionParser[Config]("scopt") {
   )
 }
 // parser.parse returns Option[C]
-parser.parse(args, Config()) map { config =>
-  // do stuff
-} getOrElse {
-  // arguments are bad, error message will have been displayed
+parser.parse(args, Config()) match {
+  case Some(config) =>
+    // do stuff
+
+  case None =>
+    // arguments are bad, error message will have been displayed
 }
 ```
 
