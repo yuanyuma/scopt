@@ -56,7 +56,7 @@ object Read {
         case (k, v) => implicitly[Read[A1]].reads(k) -> implicitly[Read[A2]].reads(v)
       }
     }
-  } 
+  }
   private def splitKeyValue(s: String): (String, String) =
     s.indexOf('=') match {
       case -1     => throw new IllegalArgumentException("Expected a key=value pair")
@@ -106,7 +106,7 @@ object Validation {
         case xs       => Left(xs)
       }
     }
-  }  
+  }
 }
 
 private[scopt] sealed trait OptionDefKind {}
@@ -163,16 +163,16 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
-  
+
   def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)
   }
-  
+
   def reportWarning(msg: String): Unit = {
     Console.err.println("Warning: " + msg)
   }
 
-  def showTryHelp: Unit = {
+  def showTryHelp(): Unit = {
     def oxford(xs: List[String]): String = xs match {
       case a :: b :: Nil => a + " or " + b
       case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
@@ -213,22 +213,22 @@ abstract case class OptionParser[C](programName: String) {
    */
   def help(name: String): OptionDef[Unit, C] = {
     val o = opt[Unit](name) action { (x, c) =>
-      showUsage
-      sys.exit
+      showUsage()
+      sys.exit()
       c
     }
     helpOptions += o
     o
   }
-    
+
 
   /** adds an option invoked by `--name` that displays header text and exits.
    * @param name name of the option
    */
   def version(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
-      showHeader
-      sys.exit
+      showHeader()
+      sys.exit()
       c
     }
 
@@ -236,7 +236,7 @@ abstract case class OptionParser[C](programName: String) {
   def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
     makeDef[Unit](Check, "") validateConfig(f)
 
-  def showHeader {
+  def showHeader() {
     Console.out.println(header)
   }
   def header: String = {
@@ -244,10 +244,10 @@ abstract case class OptionParser[C](programName: String) {
     (heads map {_.usage}).mkString(NL)
   }
 
-  def showUsage: Unit = {
+  def showUsage(): Unit = {
     Console.out.println(usage)
   }
-  def showUsageAsError: Unit = {
+  def showUsageAsError(): Unit = {
     Console.err.println(usage)
   }
   def usage: String = {
@@ -329,7 +329,7 @@ abstract case class OptionParser[C](programName: String) {
 
     def pushChildren(opt: OptionDef[_, C]): Unit = {
       // commands are cleared to guarantee that it appears first
-      pendingCommands.clear
+      pendingCommands.clear()
 
       pendingOptions insertAll (0, nonArgs filter { x => x.getParentId == Some(opt.id) &&
         !pendingOptions.contains(x) })
@@ -408,7 +408,7 @@ abstract case class OptionParser[C](programName: String) {
             case arg if findCommand(arg).isDefined =>
               val cmd = findCommand(arg).get
               handleOccurrence(cmd, pendingCommands)
-              handleArgument(cmd, "")                            
+              handleArgument(cmd, "")
             case arg if pendingArgs.isEmpty => handleError("Unknown argument '" + arg + "'")
             case arg =>
               val first = pendingArgs.head
@@ -430,8 +430,8 @@ abstract case class OptionParser[C](programName: String) {
     }
     handleChecks(_config)
     if (_error) {
-      if (showUsageOnError) showUsageAsError
-      else showTryHelp
+      if (showUsageOnError) showUsageAsError()
+      else showTryHelp()
       None
     }
     else Some(_config)
@@ -455,7 +455,7 @@ class OptionDef[A: Read, C](
   _maxOccurs: Int,
   _isHidden: Boolean) {
   import OptionDef._
-  
+
   def this(parser: OptionParser[C], kind: OptionDefKind, name: String) =
     this(_parser = parser, _id = OptionDef.generateId, _kind = kind, _name = name,
       _shortOpt = None, _keyName = None, _valueName = None,
@@ -487,7 +487,7 @@ class OptionDef[A: Read, C](
       _isHidden = _isHidden)
 
   private[this] def read: Read[A] = implicitly[Read[A]]
-  
+
   /** Adds a callback function. */
   def action(f: (A, C) => C): OptionDef[A, C] =
     _parser.updateOption(copy(_action = (a: A, c: C) => { f(a, _action(a, c)) }))
@@ -613,10 +613,10 @@ class OptionDef[A: Read, C](
         WW + (_shortOpt map { o => "-" + o + " " + valueString + " | " } getOrElse { "" }) +
         fullName + " " + valueString + NLTB + _desc
       case Opt =>
-        WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) + 
-        fullName + NLTB + _desc    
-    }    
-  private[scopt] def keyValueString: String = (_keyName getOrElse defaultKeyName) + "=" + valueString 
+        WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) +
+        fullName + NLTB + _desc
+    }
+  private[scopt] def keyValueString: String = (_keyName getOrElse defaultKeyName) + "=" + valueString
   private[scopt] def valueString: String = (_valueName getOrElse defaultValueName)
   def shortDescription: String =
     kind match {
@@ -631,7 +631,7 @@ class OptionDef[A: Read, C](
     }
   private[scopt] def argName: String =
     kind match {
-      case Arg if getMinOccurs == 0 => "[" + fullName + "]" 
+      case Arg if getMinOccurs == 0 => "[" + fullName + "]"
       case _   => fullName
     }
 }
