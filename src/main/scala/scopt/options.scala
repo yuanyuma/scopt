@@ -80,8 +80,8 @@ object Read {
   }
 
   // reads("1=false,1=true") == List((1 -> false), (1 -> true))
-  implicit def listTupleRead[K: Read, V: Read]: Read[List[(K,V)]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[(K,V)]].reads).toList
+  implicit def seqTupleRead[K: Read, V: Read]: Read[Seq[(K,V)]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K,V)]].reads).toSeq
   }
 }
 
