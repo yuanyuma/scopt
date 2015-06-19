@@ -1,17 +1,19 @@
 name := "scopt"
-
 version := "3.3.0"
 
+// site
+// to preview, preview-site
+// to push, ghpages-push-site
+site.settings
+site.includeScaladoc(s"3.3.0/api")
+ghpages.settings
+git.remoteRepo := "git@github.com:scopt/scopt.git"
+
 organization := "com.github.scopt"
-
 homepage := Some(url("https://github.com/scopt/scopt"))
-
 licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
-
 description := """a command line options parsing library"""
-
 scalaVersion := "2.11.4"
-
 crossScalaVersions := Seq("2.11.4", "2.10.4", "2.9.1", "2.9.2", "2.9.3")
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
@@ -27,6 +29,5 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 }
 
 resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public"
-
 // scaladoc fix
 unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
