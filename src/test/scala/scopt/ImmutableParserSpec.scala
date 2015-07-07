@@ -517,7 +517,7 @@ update is a command.
   }
 
   lazy val terminationSafeParser1 = new scopt.OptionParser[Config]("scopt") {
-    override def terminationHandler() = () ⇒ ()
+    override def terminate() = () ⇒ ()
     version("version")
     opt[Unit]("debug") action { (x, c) => c.copy(debug = true) }
     help("help") text("prints this usage text")

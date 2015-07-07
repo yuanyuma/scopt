@@ -241,11 +241,11 @@ cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
 
 ### Termination Handling
 
-By default, when the `help` or `version` are invoked, they call `sys.exit` after printing the help or version information. If this is not desired (e.g. testing purposes), you can override the `terminationHandler` method:
+By default, when the `help` or `version` are invoked, they call `sys.exit` after printing the help or version information. If this is not desired (e.g. testing purposes), you can override the `terminate()` method:
 
 ```scala
 // Overriding the termination handler to no-op.
-override def terminationHandler = () => ()
+override def terminate() = () => ()
 ```
 
 ### Mutable parsing
