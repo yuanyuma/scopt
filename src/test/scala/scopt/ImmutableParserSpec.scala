@@ -1,8 +1,12 @@
+import java.security.{AccessControlException, Permission}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+
 import org.specs2._
 import java.util.{Calendar, GregorianCalendar}
 import java.io.{ByteArrayOutputStream, File}
 import java.net.URI
 
+import scala.util.Try
 class ImmutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
   This is a specification to check the immutable parser
   
@@ -123,6 +127,10 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
 
   showUsage should
     print usage text                                            ${showUsageParser()}
+
+  terminationSafeParser should
+    not terminate on `--help`                                   ${terminationSafeParser("--help")}
+    not terminate on `--version`                                ${terminationSafeParser("--version")}
                                                                 """
 
   import SpecUtil._
@@ -507,6 +515,44 @@ update is a command.
     head("scopt", "3.x")
     help("help") text("prints this usage text")
   }
+
+  lazy val terminationSafeParser1 = new scopt.OptionParser[Config]("scopt") {
+    override def terminate() = () ⇒ ()
+    version("version")
+    opt[Unit]("debug") action { (x, c) => c.copy(debug = true) }
+    help("help") text("prints this usage text")
+  }
+
+  def terminationSafeParser(args: String*) = {
+    val exitWasCalled = new AtomicBoolean(false)
+    val sec = System.getSecurityManager
+
+    val exitInhibitor = new SecurityManager() {
+      override def checkExit(status: Int): Unit = {
+        exitWasCalled.set(true)
+        throw new SecurityException("Exit called when it shouldn't have been")
+      }
+      override def checkPermission(perm: Permission): Unit = {
+        perm.getName match {
+          case "setSecurityManager" | "modifyThread" ⇒ ()
+          case _ ⇒ perm.getActions match {
+            case "read" ⇒ ()
+            case _ ⇒ super.checkPermission(perm)
+          }
+        }
+      }
+    }
+
+    System.setSecurityManager(exitInhibitor)
+
+    val result = terminationSafeParser1.parse(args.toSeq, Config())
+
+    // Reset to previous.
+    System.setSecurityManager(sec)
+
+    result.isDefined && !exitWasCalled.get()
+  }
+
   def printParserError(body: scopt.OptionParser[Config] => Unit): String = {
     val errStream = new ByteArrayOutputStream()
     Console.withErr(errStream) { body(printParser1) }
@@ -524,10 +570,10 @@ update is a command.
     printParserError(_.reportWarning(msg)) === "Warning: foo".newline
   }
   def showHeaderParser() = {
-    printParserOut(_.showHeader) === "scopt 3.x".newline
+    printParserOut(_.showHeader()) === "scopt 3.x".newline
   }
   def showUsageParser() = {
-    printParserOut(_.showUsage) === """scopt 3.x
+    printParserOut(_.showUsage()) === """scopt 3.x
 Usage: scopt [options]
 
   --help

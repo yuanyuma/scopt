@@ -156,13 +156,12 @@ private[scopt] case object Check extends OptionDefKind
  * }}}
  */
 abstract case class OptionParser[C](programName: String) {
-  import OptionDef._
-
   protected val options = new ListBuffer[OptionDef[_, C]]
   protected val helpOptions = new ListBuffer[OptionDef[_, C]]
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
+  def terminate(): Unit = sys.exit
 
   def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)
@@ -214,7 +213,7 @@ abstract case class OptionParser[C](programName: String) {
   def help(name: String): OptionDef[Unit, C] = {
     val o = opt[Unit](name) action { (x, c) =>
       showUsage()
-      sys.exit()
+      terminate()
       c
     }
     helpOptions += o
@@ -228,7 +227,7 @@ abstract case class OptionParser[C](programName: String) {
   def version(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
       showHeader()
-      sys.exit()
+      terminate()
       c
     }
 

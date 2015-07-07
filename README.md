@@ -239,6 +239,15 @@ cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
 )
 ```
 
+### Termination Handling
+
+By default, when the `help` or `version` are invoked, they call `sys.exit` after printing the help or version information. If this is not desired (e.g. testing purposes), you can override the `terminate()` method:
+
+```scala
+// Overriding the termination handler to no-op.
+override def terminate() = () => ()
+```
+
 ### Mutable parsing
 
 Create a `scopt.OptionParser[Unit]` and customize it with the options you need, passing in functions to process each option or argument. Use `foreach` instead of `action`.
