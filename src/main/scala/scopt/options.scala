@@ -569,7 +569,7 @@ class OptionDef[A: Read, C](
       }
     } catch {
       case e: NumberFormatException => Left(Seq(shortDescription.capitalize + " expects a number but was given '" + arg + "'"))
-      case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' whis is invalid"))
+      case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
       case e: Throwable             => Left(Seq(shortDescription.capitalize + " failed when given '" + arg + "'. " + e.getMessage))
     }
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
