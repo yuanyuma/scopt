@@ -1,5 +1,7 @@
 package scopt
 
+import java.net.UnknownHostException
+
 import collection.mutable.{ListBuffer, ListMap}
 
 trait Read[A] { self =>
@@ -16,6 +18,7 @@ object Read {
   import java.text.SimpleDateFormat
   import java.io.File
   import java.net.URI
+  import java.net.InetAddress
   def reads[A](f: String => A): Read[A] = new Read[A] {
     val arity = 1
     val reads = f
@@ -48,6 +51,7 @@ object Read {
     }
   implicit val fileRead: Read[File]           = reads { new File(_) }
   implicit val uriRead: Read[URI]             = reads { new URI(_) }
+  implicit val inetAddress: Read[InetAddress] = reads { InetAddress.getByName(_) }
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
     val arity = 2
@@ -565,6 +569,7 @@ class OptionDef[A: Read, C](
       }
     } catch {
       case e: NumberFormatException => Left(Seq(shortDescription.capitalize + " expects a number but was given '" + arg + "'"))
+      case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' whis is invalid"))
       case e: Throwable             => Left(Seq(shortDescription.capitalize + " failed when given '" + arg + "'. " + e.getMessage))
     }
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
