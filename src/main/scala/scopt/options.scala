@@ -641,7 +641,7 @@ class OptionDef[A: Read, C](
 }
 
 private[scopt] object OptionDef {
-  val UNBOUNDED = 8192
+  val UNBOUNDED = Int.MaxValue
   val NL = System.getProperty("line.separator")
   val WW = "  "
   val TB = "        "
