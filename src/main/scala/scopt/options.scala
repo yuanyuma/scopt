@@ -19,6 +19,7 @@ object Read {
   import java.io.File
   import java.net.URI
   import java.net.InetAddress
+  import scala.concurrent.duration.Duration
   def reads[A](f: String => A): Read[A] = new Read[A] {
     val arity = 1
     val reads = f
@@ -52,6 +53,7 @@ object Read {
   implicit val fileRead: Read[File]           = reads { new File(_) }
   implicit val uriRead: Read[URI]             = reads { new URI(_) }
   implicit val inetAddress: Read[InetAddress] = reads { InetAddress.getByName(_) }
+  implicit val durationRead: Read[Duration]   = reads { Duration(_) }
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
     val arity = 2

@@ -118,6 +118,7 @@ Command line options are defined using `opt[A]('f', "foo")` or `opt[A]("foo")` w
 - `Int`, `Long`, `Double`, `String`, `BigInt`, `BigDecimal`, `java.io.File`, `java.net.URI`, and `java.net.InetAddress` accept a value like `--foo 80` or `--foo:80`
 - `Boolean` accepts a value like `--foo true` or `--foo:1`
 - `java.util.Calendar` accepts a value like `--foo 2000-12-01`
+- `scala.concurrent.duration.Duration` accepts a value like `--foo 30s`
 - A pair of types like `(String, Int)` accept a key-value like `--foo:k=1` or `-f k=1`
 - A `Seq[File]` accepts a string containing comma-separated values such as `--jars foo.jar,bar.jar`
 - A `Map[String, String]` accepts a string containing comma-separated pairs like `--kwargs key1=val1,key2=val2`
