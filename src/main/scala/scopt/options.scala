@@ -1,6 +1,7 @@
 package scopt
 
 import java.net.UnknownHostException
+import java.text.ParseException
 
 import collection.mutable.{ListBuffer, ListMap}
 
@@ -53,7 +54,12 @@ object Read {
   implicit val fileRead: Read[File]           = reads { new File(_) }
   implicit val uriRead: Read[URI]             = reads { new URI(_) }
   implicit val inetAddress: Read[InetAddress] = reads { InetAddress.getByName(_) }
-  implicit val durationRead: Read[Duration]   = reads { Duration(_) }
+  implicit val durationRead: Read[Duration]   =
+    reads { try {
+      Duration(_)
+    } catch {
+      case e: NumberFormatException => throw new ParseException(e.getMessage, -1)
+    }}
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
     val arity = 2
@@ -572,6 +578,7 @@ class OptionDef[A: Read, C](
     } catch {
       case e: NumberFormatException => Left(Seq(shortDescription.capitalize + " expects a number but was given '" + arg + "'"))
       case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
+      case e: ParseException        => Left(Seq(shortDescription.capitalize + " expects a Scala duration but was given '" + arg + "'"))
       case e: Throwable             => Left(Seq(shortDescription.capitalize + " failed when given '" + arg + "'. " + e.getMessage))
     }
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
