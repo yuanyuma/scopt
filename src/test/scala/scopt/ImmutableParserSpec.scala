@@ -71,6 +71,10 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
     fail to parse --foo                                         ${mapParserFail("foo")}
 
+  opt[List[(String,Srting)]]("foo") action { x => x } should
+    parse Map("key" -> "1", "key" -> "2") out of --foo "key=1,false=false" ${seqTupleParser("--foo","key=1,key=2")}
+    fail to parse --foo                                         ${seqTupleParserFail("foo")}
+
   opt[String]("foo") required() action { x => x } should
     fail to parse Nil                                           ${requiredFail()}
 
@@ -302,6 +306,19 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   }
   def mapParserFail(args: String*) = {
     val result = mapParser1.parse(args.toSeq, Config())
+    result === None
+  }
+  val seqTupleParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Seq[(String,String)]]("foo") action { case (s, c) => c.copy(seqTupleStringString = s) }
+    help("help")
+  }
+  def seqTupleParser(args: String*) = {
+    val result = seqTupleParser1.parse(args.toSeq, Config())
+    result.get.seqTupleStringString === List("key" -> "1","key" -> "2")
+  }
+  def seqTupleParserFail(args: String*) = {
+    val result = seqTupleParser1.parse(args.toSeq, Config())
     result === None
   }
 
@@ -589,5 +606,6 @@ Usage: scopt [options]
     uriValue: URI = new URI("http://localhost"),
     key: String = "", a: String = "", b: String = "",
     seqInts: Seq[Int] = Seq(),
-    mapStringToBool: Map[String,Boolean] = Map())
+    mapStringToBool: Map[String,Boolean] = Map(),
+    seqTupleStringString: Seq[(String, String)] = Nil)
 }
