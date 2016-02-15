@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import org.specs2._
 import java.util.{Calendar, GregorianCalendar}
 import java.io.{ByteArrayOutputStream, File}
-import java.net.URI
+import java.net.{ URI, InetAddress }
 
 import scala.util.Try
 class ImmutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
@@ -69,6 +69,10 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse http://github.com/ out of --foo http://github.com/    ${uriParser("--foo", "http://github.com/")}
     parse http://github.com/ out of --foo=http://github.com/    ${uriParser("--foo=http://github.com/")}
 
+  opt[InetAddress]("foo") action { x => x } should
+    parse 8.8.8.8 out of --foo 8.8.8.8                          ${inetAddressParser("--foo", "8.8.8.8")}
+    parse 8.8.8.8 out of --foo=8.8.8.8                          ${inetAddressParser("--foo=8.8.8.8")}
+
   opt[(String, Int)]("foo") action { x => x } should
     parse ("k", 1) out of --foo k=1                             ${pairParser("--foo", "k=1")}
     parse ("k", 1) out of --foo:k=1                             ${pairParser("--foo:k=1")}
@@ -88,7 +92,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse Map("true" -> true, "false" -> false) out of "--foo=true=true,false=false" ${mapParser("--foo=true=true,false=false")}
     fail to parse --foo                                         ${mapParserFail("foo")}
 
-  opt[List[(String,Srting)]]("foo") action { x => x } should
+  opt[Seq[(String,Srting)]]("foo") action { x => x } should
     parse Map("key" -> "1", "key" -> "2") out of --foo "key=1,false=false" ${seqTupleParser("--foo","key=1,key=2")}
     fail to parse --foo                                         ${seqTupleParserFail("foo")}
 
@@ -273,7 +277,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     val result = fileParser1.parse(args.toSeq, Config())
     result.get.fileValue === new File("test.txt")
   }
-  
+
   val uriParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[URI]("foo") action { (x, c) => c.copy(uriValue = x) }
@@ -282,6 +286,16 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   def uriParser(args: String*) = {
     val result = uriParser1.parse(args.toSeq, Config())
     result.get.uriValue === new URI("http://github.com/")
+  }
+
+  val inetAddressParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[InetAddress]("foo") action { (x, c) => c.copy(inetAddressValue = x) }
+    help("help")
+  }
+  def inetAddressParser(args: String*) = {
+    val result = inetAddressParser1.parse(args.toSeq, Config())
+    result.get.inetAddressValue === InetAddress.getByName("8.8.8.8")
   }
 
   val pairParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -596,6 +610,7 @@ Usage: scopt [options]
     calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
     fileValue: File = new File("."),
     uriValue: URI = new URI("http://localhost"),
+    inetAddressValue: InetAddress = InetAddress.getByName("0.0.0.0"),
     key: String = "", a: String = "", b: String = "",
     seqInts: Seq[Int] = Seq(),
     mapStringToBool: Map[String,Boolean] = Map(),
