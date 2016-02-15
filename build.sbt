@@ -1,5 +1,5 @@
 name := "scopt"
-version := "3.3.0"
+version := "3.4.0-SNAPSHOT"
 
 // site
 // to preview, preview-site
@@ -14,7 +14,7 @@ homepage := Some(url("https://github.com/scopt/scopt"))
 licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
 description := """a command line options parsing library"""
 scalaVersion := "2.11.4"
-crossScalaVersions := Seq("2.11.4", "2.10.4", "2.9.1", "2.9.2", "2.9.3")
+crossScalaVersions := Seq("2.11.4", "2.10.4")
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   val testVersion = sv match {
