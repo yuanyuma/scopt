@@ -24,6 +24,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse 1 out of --foo=1                                      ${intParser("--foo=1")}
     parse 1 out of -f 1                                         ${intParser("-f", "1")}
     parse 1 out of -f:1                                         ${intParser("-f:1")}
+    parse 1 out of -f=1                                         ${intParser("-f=1")}
     fail to parse --foo                                         ${intParserFail{"--foo"}}
     fail to parse --foo bar                                     ${intParserFail("--foo", "bar")}
     fail to parse --foo=bar                                     ${intParserFail("--foo=bar")}

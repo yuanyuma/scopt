@@ -595,6 +595,7 @@ class OptionDef[A: Read, C](
     _shortOpt match {
       case Some(c) if arg == "-" + shortOptOrBlank                 => 1 + read.tokensToRead
       case Some(c) if arg startsWith ("-" + shortOptOrBlank + ":") => 1
+      case Some(c) if arg startsWith ("-" + shortOptOrBlank + "=") => 1
       case _ => 0
     }
   private[scopt] def longOptTokens(arg: String): Int =
