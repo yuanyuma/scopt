@@ -1,0 +1,44 @@
+  [70]: https://github.com/scopt/scopt/pull/70
+  [74]: https://github.com/scopt/scopt/pull/74
+  [79]: https://github.com/scopt/scopt/pull/79
+  [83]: https://github.com/scopt/scopt/pull/83
+  [86]: https://github.com/scopt/scopt/pull/86
+  [87]: https://github.com/scopt/scopt/pull/87
+  [@sonenko]: https://github.com/sonenko
+  [@alexanderfefelov]: https://github.com/alexanderfefelov
+  [@metasim]: https://github.com/metasim
+  [@billonahill]: https://github.com/billonahill
+  [@serejja]: https://github.com/serejja
+  [@maizy]: https://github.com/maizy
+
+### support for optional equal sign
+
+Given a parser like this:
+
+    val intParser1 = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
+      opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) }
+      help("help")
+    }
+
+scopt 3.4.0 accepts all of the following options:
+
+- `--foo 1`
+- `--foo:1`
+- `--foo=1`
+
+This was contributed as [#87][87] by [@maizy][@maizy].
+
+### terminate
+
+scopt 3.4.0 adds a termination hanlder called `terminate(exitState: Either[String, Unit])`. Override this method to prevent scopt from calling `sys.exit(0)` on `--help` or `--version`.
+
+This was contributed as [#74][74] by [@metasim][@metasim].
+
+### other minor fixes and enhancements
+
+- Adds `Read[Seq[(K,V)]]`, which parses `key=1,key=2` as `List("key" -> "1","key" -> "2")`. [#70][70] by [@sonenko][@sonenko]
+- Adds `Read[InetAddress]`, which parses an IP address using `java.net.InetAddress.getByName`. [#79][79] by [@alexanderfefelov][@alexanderfefelov]
+- Adds `Read[Duration]`, which parses `30s` as `Duration("30s")`. [#86][86] by [@serejja][@serejja]
+- Increases the limit of `unbounded()` args. [#83][83] by [@billonahill][@billonahill]
+- Scala 2.9.x support is dropped.
