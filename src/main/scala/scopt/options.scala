@@ -178,7 +178,11 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
-  def terminate(): Unit = sys.exit
+  def terminate(exitState: Either[String, Unit]): Unit =
+    exitState match {
+      case Left(_)  => sys.exit(1)
+      case Right(_) => sys.exit(0)
+    }
 
   def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)
@@ -230,7 +234,7 @@ abstract case class OptionParser[C](programName: String) {
   def help(name: String): OptionDef[Unit, C] = {
     val o = opt[Unit](name) action { (x, c) =>
       showUsage()
-      terminate()
+      terminate(Right(()))
       c
     }
     helpOptions += o
@@ -244,7 +248,7 @@ abstract case class OptionParser[C](programName: String) {
   def version(name: String): OptionDef[Unit, C] =
     opt[Unit](name) action { (x, c) =>
       showHeader()
-      terminate()
+      terminate(Right(()))
       c
     }
 
