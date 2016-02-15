@@ -534,40 +534,15 @@ update is a command.
   }
 
   lazy val terminationSafeParser1 = new scopt.OptionParser[Config]("scopt") {
-    override def terminate() = () ⇒ ()
+    override def terminate(): Unit = ()
     version("version")
     opt[Unit]("debug") action { (x, c) => c.copy(debug = true) }
     help("help") text("prints this usage text")
   }
 
   def terminationSafeParser(args: String*) = {
-    val exitWasCalled = new AtomicBoolean(false)
-    val sec = System.getSecurityManager
-
-    val exitInhibitor = new SecurityManager() {
-      override def checkExit(status: Int): Unit = {
-        exitWasCalled.set(true)
-        throw new SecurityException("Exit called when it shouldn't have been")
-      }
-      override def checkPermission(perm: Permission): Unit = {
-        perm.getName match {
-          case "setSecurityManager" | "modifyThread" ⇒ ()
-          case _ ⇒ perm.getActions match {
-            case "read" ⇒ ()
-            case _ ⇒ super.checkPermission(perm)
-          }
-        }
-      }
-    }
-
-    System.setSecurityManager(exitInhibitor)
-
     val result = terminationSafeParser1.parse(args.toSeq, Config())
-
-    // Reset to previous.
-    System.setSecurityManager(sec)
-
-    result.isDefined && !exitWasCalled.get()
+    result.isDefined
   }
 
   def printParserError(body: scopt.OptionParser[Config] => Unit): String = {
