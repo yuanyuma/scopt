@@ -13,7 +13,7 @@ organization := "com.github.scopt"
 homepage := Some(url("https://github.com/scopt/scopt"))
 licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
 description := """a command line options parsing library"""
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.7"
 crossScalaVersions := Seq("2.11.7", "2.10.6")
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
