@@ -1,4 +1,4 @@
-def v: String = "3.4.0-SNAPSHOT"
+def v: String = "3.4.0"
 
 lazy val root = (project in file(".")).
   settings(
