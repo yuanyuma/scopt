@@ -414,9 +414,6 @@ Usage: scopt [update] [options] [<file>...]
   -f, --foo <value>         foo is an integer property
   -o, --out <file>          out is a required file property
   --max:<libname>=<max>     maximum count for <libname>
-  -j, --jars <jar1>,<jar2>...
-                            jars to include
-  --kwargs k1=v1,k2=v2...   other arguments
   --verbose                 verbose is a flag
   --help                    prints this usage text
   <file>...                 optional unbounded args
