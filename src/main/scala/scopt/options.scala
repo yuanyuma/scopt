@@ -126,6 +126,12 @@ object Validation {
   }
 }
 
+trait RenderingMode
+object RenderingMode {
+  case object OneColumn extends RenderingMode
+  case object TwoColumns extends RenderingMode
+}
+
 private[scopt] sealed trait OptionDefKind {}
 private[scopt] case object Opt extends OptionDefKind
 private[scopt] case object Note extends OptionDefKind
@@ -178,7 +184,7 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
-  def showTwoColumnUsage: Boolean = false
+  def renderingMode: RenderingMode = RenderingMode.TwoColumns
   def terminate(exitState: Either[String, Unit]): Unit =
     exitState match {
       case Left(_)  => sys.exit(1)
@@ -271,8 +277,31 @@ abstract case class OptionParser[C](programName: String) {
   def showUsageAsError(): Unit = {
     Console.err.println(usage)
   }
-  def usage: String = {
+  def usage: String = renderUsage(renderingMode)
+  def renderUsage(mode: RenderingMode): String =
+    mode match {
+      case RenderingMode.OneColumn => renderOneColumnUsage
+      case RenderingMode.TwoColumns => renderTwoColumnsUsage
+    }
+  def renderOneColumnUsage: String = {
     import OptionDef._
+    val descriptions = optionsForRender map {_.usage}
+    (if (header == "") "" else header + NL) +
+    "Usage: " + usageExample + NLNL +
+    descriptions.mkString(NL)
+  }
+  def renderTwoColumnsUsage: String = {
+    import OptionDef._
+    val xs = optionsForRender
+    val descriptions = {
+      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
+      xs map {_.usageTwoColumn(col1Len)}
+    }
+    (if (header == "") "" else header + NL) +
+    "Usage: " + usageExample + NLNL +
+    descriptions.mkString(NL)
+  }
+  def optionsForRender: List[OptionDef[_, C]] = {
     val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
     val (unseen, xs) = unsorted partition {_.hasParent} match {
       case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
@@ -286,18 +315,9 @@ abstract case class OptionParser[C](programName: String) {
         xs.insertAll((xs indexOf x) + 1, cs)
       }
     }
-    val descriptions = if (showTwoColumnUsage) {
-      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
-      xs map {_.usageTwoColumn(col1Len)}
-    } else xs map {_.usage}
-    (if (header == "") "" else header + NL) +
-    "Usage: " + commandExample(None) + NLNL +
-    descriptions.mkString(NL)
+    xs.toList
   }
-  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
-    (cmd.getParentId map { x =>
-      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
-    } getOrElse {""}) + cmd.name
+  def usageExample: String = commandExample(None)
   private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
     val text = new ListBuffer[String]()
     text += cmd map {commandName} getOrElse programName
@@ -311,6 +331,10 @@ abstract case class OptionParser[C](programName: String) {
     else if (as.nonEmpty) text ++= as map {_.argName}
     text.mkString(" ")
   }
+  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
+    (cmd.getParentId map { x =>
+      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
+    } getOrElse {""}) + cmd.name
 
   /** call this to express success in custom validation. */
   def success: Either[String, Unit] = OptionDef.makeSuccess[String]

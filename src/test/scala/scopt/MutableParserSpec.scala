@@ -76,11 +76,11 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
   cmd("update") foreach { x => x } should
     parse () out of update                                      ${cmdParser("update")}
 
-  help("help") should
-    print usage text --help                                     ${helpParser()}
+  help("help") if OneColumn should
+    print usage text --help                                     ${helpParserOneColumn()}
 
-  help("help") if compact should
-    print usage text --help                                     ${helpParserCompact()}
+  help("help") if TwoColumn should
+    print usage text --help                                     ${helpParserTwoColumns()}
 
   reportError("foo") should
     print "Error: foo\n"                                        ${reportErrorParser("foo")}
@@ -314,12 +314,13 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     (result === true) and (foo === true)
   }
 
-  def helpParser(args: String*) = {
+  def helpParserOneColumn(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
+      override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
       opt[Int]('f', "foo") foreach { x =>
         c = c.copy(foo = x) } text("foo is an integer property")
@@ -373,13 +374,12 @@ update is a command.
         xyz is a boolean property"""
   }
 
-  def helpParserCompact(args: String*) = {
+  def helpParserTwoColumns(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
-      override def showTwoColumnUsage = true
       head("scopt", "3.x")
       opt[Int]('f', "foo") foreach { x =>
         c = c.copy(foo = x) } text("foo is an integer property")
@@ -456,8 +456,7 @@ update is a command.
     printParserOut(_.showUsage) === """scopt 3.x
 Usage: scopt [options]
 
-  --help
-        prints this usage text
+  --help  prints this usage text
 """
   }
 }

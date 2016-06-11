@@ -144,11 +144,11 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse foo out of backend update foo                         ${nestedCmdParser("backend", "update", "foo")}
     fail to paser backend foo                                   ${nestedCmdParserFail("backend", "foo")}
 
-  help("help") should
-    print usage text --help                                     ${helpParser()}
+  help("help") if OneColumn should
+    print usage text --help                                     ${helpParserOneColumn()}
 
-  help("help") if compact should
-    print usage text --help                                     ${helpParserCompact()}
+  help("help") if TwoColumns should
+    print usage text --help                                     ${helpParserTwoColumns()}
 
   reportError("foo") should
     print "Error: foo\n"                                        ${reportErrorParser("foo")}
@@ -506,12 +506,13 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     result === None
   }
 
-  def helpParser(args: String*) = {
+  def helpParserOneColumn(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
       jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
+      override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
         c.copy(foo = x) } text("foo is an integer property")
@@ -578,13 +579,12 @@ update is a command.
     (parser.header === expectedHeader) and (parser.usage === expectedUsage)
   }
 
-  def helpParserCompact(args: String*) = {
+  def helpParserTwoColumns(args: String*) = {
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
       jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
-      override def showTwoColumnUsage = true
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
         c.copy(foo = x) } text("foo is an integer property")
@@ -682,8 +682,7 @@ update is a command.
     printParserOut(_.showUsage()) === """scopt 3.x
 Usage: scopt [options]
 
-  --help
-        prints this usage text
+  --help  prints this usage text
 """
   }
 
