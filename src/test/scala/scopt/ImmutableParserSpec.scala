@@ -98,7 +98,7 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse Map("true" -> true, "false" -> false) out of "--foo=true=true,false=false" ${mapParser("--foo=true=true,false=false")}
     fail to parse --foo                                         ${mapParserFail("foo")}
 
-  opt[Seq[(String,Srting)]]("foo") action { x => x } should
+  opt[Seq[(String,String)]]("foo") action { x => x } should
     parse Map("key" -> "1", "key" -> "2") out of --foo "key=1,false=false" ${seqTupleParser("--foo","key=1,key=2")}
     fail to parse --foo                                         ${seqTupleParserFail("foo")}
 
