@@ -126,6 +126,12 @@ object Validation {
   }
 }
 
+trait RenderingMode
+object RenderingMode {
+  case object OneColumn extends RenderingMode
+  case object TwoColumns extends RenderingMode
+}
+
 private[scopt] sealed trait OptionDefKind {}
 private[scopt] case object Opt extends OptionDefKind
 private[scopt] case object Note extends OptionDefKind
@@ -135,7 +141,7 @@ private[scopt] case object Head extends OptionDefKind
 private[scopt] case object Check extends OptionDefKind
 
 /** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
- * set up by an (ordered) sequence of invocations of 
+ * set up by an (ordered) sequence of invocations of
  * the various builder methods such as
  * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A,C]"><code>opt</code></a> method or
  * <a href="#arg[A](String)(Read[A]):OptionDef[A,C]"><code>arg</code></a> method.
@@ -148,7 +154,7 @@ private[scopt] case object Check extends OptionDefKind
  *     c.copy(out = x) } text("out is a required file property")
  *   opt[(String, Int)]("max") action { case ((k, v), c) =>
  *     c.copy(libName = k, maxCount = v) } validate { x =>
- *     if (x._2 > 0) success else failure("Value <max> must be >0") 
+ *     if (x._2 > 0) success else failure("Value <max> must be >0")
  *   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
  *   opt[Unit]("verbose") action { (_, c) =>
  *     c.copy(verbose = true) } text("verbose is a flag")
@@ -178,6 +184,7 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
+  def renderingMode: RenderingMode = RenderingMode.TwoColumns
   def terminate(exitState: Either[String, Unit]): Unit =
     exitState match {
       case Left(_)  => sys.exit(1)
@@ -220,12 +227,12 @@ abstract case class OptionParser[C](programName: String) {
 
   /** adds an argument invoked by an option without `-` or `--`.
    * @param name name in the usage text
-   */  
+   */
   def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
 
   /** adds a command invoked by an option without `-` or `--`.
    * @param name name of the command
-   */  
+   */
   def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
 
   /** adds an option invoked by `--name` that displays usage text and exits.
@@ -270,8 +277,31 @@ abstract case class OptionParser[C](programName: String) {
   def showUsageAsError(): Unit = {
     Console.err.println(usage)
   }
-  def usage: String = {
+  def usage: String = renderUsage(renderingMode)
+  def renderUsage(mode: RenderingMode): String =
+    mode match {
+      case RenderingMode.OneColumn => renderOneColumnUsage
+      case RenderingMode.TwoColumns => renderTwoColumnsUsage
+    }
+  def renderOneColumnUsage: String = {
     import OptionDef._
+    val descriptions = optionsForRender map {_.usage}
+    (if (header == "") "" else header + NL) +
+    "Usage: " + usageExample + NLNL +
+    descriptions.mkString(NL)
+  }
+  def renderTwoColumnsUsage: String = {
+    import OptionDef._
+    val xs = optionsForRender
+    val descriptions = {
+      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
+      xs map {_.usageTwoColumn(col1Len)}
+    }
+    (if (header == "") "" else header + NL) +
+    "Usage: " + usageExample + NLNL +
+    descriptions.mkString(NL)
+  }
+  def optionsForRender: List[OptionDef[_, C]] = {
     val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
     val (unseen, xs) = unsorted partition {_.hasParent} match {
       case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
@@ -285,15 +315,9 @@ abstract case class OptionParser[C](programName: String) {
         xs.insertAll((xs indexOf x) + 1, cs)
       }
     }
-    val descriptions = xs map {_.usage}
-    (if (header == "") "" else header + NL) +
-    "Usage: " + commandExample(None) + NLNL +
-    descriptions.mkString(NL)
+    xs.toList
   }
-  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
-    (cmd.getParentId map { x =>
-      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
-    } getOrElse {""}) + cmd.name
+  def usageExample: String = commandExample(None)
   private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
     val text = new ListBuffer[String]()
     text += cmd map {commandName} getOrElse programName
@@ -307,6 +331,10 @@ abstract case class OptionParser[C](programName: String) {
     else if (as.nonEmpty) text ++= as map {_.argName}
     text.mkString(" ")
   }
+  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
+    (cmd.getParentId map { x =>
+      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
+    } getOrElse {""}) + cmd.name
 
   /** call this to express success in custom validation. */
   def success: Either[String, Unit] = OptionDef.makeSuccess[String]
@@ -606,7 +634,7 @@ class OptionDef[A: Read, C](
     if (i >= args.length || kind != Opt) 0
     else args(i) match {
       case arg if longOptTokens(arg) > 0  => longOptTokens(arg)
-      case arg if shortOptTokens(arg) > 0 => shortOptTokens(arg) 
+      case arg if shortOptTokens(arg) > 0 => shortOptTokens(arg)
       case _ => 0
     }
   private[scopt] def apply(i: Int, args: Seq[String]): Either[String, String] =
@@ -639,6 +667,34 @@ class OptionDef[A: Read, C](
         WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) +
         fullName + NLTB + _desc
     }
+  private[scopt] def usageTwoColumn(col1Length: Int): String = {
+    def spaceToDesc(str: String) = if (str.length <= col1Length) str + " " * (col1Length - str.length)
+                                   else str.dropRight(WW.length) + NL + " " * col1Length
+    kind match {
+      case Head | Note | Check => _desc
+      case Cmd => usageColumn1 + _desc
+      case Arg => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt if read.arity == 2 => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt if read.arity == 1 => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt => spaceToDesc(usageColumn1 + WW) + _desc
+    }
+  }
+  private[scopt] def usageColumn1: String =
+    kind match {
+      case Head | Note | Check => ""
+      case Cmd =>
+        "Command: " + _parser.commandExample(Some(this)) + NL
+      case Arg => WW + name
+      case Opt if read.arity == 2 =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName + ":" + keyValueString
+      case Opt if read.arity == 1 =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName + " " + valueString
+      case Opt =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName
+    }
   private[scopt] def keyValueString: String = (_keyName getOrElse defaultKeyName) + "=" + valueString
   private[scopt] def valueString: String = (_valueName getOrElse defaultValueName)
   def shortDescription: String =
@@ -666,6 +722,7 @@ private[scopt] object OptionDef {
   val TB = "        "
   val NLTB = NL + TB
   val NLNL = NL + NL
+  val column1MaxLength = 25 + WW.length
   val defaultKeyName = "<key>"
   val defaultValueName = "<value>"
   val atomic = new java.util.concurrent.atomic.AtomicInteger
