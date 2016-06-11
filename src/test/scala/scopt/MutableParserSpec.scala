@@ -379,7 +379,7 @@ update is a command.
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
-      override def showCompactUsage = true
+      override def showTwoColumnUsage = true
       head("scopt", "3.x")
       opt[Int]('f', "foo") foreach { x =>
         c = c.copy(foo = x) } text("foo is an integer property")
@@ -411,18 +411,18 @@ update is a command.
     parser.usage === """scopt 3.x
 Usage: scopt [update] [options] [<file>...]
 
-  -f, --foo <value>         foo is an integer property
-  -o, --out <file>          out is a required file property
-  --max:<libname>=<max>     maximum count for <libname>
-  --verbose                 verbose is a flag
-  --help                    prints this usage text
-  <file>...                 optional unbounded args
+  -f, --foo <value>        foo is an integer property
+  -o, --out <file>         out is a required file property
+  --max:<libname>=<max>    maximum count for <libname>
+  --verbose                verbose is a flag
+  --help                   prints this usage text
+  <file>...                optional unbounded args
 some notes.
 
 Command: update [options]
 update is a command.
-  -nk, --not-keepalive      disable keepalive
-  --xyz <value>             xyz is a boolean property"""
+  -nk, --not-keepalive     disable keepalive
+  --xyz <value>            xyz is a boolean property"""
   }
 
   def printParserError(body: scopt.OptionParser[Unit] => Unit): String = {

@@ -584,7 +584,7 @@ update is a command.
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
       jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
-      override def showCompactUsage = true
+      override def showTwoColumnUsage = true
       head("scopt", "3.x")
       opt[Int]('f', "foo") action { (x, c) =>
         c.copy(foo = x) } text("foo is an integer property")
@@ -622,21 +622,21 @@ update is a command.
     val expectedUsage= """scopt 3.x
 Usage: scopt [update] [options] [<file>...]
 
-  -f, --foo <value>         foo is an integer property
-  -o, --out <file>          out is a required file property
-  --max:<libname>=<max>     maximum count for <libname>
+  -f, --foo <value>        foo is an integer property
+  -o, --out <file>         out is a required file property
+  --max:<libname>=<max>    maximum count for <libname>
   -j, --jars <jar1>,<jar2>...
-                            jars to include
-  --kwargs k1=v1,k2=v2...   other arguments
-  --verbose                 verbose is a flag
-  --help                    prints this usage text
-  <file>...                 optional unbounded args
+                           jars to include
+  --kwargs k1=v1,k2=v2...  other arguments
+  --verbose                verbose is a flag
+  --help                   prints this usage text
+  <file>...                optional unbounded args
 some notes.
 
 Command: update [options]
 update is a command.
-  -nk, --not-keepalive      disable keepalive
-  --xyz <value>             xyz is a boolean property""".newlines
+  -nk, --not-keepalive     disable keepalive
+  --xyz <value>            xyz is a boolean property""".newlines
     val expectedHeader = """scopt 3.x"""
 
     (parser.header === expectedHeader) and (parser.usage === expectedUsage)

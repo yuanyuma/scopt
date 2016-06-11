@@ -178,7 +178,7 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
-  def showCompactUsage: Boolean = false
+  def showTwoColumnUsage: Boolean = false
   def terminate(exitState: Either[String, Unit]): Unit =
     exitState match {
       case Left(_)  => sys.exit(1)
@@ -286,9 +286,9 @@ abstract case class OptionParser[C](programName: String) {
         xs.insertAll((xs indexOf x) + 1, cs)
       }
     }
-    val descriptions = if (showCompactUsage) {
-      val descCol = math.min(compactDescMaxCol, (xs map{_.usageNoDesc.length + WW.length}).max)
-      xs map {_.usageCompact(descCol)}
+    val descriptions = if (showTwoColumnUsage) {
+      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
+      xs map {_.usageTwoColumn(col1Len)}
     } else xs map {_.usage}
     (if (header == "") "" else header + NL) +
     "Usage: " + commandExample(None) + NLNL +
@@ -643,19 +643,19 @@ class OptionDef[A: Read, C](
         WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) +
         fullName + NLTB + _desc
     }
-  private[scopt] def usageCompact(descCol: Int): String = {
-    def spaceToDesc(str: String) = if (str.length <= descCol) str + " " * (descCol - str.length)
-                                   else str.dropRight(WW.length) + NL + " " * descCol
+  private[scopt] def usageTwoColumn(col1Length: Int): String = {
+    def spaceToDesc(str: String) = if (str.length <= col1Length) str + " " * (col1Length - str.length)
+                                   else str.dropRight(WW.length) + NL + " " * col1Length
     kind match {
       case Head | Note | Check => _desc
-      case Cmd => usageNoDesc + _desc
-      case Arg => spaceToDesc(usageNoDesc + WW) + _desc
-      case Opt if read.arity == 2 => spaceToDesc(usageNoDesc + WW) + _desc
-      case Opt if read.arity == 1 => spaceToDesc(usageNoDesc + WW) + _desc
-      case Opt => spaceToDesc(usageNoDesc + WW) + _desc
+      case Cmd => usageColumn1 + _desc
+      case Arg => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt if read.arity == 2 => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt if read.arity == 1 => spaceToDesc(usageColumn1 + WW) + _desc
+      case Opt => spaceToDesc(usageColumn1 + WW) + _desc
     }
   }
-  private[scopt] def usageNoDesc: String =
+  private[scopt] def usageColumn1: String =
     kind match {
       case Head | Note | Check => ""
       case Cmd =>
@@ -698,7 +698,7 @@ private[scopt] object OptionDef {
   val TB = "        "
   val NLTB = NL + TB
   val NLNL = NL + NL
-  val compactDescMaxCol = 28
+  val column1MaxLength = 25 + WW.length
   val defaultKeyName = "<key>"
   val defaultValueName = "<value>"
   val atomic = new java.util.concurrent.atomic.AtomicInteger
