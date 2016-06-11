@@ -26,6 +26,7 @@ lazy val root = (project in file(".")).
         case _ => Nil
       }
     },
+    scalacOptions ++= Seq("-language:existentials"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))

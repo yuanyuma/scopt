@@ -135,7 +135,7 @@ private[scopt] case object Head extends OptionDefKind
 private[scopt] case object Check extends OptionDefKind
 
 /** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
- * set up by an (ordered) sequence of invocations of 
+ * set up by an (ordered) sequence of invocations of
  * the various builder methods such as
  * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A,C]"><code>opt</code></a> method or
  * <a href="#arg[A](String)(Read[A]):OptionDef[A,C]"><code>arg</code></a> method.
@@ -148,7 +148,7 @@ private[scopt] case object Check extends OptionDefKind
  *     c.copy(out = x) } text("out is a required file property")
  *   opt[(String, Int)]("max") action { case ((k, v), c) =>
  *     c.copy(libName = k, maxCount = v) } validate { x =>
- *     if (x._2 > 0) success else failure("Value <max> must be >0") 
+ *     if (x._2 > 0) success else failure("Value <max> must be >0")
  *   } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
  *   opt[Unit]("verbose") action { (_, c) =>
  *     c.copy(verbose = true) } text("verbose is a flag")
@@ -178,6 +178,7 @@ abstract case class OptionParser[C](programName: String) {
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
+  def showCompactUsage: Boolean = false
   def terminate(exitState: Either[String, Unit]): Unit =
     exitState match {
       case Left(_)  => sys.exit(1)
@@ -220,12 +221,12 @@ abstract case class OptionParser[C](programName: String) {
 
   /** adds an argument invoked by an option without `-` or `--`.
    * @param name name in the usage text
-   */  
+   */
   def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
 
   /** adds a command invoked by an option without `-` or `--`.
    * @param name name of the command
-   */  
+   */
   def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
 
   /** adds an option invoked by `--name` that displays usage text and exits.
@@ -285,7 +286,10 @@ abstract case class OptionParser[C](programName: String) {
         xs.insertAll((xs indexOf x) + 1, cs)
       }
     }
-    val descriptions = xs map {_.usage}
+    val descriptions = if (showCompactUsage) {
+      val descCol = math.min(compactDescMaxCol, (xs map{_.usageNoDesc.length + WW.length}).max)
+      xs map {_.usageCompact(descCol)}
+    } else xs map {_.usage}
     (if (header == "") "" else header + NL) +
     "Usage: " + commandExample(None) + NLNL +
     descriptions.mkString(NL)
@@ -606,7 +610,7 @@ class OptionDef[A: Read, C](
     if (i >= args.length || kind != Opt) 0
     else args(i) match {
       case arg if longOptTokens(arg) > 0  => longOptTokens(arg)
-      case arg if shortOptTokens(arg) > 0 => shortOptTokens(arg) 
+      case arg if shortOptTokens(arg) > 0 => shortOptTokens(arg)
       case _ => 0
     }
   private[scopt] def apply(i: Int, args: Seq[String]): Either[String, String] =
@@ -639,6 +643,34 @@ class OptionDef[A: Read, C](
         WW + (_shortOpt map { o => "-" + o + " | " } getOrElse { "" }) +
         fullName + NLTB + _desc
     }
+  private[scopt] def usageCompact(descCol: Int): String = {
+    def spaceToDesc(str: String) = if (str.length <= descCol) str + " " * (descCol - str.length)
+                                   else str.dropRight(WW.length) + NL + " " * descCol
+    kind match {
+      case Head | Note | Check => _desc
+      case Cmd => usageNoDesc + _desc
+      case Arg => spaceToDesc(usageNoDesc + WW) + _desc
+      case Opt if read.arity == 2 => spaceToDesc(usageNoDesc + WW) + _desc
+      case Opt if read.arity == 1 => spaceToDesc(usageNoDesc + WW) + _desc
+      case Opt => spaceToDesc(usageNoDesc + WW) + _desc
+    }
+  }
+  private[scopt] def usageNoDesc: String =
+    kind match {
+      case Head | Note | Check => ""
+      case Cmd =>
+        "Command: " + _parser.commandExample(Some(this)) + NL
+      case Arg => WW + name
+      case Opt if read.arity == 2 =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName + ":" + keyValueString
+      case Opt if read.arity == 1 =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName + " " + valueString
+      case Opt =>
+        WW + (_shortOpt map { o => "-" + o + ", " } getOrElse { "" }) +
+        fullName
+    }
   private[scopt] def keyValueString: String = (_keyName getOrElse defaultKeyName) + "=" + valueString
   private[scopt] def valueString: String = (_valueName getOrElse defaultValueName)
   def shortDescription: String =
@@ -666,6 +698,7 @@ private[scopt] object OptionDef {
   val TB = "        "
   val NLTB = NL + TB
   val NLNL = NL + NL
+  val compactDescMaxCol = 28
   val defaultKeyName = "<key>"
   val defaultValueName = "<value>"
   val atomic = new java.util.concurrent.atomic.AtomicInteger

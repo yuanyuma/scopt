@@ -79,6 +79,9 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
   help("help") should
     print usage text --help                                     ${helpParser()}
 
+  help("help") if compact should
+    print usage text --help                                     ${helpParserCompact()}
+
   reportError("foo") should
     print "Error: foo\n"                                        ${reportErrorParser("foo")}
 
@@ -315,7 +318,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
       mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
-    var c = Config()    
+    var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
       opt[Int]('f', "foo") foreach { x =>
@@ -324,7 +327,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
         c = c.copy(out = x) } text("out is a required file property")
       opt[(String, Int)]("max") foreach { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) } validate { x =>
-        if (x._2 > 0) success else failure("Value <max> must be >0") 
+        if (x._2 > 0) success else failure("Value <max> must be >0")
       } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
       opt[Unit]("verbose") foreach { _ =>
         c = c.copy(verbose = true) } text("verbose is a flag")
@@ -368,6 +371,61 @@ update is a command.
         disable keepalive
   --xyz <value>
         xyz is a boolean property"""
+  }
+
+  def helpParserCompact(args: String*) = {
+    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
+      libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
+      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
+    var c = Config()
+    val parser = new scopt.OptionParser[Unit]("scopt") {
+      override def showCompactUsage = true
+      head("scopt", "3.x")
+      opt[Int]('f', "foo") foreach { x =>
+        c = c.copy(foo = x) } text("foo is an integer property")
+      opt[File]('o', "out") required() valueName("<file>") foreach { x =>
+        c = c.copy(out = x) } text("out is a required file property")
+      opt[(String, Int)]("max") foreach { case (k, v) =>
+        c = c.copy(libName = k, maxCount = v) } validate { x =>
+        if (x._2 > 0) success else failure("Value <max> must be >0")
+      } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
+      opt[Unit]("verbose") foreach { _ =>
+        c = c.copy(verbose = true) } text("verbose is a flag")
+      opt[Unit]("debug") hidden() foreach { _ =>
+        c = c.copy(debug = true) } text("this option is hidden in the usage text")
+      help("help") text("prints this usage text")
+      arg[File]("<file>...") unbounded() optional() foreach { x =>
+        c = c.copy(files = c.files :+ x) } text("optional unbounded args")
+      note("some notes.".newline)
+      cmd("update") foreach { _ =>
+        c.copy(mode = "update") } text("update is a command.") children(
+        opt[Unit]("not-keepalive") abbr("nk") foreach { _ =>
+          c.copy(keepalive = false) } text("disable keepalive"),
+        opt[Boolean]("xyz") foreach { x =>
+          c = c.copy(xyz = x) } text("xyz is a boolean property"),
+        opt[Unit]("debug-update") hidden() foreach { _ =>
+          c = c.copy(debug = true) } text("this option is hidden in the usage text")
+      )
+    }
+    parser.parse(args.toSeq)
+    parser.usage === """scopt 3.x
+Usage: scopt [update] [options] [<file>...]
+
+  -f, --foo <value>         foo is an integer property
+  -o, --out <file>          out is a required file property
+  --max:<libname>=<max>     maximum count for <libname>
+  -j, --jars <jar1>,<jar2>...
+                            jars to include
+  --kwargs k1=v1,k2=v2...   other arguments
+  --verbose                 verbose is a flag
+  --help                    prints this usage text
+  <file>...                 optional unbounded args
+some notes.
+
+Command: update [options]
+update is a command.
+  -nk, --not-keepalive      disable keepalive
+  --xyz <value>             xyz is a boolean property"""
   }
 
   def printParserError(body: scopt.OptionParser[Unit] => Unit): String = {
