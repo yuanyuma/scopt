@@ -5,8 +5,7 @@
 
 ### two-column rendering
 
-scopt 3.5.0 introduces the notion of rendering mode for the usage text that scopt generates,
-and by default it uses two-column rendering that looks like this:
+scopt 3.5.0 introduces two-column rendering for the usage text, which is enabled by default:
 
     scopt 3.x
     Usage: scopt [update] [options] [<file>...]
@@ -18,7 +17,7 @@ and by default it uses two-column rendering that looks like this:
     update is a command.
       --xyz <value>            xyz is a boolean property
 
-Previous (one-column) rendering looked like this:
+This is a bit more compact compared to the previous (one-column) rendering that looked like this:
 
     scopt 3.x
     Usage: scopt [update] [options] [<file>...]
