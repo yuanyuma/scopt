@@ -1,3 +1,5 @@
+  [1]: http://scopt.github.io/scopt/3.5.0/api/index.html#scopt.OptionParser
+
 scopt
 =====
 
@@ -7,7 +9,7 @@ Sonatype
 --------
 
 ```scala
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.4.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
 resolvers += Resolver.sonatypeRepo("public")
 ```
@@ -31,7 +33,7 @@ On the other hand, in mutable parsing style you are expected to modify the confi
 
 ### Immutable parsing
 
-Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://scopt.github.io/scopt/3.3.0/api/#scopt.OptionParser) for the details on various builder methods.
+Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API][1] for the details on various builder methods.
 
 ```scala
 val parser = new scopt.OptionParser[Config]("scopt") {
