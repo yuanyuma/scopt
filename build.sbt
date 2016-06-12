@@ -1,12 +1,12 @@
-def v: String = "3.4.0"
+def v: String = "3.5.0"
 
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(Seq(
       version := v,
       organization := "com.github.scopt",
-      scalaVersion := "2.11.7",
-      crossScalaVersions := Seq("2.11.7", "2.10.6", "2.12.0-M4"),
+      scalaVersion := "2.11.8",
+      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.0-M4"),
       homepage := Some(url("https://github.com/scopt/scopt")),
       licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
     )),

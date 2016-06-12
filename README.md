@@ -36,36 +36,56 @@ Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API](http://
 ```scala
 val parser = new scopt.OptionParser[Config]("scopt") {
   head("scopt", "3.x")
-  opt[Int]('f', "foo") action { (x, c) =>
-    c.copy(foo = x) } text("foo is an integer property")
-  opt[File]('o', "out") required() valueName("<file>") action { (x, c) =>
-    c.copy(out = x) } text("out is a required file property")
-  opt[(String, Int)]("max") action { case ((k, v), c) =>
-    c.copy(libName = k, maxCount = v) } validate { x =>
-    if (x._2 > 0) success else failure("Value <max> must be >0") 
-  } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-  opt[Seq[File]]('j', "jars") valueName("<jar1>,<jar2>...") action { (x,c) =>
-    c.copy(jars = x) } text("jars to include")
-  opt[Map[String,String]]("kwargs") valueName("k1=v1,k2=v2...") action { (x, c) =>
-    c.copy(kwargs = x) } text("other arguments")
-  opt[Unit]("verbose") action { (_, c) =>
-    c.copy(verbose = true) } text("verbose is a flag")
-  opt[Unit]("debug") hidden() action { (_, c) =>
-    c.copy(debug = true) } text("this option is hidden in the usage text")
-  note("some notes.\n")
-  help("help") text("prints this usage text")
-  arg[File]("<file>...") unbounded() optional() action { (x, c) =>
-    c.copy(files = c.files :+ x) } text("optional unbounded args")
-  cmd("update") action { (_, c) =>
-    c.copy(mode = "update") } text("update is a command.") children(
-    opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
-      c.copy(keepalive = false) } text("disable keepalive"),
-    opt[Boolean]("xyz") action { (x, c) =>
-      c.copy(xyz = x) } text("xyz is a boolean property"),
-    checkConfig { c =>
-      if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
-  )
+
+  opt[Int]('f', "foo").action( (x, c) =>
+    c.copy(foo = x) ).text("foo is an integer property")
+
+  opt[File]('o', "out").required().valueName("<file>").
+    action( (x, c) => c.copy(out = x) ).
+    text("out is a required file property")
+
+  opt[(String, Int)]("max").action({
+      case ((k, v), c) => c.copy(libName = k, maxCount = v) }).
+    validate( x =>
+      if (x._2 > 0) success
+      else failure("Value <max> must be >0") ).
+    keyValueName("<libname>", "<max>").
+    text("maximum count for <libname>")
+
+  opt[Seq[File]]('j', "jars").valueName("<jar1>,<jar2>...").action( (x,c) =>
+    c.copy(jars = x) ).text("jars to include")
+
+  opt[Map[String,String]]("kwargs").valueName("k1=v1,k2=v2...").action( (x, c) =>
+    c.copy(kwargs = x) ).text("other arguments")
+
+  opt[Unit]("verbose").action( (_, c) =>
+    c.copy(verbose = true) ).text("verbose is a flag")
+
+  opt[Unit]("debug").hidden().action( (_, c) =>
+    c.copy(debug = true) ).text("this option is hidden in the usage text")
+
+  help("help").text("prints this usage text")
+
+  arg[File]("<file>...").unbounded().optional().action( (x, c) =>
+    c.copy(files = c.files :+ x) ).text("optional unbounded args")
+
+  note("some notes.".newline)
+
+  cmd("update").action( (_, c) => c.copy(mode = "update") ).
+    text("update is a command.").
+    children(
+      opt[Unit]("not-keepalive").abbr("nk").action( (_, c) =>
+        c.copy(keepalive = false) ).text("disable keepalive"),
+      opt[Boolean]("xyz").action( (x, c) =>
+        c.copy(xyz = x) ).text("xyz is a boolean property"),
+      opt[Unit]("debug-update").hidden().action( (_, c) =>
+        c.copy(debug = true) ).text("this option is hidden in the usage text"),
+      checkConfig( c =>
+        if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+        else success )
+    )
 }
+
 // parser.parse returns Option[C]
 parser.parse(args, Config()) match {
   case Some(config) =>
@@ -82,32 +102,21 @@ The above generates the following usage text:
 scopt 3.x
 Usage: scopt [update] [options] [<file>...]
 
-  -f <value> | --foo <value>
-        foo is an integer property
-  -o <file> | --out <file>
-        out is a required file property
-  --max:<libname>=<max>
-        maximum count for <libname>
-  -j <jar1>,<jar2>... | --jars <jar1>,<jar2>...
-        jars to include
-  --kwargs k1=v1,k2=v2...
-        other arguments
-  --verbose
-        verbose is a flag
+  -f, --foo <value>        foo is an integer property
+  -o, --out <file>         out is a required file property
+  --max:<libname>=<max>    maximum count for <libname>
+  -j, --jars <jar1>,<jar2>...
+                           jars to include
+  --kwargs k1=v1,k2=v2...  other arguments
+  --verbose                verbose is a flag
+  --help                   prints this usage text
+  <file>...                optional unbounded args
 some notes.
 
-  --help
-        prints this usage text
-  <file>...
-        optional unbounded args
-
-Command: update
+Command: update [options]
 update is a command.
-
-  -nk | --not-keepalive
-        disable keepalive
-  --xyz <value>
-        xyz is a boolean property
+  -nk, --not-keepalive     disable keepalive
+  --xyz <value>            xyz is a boolean property
 ```
 
 #### Options
@@ -134,7 +143,7 @@ implicit val weekDaysRead: scopt.Read[WeekDays.Value] =
   scopt.Read.reads(WeekDays withName _)
 ```
 
-By default these options are optional. 
+By default these options are optional.
 
 #### Short options
 
@@ -143,7 +152,7 @@ For plain flags (`opt[Unit]`) short options can be grouped as `-fb` to mean `--f
 `opt` accepts only a single character, but using `abbr("ab")` a string can be used too:
 
 ```scala
-opt[Unit]("no-keepalive") abbr("nk") action { (x, c) => c.copy(keepalive = false) }
+opt[Unit]("no-keepalive").abbr("nk").action( (x, c) => c.copy(keepalive = false) )
 ```
 
 #### Help, Version, and Notes
@@ -160,6 +169,10 @@ override def showUsageOnError = true
 
 Command line arguments are defined using `arg[A]("<file>")`. It works similar to options, but instead it accepts values without `--` or `-`. By default, arguments accept a single value and are required.
 
+```scala
+arg[String]("<file>...")
+```
+
 #### Occurrence
 
 Each opt/arg carries occurrence information `minOccurs` and `maxOccurs`.
@@ -169,12 +182,12 @@ Each opt/arg carries occurrence information `minOccurs` and `maxOccurs`.
 Occurrence can be set using the methods on the opt/arg:
 
 ```scala
-opt[String]('o', "out") required()
-opt[String]('o', "out") minOccurs(1) // same as above
-arg[String]("<mode>") optional()
-arg[String]("<mode>") minOccurs(0) // same as above
-arg[String]("<file>...") optional() unbounded()
-arg[String]("<file>...") minOccurs(0) maxOccurs(1024) // same as above
+opt[String]('o', "out").required()
+opt[String]('o', "out").minOccurs(1) // same as above
+arg[String]("<mode>").optional()
+arg[String]("<mode>").minOccurs(0) // same as above
+arg[String]("<file>...").optional().unbounded()
+arg[String]("<file>...").minOccurs(0).maxOccurs(1024) // same as above
 ```
 
 #### Visibility
@@ -182,8 +195,8 @@ arg[String]("<file>...") minOccurs(0) maxOccurs(1024) // same as above
 Each opt/arg can be hidden from the usage text using `hidden()` method:
 
 ```scala
-opt[Unit]("debug") hidden() action { (_, c) =>
-  c.copy(debug = true) } text("this option is hidden in the usage text")
+opt[Unit]("debug").hidden().action( (_, c) =>
+  c.copy(debug = true) ).text("this option is hidden in the usage text")
 ```
 
 #### Validation
@@ -191,9 +204,11 @@ opt[Unit]("debug") hidden() action { (_, c) =>
 Each opt/arg can carry multiple validation functions.
 
 ```scala
-opt[Int]('f', "foo") action { (x, c) => c.copy(intValue = x) } validate { x =>
-  if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
-  failure("Just because") }
+opt[Int]('f', "foo").action( (x, c) => c.copy(intValue = x) ).
+  validate( x =>
+    if (x > 0) success
+    else failure("Option --foo must be >0") ).
+  validate( x => failure("Just because") )
 ```
 
 The first function validates if the values are positive, and
@@ -204,8 +219,9 @@ the second function always fails.
 Consistency among the option values can be checked using `checkConfig`.
 
 ```scala
-checkConfig { c =>
-  if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
+checkConfig( c =>
+  if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+  else success )
 ```
 
 These are called at the end of parsing.
@@ -215,16 +231,18 @@ These are called at the end of parsing.
 Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get inserted in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level. It is generally recommended to avoid mixing args both in parent level and commands to avoid confusion.
 
 ```scala
-arg[String]("<file>...") unbounded() optional()
-cmd("update") action { (_, c) =>
-  c.copy(mode = "update") } text("update is a command.") children(
-  opt[Unit]("not-keepalive") abbr("nk") action { (_, c) =>
-    c.copy(keepalive = false) } text("disable keepalive"),
-  opt[Boolean]("xyz") action { (x, c) =>
-    c.copy(xyz = x) } text("xyz is a boolean property"),
-  checkConfig { c =>
-    if (c.keepalive && c.xyz) failure("xyz cannot keep alive") else success }
-)
+cmd("update").
+  action( (_, c) => c.copy(mode = "update") ).
+  text("update is a command.").
+  children(
+    opt[Unit]("not-keepalive").abbr("nk").action( (_, c) =>
+      c.copy(keepalive = false) ).text("disable keepalive"),
+    opt[Boolean]("xyz").action( (x, c) =>
+      c.copy(xyz = x) ).text("xyz is a boolean property"),
+    checkConfig( c =>
+      if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+      else success )
+  )
 ```
 
 In the above, `update test.txt` would trigger the update command, but `test.txt update` won't.
@@ -232,12 +250,13 @@ In the above, `update test.txt` would trigger the update command, but `test.txt 
 Commands could be nested into another command as follows:
 
 ```scala
-cmd("backend") text("commands to manipulate backends:\n") action { (x, c) =>
-  c.copy(flag = true) } children(
-  cmd("update") children(
-    arg[String]("<a>") action { (x, c) => c.copy(a = x) } 
-  )     
-)
+cmd("backend").text("commands to manipulate backends:\n").
+  action( (x, c) => c.copy(flag = true) ).
+  children(
+    cmd("update").children(
+      arg[String]("<a>").action( (x, c) => c.copy(a = x) )
+    )
+  )
 ```
 
 ### Termination Handling
@@ -249,6 +268,46 @@ By default, when the `--help` or `--version` are invoked, they call `sys.exit(0)
 override def terminate(exitState: Either[String, Unit]): Unit = ()
 ```
 
+### Rendering mode
+
+scopt 3.5.0 introduced rendering mode, and adopted two-column rendeing of the usage text by default. To switch back to the older one-column rendering override the `renderingMode` method:
+
+```scala
+override def renderingMode = scopt.RenderingMode.OneColumn
+```
+
+This will output the sample usage as follows:
+
+```
+scopt 3.x
+Usage: scopt [update] [options] [<file>...]
+
+  -f <value> | --foo <value>
+        foo is an integer property
+  -o <file> | --out <file>
+        out is a required file property
+  --max:<libname>=<max>
+        maximum count for <libname>
+  -j <jar1>,<jar2>... | --jars <jar1>,<jar2>...
+        jars to include
+  --kwargs k1=v1,k2=v2...
+        other arguments
+  --verbose
+        verbose is a flag
+  --help
+        prints this usage text
+  <file>...
+        optional unbounded args
+some notes.
+
+Command: update [options]
+update is a command.
+  -nk | --not-keepalive
+        disable keepalive
+  --xyz <value>
+        xyz is a boolean property
+```
+
 ### Mutable parsing
 
 Create a `scopt.OptionParser[Unit]` and customize it with the options you need, passing in functions to process each option or argument. Use `foreach` instead of `action`.
@@ -256,27 +315,46 @@ Create a `scopt.OptionParser[Unit]` and customize it with the options you need, 
 ```scala
 val parser = new scopt.OptionParser[Unit]("scopt") {
   head("scopt", "3.x")
-  opt[Int]('f', "foo") foreach { x =>
-    c = c.copy(foo = x) } text("foo is an integer property")
-  opt[java.io.File]('o', "out") required() valueName("<file>") foreach { x =>
-    c = c.copy(out = x) } text("out is a required file property")
-  opt[(String, Int)]("max") foreach { case (k, v) =>
-    c = c.copy(libName = k, maxCount = v) } validate { x =>
-    if (x._2 > 0) success else failure("Value <max> must be >0") 
-  } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-  opt[Unit]("verbose") foreach { _ =>
-    c = c.copy(verbose = true) } text("verbose is a flag")
-  opt[Unit]("debug") hidden() foreach { _ =>
-    c = c.copy(debug = true) } text("this option is hidden in the usage text")
-  note("some notes.\n")
-  help("help") text("prints this usage text")
-  arg[java.io.File]("<file>...") unbounded() optional() foreach { x =>
-    c = c.copy(files = c.files :+ x) } text("optional unbounded args")
-  cmd("update") foreach { _ =>
-    c.copy(mode = "update") } text("update is a command.") children(
-    opt[Boolean]("xyz") foreach { x =>
-      c = c.copy(xyz = x) } text("xyz is a boolean property")
-  )
+
+  opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
+    text("foo is an integer property")
+
+  opt[File]('o', "out").required().valueName("<file>").
+    foreach( x => c = c.copy(out = x) ).text("out is a required file property")
+
+  opt[(String, Int)]("max").foreach( { case (k, v) =>
+    c = c.copy(libName = k, maxCount = v) }).
+    validate( x =>
+      if (x._2 > 0) success
+      else failure("Value <max> must be >0") ).
+    keyValueName("<libname>", "<max>").
+    text("maximum count for <libname>")
+
+  opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
+    text("verbose is a flag")
+
+  opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
+    text("this option is hidden in the usage text")
+
+  help("help").text("prints this usage text")
+
+  arg[File]("<file>...").unbounded().optional().
+    foreach( x => c = c.copy(files = c.files :+ x) ).
+    text("optional unbounded args")
+
+  note("some notes.".newline)
+
+  cmd("update").foreach( _ => c.copy(mode = "update") ).
+    text("update is a command.").
+    children(
+      opt[Unit]("not-keepalive").abbr("nk").
+        foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
+      opt[Boolean]("xyz").foreach( x =>
+        c = c.copy(xyz = x) ).text("xyz is a boolean property"),
+      opt[Unit]("debug-update").hidden().
+        foreach( _ => c = c.copy(debug = true) ).
+        text("this option is hidden in the usage text")
+    )
 }
 if (parser.parse(args)) {
   // do stuff

@@ -1,0 +1,40 @@
+  [@Jibbers42]: https://github.com/Jibbers42
+  [109]: https://github.com/scopt/scopt/pull/109
+
+## breaking changes
+
+### two-column rendering
+
+scopt 3.5.0 introduces the notion of rendering mode for the usage text that scopt generates,
+and by default it uses two-column rendering that looks like this:
+
+    scopt 3.x
+    Usage: scopt [update] [options] [<file>...]
+
+      -f, --foo <value>        foo is an integer property
+      -o, --out <file>         out is a required file property
+
+    Command: update [options]
+    update is a command.
+      --xyz <value>            xyz is a boolean property
+
+Previous (one-column) rendering looked like this:
+
+    scopt 3.x
+    Usage: scopt [update] [options] [<file>...]
+
+      -f <value> | --foo <value>
+            foo is an integer property
+      -o <file> | --out <file>
+            out is a required file property
+
+    Command: update [options]
+    update is a command.
+      --xyz <value>
+            xyz is a boolean property
+
+You can switch back to the one-column rendering as follows:
+
+    override def renderingMode = scopt.RenderingMode.OneColumn
+
+This feature was contributed by [@Jibbers42][@Jibbers42] as [#109][109].

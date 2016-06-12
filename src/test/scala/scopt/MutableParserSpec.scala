@@ -101,7 +101,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Unit]('f', "foo") foreach { _ => foo = true }
+      opt[Unit]('f', "foo").foreach( _ => foo = true )
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -112,7 +112,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var debug = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Unit]("debug") hidden() foreach { _ => debug = true }
+      opt[Unit]("debug").hidden().foreach( _ => debug = true )
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -123,7 +123,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") foreach { x => foo = x }
+      opt[Int]('f', "foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -134,7 +134,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") foreach { x => foo = x }
+      opt[Int]('f', "foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -144,7 +144,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo") foreach { x => foo = x }
+      opt[String]("foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -155,7 +155,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = 0.0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo") foreach { x => foo = x }
+      opt[Double]("foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -166,7 +166,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = 0.0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo") foreach { x => foo = x }
+      opt[Double]("foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -176,7 +176,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo") foreach { x => foo = x }
+      opt[Boolean]("foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -187,7 +187,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo") foreach { x => foo = x }
+      opt[Boolean]("foo").foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -198,10 +198,10 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo") foreach { case (k, v) =>
+      opt[(String, Int)]("foo").foreach({ case (k, v) =>
         foo = k
         value = v
-      }
+      })
       help("help")
     }
     parser.parse(args.toSeq)
@@ -213,10 +213,10 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo") foreach { case (k, v) =>
+      opt[(String, Int)]("foo").foreach({ case (k, v) =>
         foo = k
         value = v
-      }
+      })
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -226,7 +226,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo") required() foreach { x => foo = x }
+      opt[String]("foo").required().foreach( x => foo = x )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -236,9 +236,11 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") foreach { x => foo = x } validate { x =>
-        if (x > 0) success else failure("Option --foo must be >0") } validate { x =>
-        failure("Just because") }
+      opt[Int]('f', "foo").foreach( x => foo = x ).
+        validate( x =>
+          if (x > 0) success
+          else failure("Option --foo must be >0") ).
+        validate( x => failure("Just because") )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -248,7 +250,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var port = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>") foreach { x => port = x }
+      arg[Int]("<port>").foreach( x => port = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -259,7 +261,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var port = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>") foreach { x => port = x }
+      arg[Int]("<port>").foreach( x => port = x )
       help("help")
     }
     parser.parse(args.toSeq) === false
@@ -270,8 +272,8 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") foreach { x => a = x }
-      arg[String]("<b>") foreach { x => b = x }
+      arg[String]("<a>").foreach( x => a = x )
+      arg[String]("<b>").foreach( x => b = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -283,8 +285,8 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") foreach { x => a = x } unbounded()
-      arg[String]("<b>") foreach { x => b = x }
+      arg[String]("<a>").foreach( x => a = x ).unbounded()
+      arg[String]("<b>").foreach( x => b = x )
       help("help")
     }
     parser.parse(args.toSeq)
@@ -296,8 +298,8 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>") foreach { x => a = x } unbounded() optional()
-      arg[String]("<b>") foreach { x => b = x } optional()
+      arg[String]("<a>").foreach( x => a = x ).unbounded().optional()
+      arg[String]("<b>").foreach( x => b = x ).optional()
       help("help")
     }
     parser.parse(args.toSeq) === true
@@ -307,7 +309,7 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      cmd("update") foreach { _ => foo = true }
+      cmd("update").foreach( _ => foo = true )
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -322,31 +324,46 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     val parser = new scopt.OptionParser[Unit]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
-      opt[Int]('f', "foo") foreach { x =>
-        c = c.copy(foo = x) } text("foo is an integer property")
-      opt[File]('o', "out") required() valueName("<file>") foreach { x =>
-        c = c.copy(out = x) } text("out is a required file property")
-      opt[(String, Int)]("max") foreach { case (k, v) =>
-        c = c.copy(libName = k, maxCount = v) } validate { x =>
-        if (x._2 > 0) success else failure("Value <max> must be >0")
-      } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-      opt[Unit]("verbose") foreach { _ =>
-        c = c.copy(verbose = true) } text("verbose is a flag")
-      opt[Unit]("debug") hidden() foreach { _ =>
-        c = c.copy(debug = true) } text("this option is hidden in the usage text")
-      help("help") text("prints this usage text")
-      arg[File]("<file>...") unbounded() optional() foreach { x =>
-        c = c.copy(files = c.files :+ x) } text("optional unbounded args")
+
+      opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
+        text("foo is an integer property")
+
+      opt[File]('o', "out").required().valueName("<file>").
+        foreach( x => c = c.copy(out = x) ).text("out is a required file property")
+
+      opt[(String, Int)]("max").foreach( { case (k, v) =>
+        c = c.copy(libName = k, maxCount = v) }).
+        validate( x =>
+          if (x._2 > 0) success
+          else failure("Value <max> must be >0") ).
+        keyValueName("<libname>", "<max>").
+        text("maximum count for <libname>")
+
+      opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
+        text("verbose is a flag")
+
+      opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
+        text("this option is hidden in the usage text")
+
+      help("help").text("prints this usage text")
+
+      arg[File]("<file>...").unbounded().optional().
+        foreach( x => c = c.copy(files = c.files :+ x) ).
+        text("optional unbounded args")
+
       note("some notes.".newline)
-      cmd("update") foreach { _ =>
-        c.copy(mode = "update") } text("update is a command.") children(
-        opt[Unit]("not-keepalive") abbr("nk") foreach { _ =>
-          c.copy(keepalive = false) } text("disable keepalive"),
-        opt[Boolean]("xyz") foreach { x =>
-          c = c.copy(xyz = x) } text("xyz is a boolean property"),
-        opt[Unit]("debug-update") hidden() foreach { _ =>
-          c = c.copy(debug = true) } text("this option is hidden in the usage text")
-      )
+
+      cmd("update").foreach( _ => c.copy(mode = "update") ).
+        text("update is a command.").
+        children(
+          opt[Unit]("not-keepalive").abbr("nk").
+            foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
+          opt[Boolean]("xyz").foreach( x =>
+            c = c.copy(xyz = x) ).text("xyz is a boolean property"),
+          opt[Unit]("debug-update").hidden().
+            foreach( _ => c = c.copy(debug = true) ).
+            text("this option is hidden in the usage text")
+        )
     }
     parser.parse(args.toSeq)
     parser.usage === """scopt 3.x
@@ -381,31 +398,46 @@ update is a command.
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo") foreach { x =>
-        c = c.copy(foo = x) } text("foo is an integer property")
-      opt[File]('o', "out") required() valueName("<file>") foreach { x =>
-        c = c.copy(out = x) } text("out is a required file property")
-      opt[(String, Int)]("max") foreach { case (k, v) =>
-        c = c.copy(libName = k, maxCount = v) } validate { x =>
-        if (x._2 > 0) success else failure("Value <max> must be >0")
-      } keyValueName("<libname>", "<max>") text("maximum count for <libname>")
-      opt[Unit]("verbose") foreach { _ =>
-        c = c.copy(verbose = true) } text("verbose is a flag")
-      opt[Unit]("debug") hidden() foreach { _ =>
-        c = c.copy(debug = true) } text("this option is hidden in the usage text")
-      help("help") text("prints this usage text")
-      arg[File]("<file>...") unbounded() optional() foreach { x =>
-        c = c.copy(files = c.files :+ x) } text("optional unbounded args")
+
+      opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
+        text("foo is an integer property")
+
+      opt[File]('o', "out").required().valueName("<file>").
+        foreach( x => c = c.copy(out = x) ).text("out is a required file property")
+
+      opt[(String, Int)]("max").foreach( { case (k, v) =>
+        c = c.copy(libName = k, maxCount = v) }).
+        validate( x =>
+          if (x._2 > 0) success
+          else failure("Value <max> must be >0") ).
+        keyValueName("<libname>", "<max>").
+        text("maximum count for <libname>")
+
+      opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
+        text("verbose is a flag")
+
+      opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
+        text("this option is hidden in the usage text")
+
+      help("help").text("prints this usage text")
+
+      arg[File]("<file>...").unbounded().optional().
+        foreach( x => c = c.copy(files = c.files :+ x) ).
+        text("optional unbounded args")
+
       note("some notes.".newline)
-      cmd("update") foreach { _ =>
-        c.copy(mode = "update") } text("update is a command.") children(
-        opt[Unit]("not-keepalive") abbr("nk") foreach { _ =>
-          c.copy(keepalive = false) } text("disable keepalive"),
-        opt[Boolean]("xyz") foreach { x =>
-          c = c.copy(xyz = x) } text("xyz is a boolean property"),
-        opt[Unit]("debug-update") hidden() foreach { _ =>
-          c = c.copy(debug = true) } text("this option is hidden in the usage text")
-      )
+
+      cmd("update").foreach( _ => c.copy(mode = "update") ).
+        text("update is a command.").
+        children(
+          opt[Unit]("not-keepalive").abbr("nk").
+            foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
+          opt[Boolean]("xyz").foreach( x =>
+            c = c.copy(xyz = x) ).text("xyz is a boolean property"),
+          opt[Unit]("debug-update").hidden().
+            foreach( _ => c = c.copy(debug = true) ).
+            text("this option is hidden in the usage text")
+        )
     }
     parser.parse(args.toSeq)
     parser.usage === """scopt 3.x
