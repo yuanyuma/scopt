@@ -374,7 +374,7 @@ sbt to build scopt.
 License
 -------
 
-MIT License.
+[MIT License](LICENSE.md).
 
 Credits
 -------
