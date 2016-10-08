@@ -25,7 +25,6 @@ object Read {
     val arity = 1
     val reads = f
   }
-  implicit val intRead: Read[Int]             = reads { _.toInt }
   implicit val stringRead: Read[String]       = reads { identity }
   implicit val doubleRead: Read[Double]       = reads { _.toDouble }
   implicit val booleanRead: Read[Boolean]     =
@@ -39,8 +38,24 @@ object Read {
       case s       =>
         throw new IllegalArgumentException("'" + s + "' is not a boolean.")
     }}
-  implicit val longRead: Read[Long]           = reads { _.toLong }
-  implicit val bigIntRead: Read[BigInt]       = reads { BigInt(_) }
+
+  private def fixedPointWithRadix(str: String): (String, Int) = str.toLowerCase match {
+    case s if s.startsWith("0x") => (s.stripPrefix("0x"), 16)
+    case s                       => (s, 10)
+  }
+  implicit val intRead: Read[Int] = reads { str =>
+    val (s, radix) = fixedPointWithRadix(str)
+    Integer.parseInt(s, radix)
+  }
+  implicit val longRead: Read[Long] = reads { str =>
+    val (s, radix) = fixedPointWithRadix(str)
+    java.lang.Long.parseLong(s, radix)
+  }
+  implicit val bigIntRead: Read[BigInt] = reads { str =>
+    val (s, radix) = fixedPointWithRadix(str)
+    BigInt(s, radix)
+  }
+
   implicit val bigDecimalRead: Read[BigDecimal] = reads { BigDecimal(_) }
   implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
   def calendarRead(pattern: String): Read[Calendar] = calendarRead(pattern, Locale.getDefault)

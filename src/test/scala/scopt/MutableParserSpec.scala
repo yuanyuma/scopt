@@ -14,9 +14,26 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     parse 1 out of --foo=1                                      ${intParser("--foo=1")}
     parse 1 out of -f 1                                         ${intParser("-f", "1")}
     parse 1 out of -f:1                                         ${intParser("-f:1")}
+    parse 1 out of --foo 0x01                                   ${intParser("--foo","0x01")}
+    parse 1 out of --foo:0x01                                   ${intParser("--foo:0x01")}
+    parse 1 out of --foo=0x01                                   ${intParser("--foo=0x01")}
+    parse 1 out of -f 0x1                                       ${intParser("-f", "0x1")}
+    parse 1 out of -f:0x1                                       ${intParser("-f:0x1")}
     fail to parse --foo                                         ${intParserFail{"--foo"}}
     fail to parse --foo bar                                     ${intParserFail("--foo", "bar")}
     fail to parse --foo=bar                                     ${intParserFail("--foo=bar")}
+
+  opt[Long]('f', "foo") foreach { x => x } should
+    parse 1 out of --foo 1                                      ${longParser("--foo", "1")}
+    parse 1 out of --foo:1                                      ${longParser("--foo:1")}
+    parse 1 out of --foo=1                                      ${longParser("--foo=1")}
+    parse 1 out of -f 1                                         ${longParser("-f", "1")}
+    parse 1 out of -f:1                                         ${longParser("-f:1")}
+    parse 1 out of --foo 0x01                                   ${longParser("--foo","0x01")}
+    parse 1 out of --foo:0x01                                   ${longParser("--foo:0x01")}
+    parse 1 out of --foo=0x01                                   ${longParser("--foo=0x01")}
+    parse 1 out of -f 0x1                                       ${longParser("-f", "0x1")}
+    parse 1 out of -f:0x1                                       ${longParser("-f:0x1")}
 
   opt[String]("foo") foreach { x => x } should
     parse "bar" out of --foo bar                                ${stringParser("--foo", "bar")}
@@ -128,6 +145,17 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     }
     parser.parse(args.toSeq)
     foo === 1
+  }
+
+  def longParser(args: String*) = {
+    var foo = 0L
+    val parser = new scopt.OptionParser[Unit]("scopt") {
+      head("scopt", "3.x")
+      opt[Long]('f', "foo").foreach( x => foo = x )
+      help("help")
+    }
+    parser.parse(args.toSeq)
+    foo === 1L
   }
 
   def intParserFail(args: String*) = {
