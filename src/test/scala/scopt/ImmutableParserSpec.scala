@@ -26,9 +26,27 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse 1 out of -f 1                                         ${intParser("-f", "1")}
     parse 1 out of -f:1                                         ${intParser("-f:1")}
     parse 1 out of -f=1                                         ${intParser("-f=1")}
+    parse 1 out of --foo 0x01                                   ${intParser("--foo", "0x01")}
+    parse 1 out of --foo:0x01                                   ${intParser("--foo:0x01")}
+    parse 1 out of --foo=0x01                                   ${intParser("--foo=0x01")}
+    parse 1 out of -f 0x1                                       ${intParser("-f", "0x1")}
+    parse 1 out of -f:0x1                                       ${intParser("-f:0x1")}
     fail to parse --foo                                         ${intParserFail{"--foo"}}
     fail to parse --foo bar                                     ${intParserFail("--foo", "bar")}
     fail to parse --foo=bar                                     ${intParserFail("--foo=bar")}
+
+  opt[Long]('f', "foo") action { x => x } should
+    parse 1 out of --foo 1                                      ${longParser("--foo", "1")}
+    parse 1 out of --foo:1                                      ${longParser("--foo:1")}
+    parse 1 out of --foo=1                                      ${longParser("--foo=1")}
+    parse 1 out of -f 1                                         ${longParser("-f", "1")}
+    parse 1 out of -f:1                                         ${longParser("-f:1")}
+    parse 1 out of -f=1                                         ${longParser("-f=1")}
+    parse 1 out of --foo 0x01                                   ${longParser("--foo", "0x01")}
+    parse 1 out of --foo:0x01                                   ${longParser("--foo:0x01")}
+    parse 1 out of --foo=0x01                                   ${longParser("--foo=0x01")}
+    parse 1 out of -f 0x1                                       ${longParser("-f", "0x1")}
+    parse 1 out of -f:0x1                                       ${longParser("-f:0x1")}
 
   opt[String]("foo") action { x => x } should
     parse "bar" out of --foo bar                                ${stringParser("--foo", "bar")}
@@ -209,6 +227,17 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   def intParserFail(args: String*) = {
     val result = intParser1.parse(args.toSeq, Config())
     result === None
+  }
+
+  val longParser1 = new scopt.OptionParser[Config]("scopt") {
+    override def showUsageOnError = true
+    head("scopt", "3.x")
+    opt[Long]('f', "foo").action( (x, c) => c.copy(longValue = x))
+    help("help")
+  }
+  def longParser(args: String*) = {
+    val result = intParser1.parse(args.toSeq, Config())
+    result.get.intValue === 1
   }
 
   val stringParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -733,7 +762,7 @@ Usage: scopt [options]
 """
   }
 
-  case class Config(flag: Boolean = false, intValue: Int = 0, stringValue: String = "",
+  case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",
     doubleValue: Double = 0.0, boolValue: Boolean = false, debug: Boolean = false,
     bigDecimalValue: BigDecimal = BigDecimal("0.0"),
     calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
