@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).
       version := v,
       organization := "com.github.scopt",
       scalaVersion := "2.11.8",
-      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.0-RC1"),
+      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.0"),
       homepage := Some(url("https://github.com/scopt/scopt")),
       licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
     )),
@@ -19,7 +19,7 @@ lazy val root = (project in file(".")).
     ghpages.settings,
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     description := """a command line options parsing library""",
-    libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.5" % "test",
+    libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.6" % "test",
     scalacOptions ++= Seq("-language:existentials"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
