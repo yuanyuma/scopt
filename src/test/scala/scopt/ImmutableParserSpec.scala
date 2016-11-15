@@ -1,13 +1,9 @@
-import java.security.{AccessControlException, Permission}
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
-
 import org.specs2._
 import java.util.{Calendar, GregorianCalendar}
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{ URI, InetAddress }
 import scala.concurrent.duration.Duration
 
-import scala.util.Try
 class ImmutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
   This is a specification to check the immutable parser
 
