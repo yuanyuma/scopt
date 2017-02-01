@@ -49,6 +49,13 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     parse "bar" out of --foo:bar                                ${stringParser("--foo:bar")}
     parse "bar" out of --foo=bar                                ${stringParser("--foo=bar")}
 
+  opt[Char]("foo") action { x => x } should
+    parse 'b' out of --foo b                                    ${charParser("--foo", "b")}
+    parse 'b' out of --foo:b                                    ${charParser("--foo:b")}
+    parse 'b' out of --foo=b                                    ${charParser("--foo=b")}
+    fail to parse --foo bar                                     ${charParserFail("--foo", "bar")}
+    fail to parse --foo=bar                                     ${charParserFail("--foo=bar")}
+
   opt[Double]("foo") action { x => x } should
     parse 1.0 out of --foo 1.0                                  ${doubleParser("--foo", "1.0")}
     parse 1.0 out of --foo:1.0                                  ${doubleParser("--foo:1.0")}
@@ -244,6 +251,20 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   def stringParser(args: String*) = {
     val result = stringParser1.parse(args.toSeq, Config())
     result.get.stringValue === "bar"
+  }
+
+  val charParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Char]("foo").action( (x, c) => c.copy(charValue = x) )
+    help("help")
+  }
+  def charParser(args: String*) = {
+    val result = charParser1.parse(args.toSeq, Config())
+    result.get.charValue === 'b'
+  }
+  def charParserFail(args: String*) = {
+    val result = charParser1.parse(args.toSeq, Config())
+    result === None
   }
 
   val doubleParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -769,5 +790,5 @@ Usage: scopt [options]
     key: String = "", a: String = "", b: String = "",
     seqInts: Seq[Int] = Seq(),
     mapStringToBool: Map[String,Boolean] = Map(),
-    seqTupleStringString: Seq[(String, String)] = Nil)
+    seqTupleStringString: Seq[(String, String)] = Nil, charValue: Char = 0)
 }

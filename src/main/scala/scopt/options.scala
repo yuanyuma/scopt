@@ -26,6 +26,12 @@ object Read {
     val reads = f
   }
   implicit val stringRead: Read[String]       = reads { identity }
+  implicit val charRead: Read[Char]           =
+    reads { _.getBytes match {
+      case Array(char) => char.toChar
+      case s           =>
+        throw new IllegalArgumentException("'" + s + "' is not a char.")
+    }}
   implicit val doubleRead: Read[Double]       = reads { _.toDouble }
   implicit val booleanRead: Read[Boolean]     =
     reads { _.toLowerCase match {
