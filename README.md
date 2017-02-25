@@ -2,6 +2,7 @@
 
 # scopt
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.scopt/scopt_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.scopt/scopt_2.11)
+[![Javadocs](https://javadoc.io/badge/com.github.scopt/scopt_2.12.svg)](https://javadoc.io/doc/com.github.scopt/scopt_2.12)
 
 scopt is a little command line options parsing library.
 
