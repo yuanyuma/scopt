@@ -357,19 +357,24 @@ abstract case class OptionParser[C](programName: String) {
   }
   def optionsForRender: List[OptionDef[_, C]] = {
     val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
-    val (unseen, xs) = unsorted partition {_.hasParent} match {
+    val (remaining, sorted) = unsorted partition {_.hasParent} match {
       case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
     }
-    while (!unseen.isEmpty) {
+    var continue = true
+    while (!remaining.isEmpty && continue) {
+      continue = false
       for {
-        x <- xs
+        parent <- sorted
       } {
-        val cs = unseen filter {_.getParentId == Some(x.id)}
-        unseen --= cs
-        xs.insertAll((xs indexOf x) + 1, cs)
+        val childrenOfThisParent = remaining filter {_.getParentId == Some(parent.id)}
+        if (childrenOfThisParent.nonEmpty) {
+          remaining --= childrenOfThisParent
+          sorted.insertAll((sorted indexOf parent) + 1, childrenOfThisParent)
+          continue = true
+        }
       }
     }
-    xs.toList
+    sorted.toList
   }
   def usageExample: String = commandExample(None)
   private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
@@ -556,6 +561,7 @@ class OptionDef[A: Read, C](
   _minOccurs: Int,
   _maxOccurs: Int,
   _isHidden: Boolean) {
+
   import OptionDef._
 
   def this(parser: OptionParser[C], kind: OptionDefKind, name: String) =
