@@ -186,6 +186,9 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   terminationSafeParser should
     not terminate on `--help`                                   ${terminationSafeParser("--help")}
     not terminate on `--version`                                ${terminationSafeParser("--version")}
+
+  emptyParser.showUsage
+    print empty usage text                                      ${noOptionTest()}
                                                                 """
 
   import SpecUtil._
@@ -777,6 +780,12 @@ Usage: scopt [options]
 
   --help  prints this usage text
 """
+  }
+
+  def noOptionTest() = {
+    val emptyParser =
+      new scopt.OptionParser[Config]("scopt") {}
+    emptyParser.usage !== ""
   }
 
   case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",

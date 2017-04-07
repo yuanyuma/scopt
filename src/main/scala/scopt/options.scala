@@ -345,7 +345,10 @@ abstract case class OptionParser[C](programName: String) {
     import OptionDef._
     val xs = optionsForRender
     val descriptions = {
-      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
+      val col1Len = math.min(column1MaxLength, xs map {_.usageColumn1.length + WW.length} match {
+        case Nil => 0
+        case list => list.max
+      })
       xs map {_.usageTwoColumn(col1Len)}
     }
     (if (header == "") "" else header + NL) +
