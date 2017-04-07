@@ -183,6 +183,9 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   showUsage should
     print usage text                                            ${showUsageParser()}
 
+  cmd("update") hidden() children(opt[Unit]("foo").text("foo")) should
+    print usage text                                            ${showUsageHiddenCmdParser()}
+
   terminationSafeParser should
     not terminate on `--help`                                   ${terminationSafeParser("--help")}
     not terminate on `--version`                                ${terminationSafeParser("--version")}
@@ -743,6 +746,14 @@ update is a command.
     help("help") text("prints this usage text")
   }
 
+  val printHiddenCmdParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    cmd("update").hidden().children(
+      opt[Unit]("foo").text("foo")
+    )
+    help("help") text("prints this usage text")
+  }
+
   lazy val terminationSafeParser1 = new scopt.OptionParser[Config]("scopt") {
     override def terminate(exitState: Either[String, Unit]): Unit = ()
     version("version")
@@ -760,10 +771,13 @@ update is a command.
     Console.withErr(errStream) { body(printParser1) }
     errStream.toString("UTF-8")
   }
-  def printParserOut(body: scopt.OptionParser[Config] => Unit): String = {
+  def printParserOut(thunk: => Unit): String = {
     val outStream = new ByteArrayOutputStream()
-    Console.withOut(outStream) { body(printParser1) }
+    Console.withOut(outStream) { thunk }
     outStream.toString("UTF-8")
+  }
+  def printParserOut(body: scopt.OptionParser[Config] => Unit): String = {
+    printParserOut { body(printParser1) }
   }
   def reportErrorParser(msg: String) = {
     printParserError(_.reportError(msg)) === "Error: foo".newline
@@ -782,11 +796,20 @@ Usage: scopt [options]
 """
   }
 
+  def showUsageHiddenCmdParser() = {
+    printParserOut(printHiddenCmdParser1.showUsage()) === """scopt 3.x
+Usage: scopt [update] [options]
+
+  --help  prints this usage text
+"""
+  }
+  
   def noOptionTest() = {
     val emptyParser =
       new scopt.OptionParser[Config]("scopt") {}
     emptyParser.usage !== ""
   }
+  
 
   case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",
     doubleValue: Double = 0.0, boolValue: Boolean = false, debug: Boolean = false,
