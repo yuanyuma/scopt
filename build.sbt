@@ -13,7 +13,7 @@ lazy val scopt = (crossProject in file(".")).
     inThisBuild(Seq(
       version := v,
       organization := "com.github.scopt",
-      scalaVersion := "2.11.8",
+      scalaVersion := "2.12.1",
       crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.0"),
       homepage := Some(url("https://github.com/scopt/scopt")),
       licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
