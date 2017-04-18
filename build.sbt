@@ -1,6 +1,14 @@
 def v: String = "3.5.0"
 
-lazy val root = (project in file(".")).
+lazy val root = project.in(file(".")).
+	aggregate(scoptJS, scoptJVM).
+	settings(
+		publish := {},
+		publishLocal := {}
+	)
+
+
+lazy val scopt = (crossProject in file(".")).
   settings(
     inThisBuild(Seq(
       version := v,
@@ -25,3 +33,6 @@ lazy val root = (project in file(".")).
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
+
+lazy val scoptJS = scopt.js
+lazy val scoptJVM = scopt.jvm

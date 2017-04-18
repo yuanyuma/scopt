@@ -9,3 +9,5 @@ ivyXML :=
   rev="2.5.0.v201103041518">
     <artifact name="javax.servlet" type="orbit" ext="jar"/>
   </dependency>
+
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.15")
