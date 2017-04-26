@@ -10,7 +10,7 @@ Sonatype
 --------
 
 ```scala
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.1"
 ```
 
 Usage
