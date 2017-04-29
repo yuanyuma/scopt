@@ -1,6 +1,6 @@
 package scopt
 
-//import java.net.UnknownHostException
+
 
 import collection.mutable.{ListBuffer, ListMap}
 
@@ -663,12 +663,8 @@ class OptionDef[A: Read, C](
         case Right(_) => Right(callback(x, config))
         case Left(xs) => Left(xs)
       }
-    } catch {
-      case e: NumberFormatException => Left(Seq(shortDescription.capitalize + " expects a number but was given '" + arg + "'"))
-//      case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
-      case e: ParseException        => Left(Seq(shortDescription.capitalize + " expects a Scala duration but was given '" + arg + "'"))
-      case e: Throwable             => Left(Seq(shortDescription.capitalize + " failed when given '" + arg + "'. " + e.getMessage))
-    }
+    } catch applyArgumentExHandler(shortDescription.capitalize, arg)
+
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
   private[scopt] def shortOptTokens(arg: String): Int =
     _shortOpt match {

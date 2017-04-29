@@ -1,5 +1,6 @@
 package scopt
 
+import java.net.UnknownHostException
 
 private[scopt] object platform {
   val _NL = System.getProperty("line.separator")
@@ -26,4 +27,13 @@ private[scopt] object platform {
     implicit val fileRead: Read[File]           = Read.reads { new File(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
   }
+
+  def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
+      case e: NumberFormatException => Left(Seq(desc + " expects a number but was given '" + arg + "'"))
+      case e: UnknownHostException  => Left(Seq(desc + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
+      case e: ParseException        => Left(Seq(desc + " expects a Scala duration but was given '" + arg + "'"))
+      case e: Throwable             => Left(Seq(desc + " failed when given '" + arg + "'. " + e.getMessage))
+    }
+
+
 }
