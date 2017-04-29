@@ -18,7 +18,6 @@ script:
 scala:
    - 2.10.6
    - 2.11.7
-   - 2.12.2
 
 matrix:
   include:
