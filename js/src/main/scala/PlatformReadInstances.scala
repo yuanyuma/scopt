@@ -19,7 +19,7 @@ private[scopt] object platform {
   type ParseException = scopt.ParseException
   def mkParseEx(s: String, p: Int) = new ParseException(s, p)
 
-  trait Implicits {
+  trait PlatformReadInstances {
   }
 
   def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {

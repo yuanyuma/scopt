@@ -13,7 +13,7 @@ private[scopt] object platform {
   type ParseException = java.text.ParseException
   def mkParseEx(s: String, p: Int) = new java.text.ParseException(s, p)
 
-  trait Implicits {
+  trait PlatformReadInstances {
     def calendarRead(pattern: String): Read[Calendar] = calendarRead(pattern, Locale.getDefault)
     def calendarRead(pattern: String, locale: Locale): Read[Calendar] =
       Read.reads { s =>

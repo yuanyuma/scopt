@@ -14,7 +14,7 @@ trait Read[A] { self =>
   }
 }
 
-object Read extends platform.Implicits {
+object Read extends platform.PlatformReadInstances {
 
   import java.net.URI
   import scala.concurrent.duration.Duration
