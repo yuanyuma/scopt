@@ -1,7 +1,6 @@
 package scopt
 
-import java.net.UnknownHostException
-import java.text.ParseException
+
 
 import collection.mutable.{ListBuffer, ListMap}
 
@@ -14,13 +13,12 @@ trait Read[A] { self =>
     val reads = self.reads andThen f
   }
 }
-object Read {
-  import java.util.{Locale, Calendar, GregorianCalendar}
-  import java.text.SimpleDateFormat
-  import java.io.File
+
+object Read extends platform.PlatformReadInstances {
+
   import java.net.URI
-  import java.net.InetAddress
   import scala.concurrent.duration.Duration
+
   def reads[A](f: String => A): Read[A] = new Read[A] {
     val arity = 1
     val reads = f
@@ -63,23 +61,13 @@ object Read {
   }
 
   implicit val bigDecimalRead: Read[BigDecimal] = reads { BigDecimal(_) }
-  implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
-  def calendarRead(pattern: String): Read[Calendar] = calendarRead(pattern, Locale.getDefault)
-  def calendarRead(pattern: String, locale: Locale): Read[Calendar] =
-    reads { s =>
-      val fmt = new SimpleDateFormat(pattern)
-      val c = new GregorianCalendar
-      c.setTime(fmt.parse(s))
-      c
-    }
-  implicit val fileRead: Read[File]           = reads { new File(_) }
   implicit val uriRead: Read[URI]             = reads { new URI(_) }
-  implicit val inetAddress: Read[InetAddress] = reads { InetAddress.getByName(_) }
+
   implicit val durationRead: Read[Duration]   =
     reads { try {
       Duration(_)
     } catch {
-      case e: NumberFormatException => throw new ParseException(e.getMessage, -1)
+      case e: NumberFormatException => throw platform.mkParseEx(e.getMessage, -1)
     }}
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
@@ -232,6 +220,8 @@ private[scopt] case object Check extends OptionDefKind
 abstract case class OptionParser[C](programName: String) {
   protected val options = new ListBuffer[OptionDef[_, C]]
   protected val helpOptions = new ListBuffer[OptionDef[_, C]]
+
+  import platform._
 
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
@@ -562,6 +552,7 @@ class OptionDef[A: Read, C](
   _maxOccurs: Int,
   _isHidden: Boolean) {
 
+  import platform._
   import OptionDef._
 
   def this(parser: OptionParser[C], kind: OptionDefKind, name: String) =
@@ -672,12 +663,8 @@ class OptionDef[A: Read, C](
         case Right(_) => Right(callback(x, config))
         case Left(xs) => Left(xs)
       }
-    } catch {
-      case e: NumberFormatException => Left(Seq(shortDescription.capitalize + " expects a number but was given '" + arg + "'"))
-      case e: UnknownHostException  => Left(Seq(shortDescription.capitalize + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
-      case e: ParseException        => Left(Seq(shortDescription.capitalize + " expects a Scala duration but was given '" + arg + "'"))
-      case e: Throwable             => Left(Seq(shortDescription.capitalize + " failed when given '" + arg + "'. " + e.getMessage))
-    }
+    } catch applyArgumentExHandler(shortDescription.capitalize, arg)
+
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
   private[scopt] def shortOptTokens(arg: String): Int =
     _shortOpt match {
@@ -775,9 +762,10 @@ class OptionDef[A: Read, C](
     }
 }
 
+
 private[scopt] object OptionDef {
   val UNBOUNDED = Int.MaxValue
-  val NL = System.getProperty("line.separator")
+  val NL = platform._NL
   val WW = "  "
   val TB = "        "
   val NLTB = NL + TB

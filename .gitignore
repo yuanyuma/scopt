@@ -4,3 +4,5 @@ project/boot
 lib_managed
 *.i??
 .idea/
+
+*~

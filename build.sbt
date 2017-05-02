@@ -1,12 +1,19 @@
-def v: String = "3.5.0"
+def v: String = "3.5.1"
 
-lazy val root = (project in file(".")).
+lazy val root = project.in(file(".")).
+  aggregate(scoptJS, scoptJVM).
+  settings(
+    publish := {},
+    publishLocal := {})
+
+
+lazy val scopt = (crossProject in file(".")).
   settings(
     inThisBuild(Seq(
       version := v,
       organization := "com.github.scopt",
-      scalaVersion := "2.11.8",
-      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.0"),
+      scalaVersion := "2.12.2",
+      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.2"),
       homepage := Some(url("https://github.com/scopt/scopt")),
       licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
     )),
@@ -25,3 +32,6 @@ lazy val root = (project in file(".")).
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
+
+lazy val scoptJS = scopt.js
+lazy val scoptJVM = scopt.jvm
