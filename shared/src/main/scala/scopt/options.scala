@@ -758,7 +758,7 @@ class OptionDef[A: Read, C](
       case Opt => "--" + name
       case _   => name
     }
-    private[scopt] def argName: String =
+  private[scopt] def argName: String =
     kind match {
       case Arg if getMinOccurs == 0 => "[" + fullName + "]"
       case _   => fullName
