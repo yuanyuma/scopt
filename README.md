@@ -271,7 +271,7 @@ override def terminate(exitState: Either[String, Unit]): Unit = ()
 
 ### Captured Output
 
-By default, scopt emits output when needed on stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to capture stderr and stdout output rather than emit them directly.   Redirecting Console in Scala can accomplish this in a thread-safe way, within a scope of your chosing, like this:
+By default, scopt emits output when needed to stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to capture stderr and stdout output rather than emit them directly.   Redirecting Console in Scala can accomplish this in a thread-safe way, within a scope of your chosing, like this:
 
 ```scala
 val outCapture = new ByteArrayOutputStream
