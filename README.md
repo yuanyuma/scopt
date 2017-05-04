@@ -269,6 +269,22 @@ By default, when the `--help` or `--version` are invoked, they call `sys.exit(0)
 override def terminate(exitState: Either[String, Unit]): Unit = ()
 ```
 
+### Captured Output
+
+By default, scopt emits output when needed to stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to capture stderr and stdout output rather than emit them directly.   Redirecting Console in Scala can accomplish this in a thread-safe way, within a scope of your chosing, like this:
+
+```scala
+val outCapture = new ByteArrayOutputStream
+val errCapture = new ByteArrayOutputStream
+
+Console.withOut(outCapture) {
+  Console.withErr(errCapture) {
+    parser.parse(args, config)
+  }
+}
+// Now stderr output from this block is in errCapture.toString, and stdout in outCapture.toString
+```
+
 ### Rendering mode
 
 scopt 3.5.0 introduced rendering mode, and adopted two-column rendeing of the usage text by default. To switch back to the older one-column rendering override the `renderingMode` method:
