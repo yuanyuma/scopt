@@ -282,8 +282,7 @@ Console.withOut(outCapture) {
     parser.parse(args, config)
   }
 }
-
-ParseResult(config, errCapture.toString, outCapture.toString)
+// Now stderr output from this block is in errCapture.toString, and stdout in outCapture.toString
 ```
 
 ### Rendering mode
