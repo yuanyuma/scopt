@@ -217,7 +217,7 @@ private[scopt] case object Check extends OptionDefKind
  * }
  * }}}
  */
-abstract case class OptionParser[C](programName: String) {
+abstract class OptionParser[C](programName: String) {
   protected val options = new ListBuffer[OptionDef[_, C]]
   protected val helpOptions = new ListBuffer[OptionDef[_, C]]
 
