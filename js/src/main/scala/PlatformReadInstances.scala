@@ -20,6 +20,8 @@ private[scopt] object platform {
   def mkParseEx(s: String, p: Int) = new ParseException(s, p)
 
   trait PlatformReadInstances {
+    import java.net.URI
+    implicit val uriRead: Read[URI] = Read.reads { new URI(_) }
   }
 
   def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {

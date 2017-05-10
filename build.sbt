@@ -1,13 +1,16 @@
+// shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
+import sbtcrossproject.{crossProject, CrossType}
+
 def v: String = "3.5.1"
 
 lazy val root = project.in(file(".")).
-  aggregate(scoptJS, scoptJVM).
+  aggregate(scoptJS, scoptJVM, scoptNative).
   settings(
     publish := {},
     publishLocal := {})
 
 
-lazy val scopt = (crossProject in file(".")).
+lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(".")).
   settings(
     inThisBuild(Seq(
       version := v,
@@ -31,7 +34,17 @@ lazy val scopt = (crossProject in file(".")).
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
+  ).
+  nativeSettings(
+    scalaVersion := "2.11.11",
+    crossScalaVersions := Nil
   )
 
 lazy val scoptJS = scopt.js
 lazy val scoptJVM = scopt.jvm
+lazy val scoptNative = scopt.native
+
+lazy val nativeTest = project.in(file("nativeTest")).
+  dependsOn(scoptNative).
+  enablePlugins(ScalaNativePlugin).
+  settings(scalaVersion := "2.11.8")

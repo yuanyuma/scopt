@@ -8,7 +8,7 @@ private[scopt] object platform {
   import java.util.{Locale, Calendar, GregorianCalendar}
   import java.text.SimpleDateFormat
   import java.io.File
-  import java.net.InetAddress
+  import java.net.{InetAddress, URI}
 
   type ParseException = java.text.ParseException
   def mkParseEx(s: String, p: Int) = new java.text.ParseException(s, p)
@@ -26,6 +26,7 @@ private[scopt] object platform {
     implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
     implicit val fileRead: Read[File]           = Read.reads { new File(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
+    implicit val uriRead: Read[URI]             = Read.reads { new URI(_) }
   }
 
   def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
