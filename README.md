@@ -10,8 +10,10 @@ Sonatype
 --------
 
 ```scala
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.1"
+libraryDependencies += "com.github.scopt" %% "scopt" % "X.Y.Z"
 ```
+
+See the Maven Central badge above.
 
 Usage
 -----
