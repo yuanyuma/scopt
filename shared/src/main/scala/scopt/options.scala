@@ -644,15 +644,18 @@ class OptionDef[A: Read, C](
 
   private[scopt] val kind: OptionDefKind = _kind
   private[scopt] val id: Int = _id
-  private[scopt] val name: String = _name
+  val name: String = _name
   private[scopt] def callback: (A, C) => C = _action
-  private[scopt] def getMinOccurs: Int = _minOccurs
-  private[scopt] def getMaxOccurs: Int = _maxOccurs
+  def getMinOccurs: Int = _minOccurs
+  def getMaxOccurs: Int = _maxOccurs
   private[scopt] def shortOptOrBlank: String = _shortOpt getOrElse("")
   private[scopt] def hasParent: Boolean = _parentId.isDefined
   private[scopt] def getParentId: Option[Int] = _parentId
-  private[scopt] def isHidden: Boolean = _isHidden
+  def isHidden: Boolean = _isHidden
   private[scopt] def checks: Seq[C => Either[String, Unit]] = _configValidations
+  def desc: String = _desc
+  def shortOpt: Option[String] = _shortOpt
+  def valueName: Option[String] = _valueName
 
   private[scopt] def applyArgument(arg: String, config: C): Either[Seq[String], C] =
     try {
