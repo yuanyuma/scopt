@@ -18,7 +18,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
       version := v,
       organization := "com.github.scopt",
       scalaVersion := "2.12.2",
-      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.2"),
+      crossScalaVersions := Seq("2.11.8", "2.10.6", "2.12.2", "2.13.0-M1"),
       homepage := Some(url("https://github.com/scopt/scopt")),
       licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php"))
     )),
@@ -31,7 +31,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     ghpages.settings,
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     description := """a command line options parsing library""",
-    libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.6" % "test",
+    libraryDependencies += "org.specs2" %% "specs2-core" % "3.9.1" % "test",
     scalacOptions ++= Seq("-language:existentials"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
