@@ -513,6 +513,14 @@ abstract class OptionParser[C](programName: String) {
       }
       i += 1
     }
+
+    pendingOptions.filter(_.hasFallback).foreach { opt =>
+      val fallback = opt.getFallback
+      if (fallback != null) {
+        handleOccurrence(opt, pendingOptions)
+        handleArgument(opt, fallback.toString)
+      }
+    }
     (pendingOptions filter { opt => opt.getMinOccurs > occurrences(opt) }) foreach { opt =>
       if (opt.getMinOccurs == 1) reportError("Missing " + opt.shortDescription)
       else reportError(opt.shortDescription.capitalize + " must be given " + opt.getMinOccurs + " times")
@@ -548,7 +556,8 @@ class OptionDef[A: Read, C](
   _parentId: Option[Int],
   _minOccurs: Int,
   _maxOccurs: Int,
-  _isHidden: Boolean) {
+  _isHidden: Boolean,
+  _fallback: Option[() => A]) {
 
   import platform._
   import OptionDef._
@@ -559,7 +568,7 @@ class OptionDef[A: Read, C](
       _desc = "", _action = { (a: A, c: C) => c },
       _validations = Seq(), _configValidations = Seq(),
       _parentId = None, _minOccurs = 0, _maxOccurs = 1,
-      _isHidden = false)
+      _isHidden = false, _fallback = None)
 
   private[scopt] def copy(
     _parser: OptionParser[C] = this._parser,
@@ -576,12 +585,13 @@ class OptionDef[A: Read, C](
     _parentId: Option[Int] = this._parentId,
     _minOccurs: Int = this._minOccurs,
     _maxOccurs: Int = this._maxOccurs,
-    _isHidden: Boolean = this._isHidden): OptionDef[A, C] =
+    _isHidden: Boolean = this._isHidden,
+    _fallback: Option[() => A] = this._fallback): OptionDef[A, C] =
     new OptionDef(_parser = _parser, _id = _id, _kind = _kind, _name = _name, _shortOpt = _shortOpt,
       _keyName = _keyName, _valueName = _valueName, _desc = _desc, _action = _action,
       _validations = _validations, _configValidations = _configValidations,
       _parentId = _parentId, _minOccurs = _minOccurs, _maxOccurs = _maxOccurs,
-      _isHidden = _isHidden)
+      _isHidden = _isHidden, _fallback = _fallback)
 
   private[this] def read: Read[A] = implicitly[Read[A]]
 
@@ -606,7 +616,7 @@ class OptionDef[A: Read, C](
     _parser.updateOption(copy(_minOccurs = n))
   /** Requires the option to appear at least once. */
   def required(): OptionDef[A, C] = minOccurs(1)
-  /** Chanages the option to be optional. */
+  /** Changes the option to be optional. */
   def optional(): OptionDef[A, C] = minOccurs(0)
   /** Allows the argument to appear at most `n` times. */
   def maxOccurs(n: Int): OptionDef[A, C] =
@@ -631,6 +641,9 @@ class OptionDef[A: Read, C](
   /** Hides the option in any usage text. */
   def hidden(): OptionDef[A, C] =
     _parser.updateOption(copy(_isHidden = true))
+  /** provides a default to fallback to, e.g. for System.getenv */
+  def withFallback(to: () => A): OptionDef[A, C] =
+    _parser.updateOption(copy(_fallback = Option(to)))
 
   private[scopt] def validateConfig(f: C => Either[String, Unit]) =
     _parser.updateOption(copy(_configValidations = _configValidations :+ f))
@@ -652,6 +665,8 @@ class OptionDef[A: Read, C](
   private[scopt] def hasParent: Boolean = _parentId.isDefined
   private[scopt] def getParentId: Option[Int] = _parentId
   def isHidden: Boolean = _isHidden
+  def hasFallback: Boolean = _fallback.isDefined
+  def getFallback: A = _fallback.get.apply
   private[scopt] def checks: Seq[C => Either[String, Unit]] = _configValidations
   def desc: String = _desc
   def shortOpt: Option[String] = _shortOpt

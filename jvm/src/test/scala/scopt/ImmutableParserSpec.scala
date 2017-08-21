@@ -126,6 +126,10 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   opt[String]("foo") required() action { x => x } should
     fail to parse Nil                                           ${requiredFail()}
 
+  opt[String]("foo").required().withFallback(() => "someFallback") should
+    parse provided value                                        ${requiredWithFallback(args = Seq("--stringValue", "provided"), expected = "provided")}
+    use fallback value                                          ${requiredWithFallback(args = Nil, expected = "someFallback")}
+
   opt[Unit]("debug") hidden() action { x => x } should
     parse () out of --debug                                     ${unitParserHidden("--debug")}
 
@@ -443,6 +447,13 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     val result = requireParser1.parse(args.toSeq, Config())
     result === None
   }
+
+  def requiredWithFallback(args: Seq[String], expected: String) =
+    new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
+      opt[String]("stringValue").required().withFallback(() => "someFallback")
+        .action( (x, c) => c.copy(stringValue = x) )
+    }.parse(args, Config()) === Some(Config(stringValue = expected))
 
   val validParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")

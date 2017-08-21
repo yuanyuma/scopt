@@ -69,6 +69,10 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
   opt[String]("foo") required() foreach { x => x } should
     fail to parse Nil                                           ${requiredFail()}
 
+  opt[String]("foo").required().withFallback(() => "someFallback") should
+    parse provided value                                        ${requiredWithFallback(args = Seq("--stringValue", "provided"), expected = "provided")}
+    use fallback value                                          ${requiredWithFallback(args = Nil, expected = "someFallback")}
+
   opt[Unit]("debug") hidden() foreach { x => x } should
     parse () out of --debug                                     ${unitParserHidden("--debug")}
 
@@ -258,6 +262,18 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
       help("help")
     }
     parser.parse(args.toSeq) === false
+  }
+
+  def requiredWithFallback(args: Seq[String], expected: String) = {
+    var stringValue = ""
+    val parser = new scopt.OptionParser[Unit]("scopt") {
+      head("scopt", "3.x")
+      opt[String]("stringValue").required().withFallback(() => "someFallback")
+        .foreach( x => stringValue = x )
+      help("help")
+    }
+    parser.parse(args) === true
+    stringValue === expected
   }
 
   def validFail(args: String*) = {
