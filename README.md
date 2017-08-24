@@ -186,6 +186,7 @@ Occurrence can be set using the methods on the opt/arg:
 
 ```scala
 opt[String]('o', "out").required()
+opt[String]('o', "out").required().withFallback(() => "default value")
 opt[String]('o', "out").minOccurs(1) // same as above
 arg[String]("<mode>").optional()
 arg[String]("<mode>").minOccurs(0) // same as above
