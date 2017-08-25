@@ -1,0 +1,14 @@
+### Scala.js support
+
+Scala.js support was added by @aappddeevv in #137.
+
+### Scala Native
+
+Scala Native support was added by @Duhemm in #141
+
+### bug fixes and minor enhancements
+
+- Adds `opt[Char]` support (typeclass instance `Read[Char]`). #130 by @emanresusername
+- Prints usage even if there are no options. #131 by @remus32
+- Fixes infinite loop when a subcommand is hidden. #133 by @tksfz 
+- Adds better support for capturing output. #139 by @gzoller 
