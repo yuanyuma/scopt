@@ -1,0 +1,20 @@
+scopt 3.7.0 is cross built for Scala 2.10, 2.11, 2.12, 2.13, JS 0.6, and Native 0.3.
+
+### withFallback
+
+Options now support a fallback value.
+
+```scala
+val parser = new scopt.OptionParser[Unit]("scopt") {
+  head("scopt", "3.x")
+  opt[String]("stringValue").required().withFallback(() => "someFallback")
+    .foreach( x => stringValue = x )
+ help("help")
+}
+```
+
+This feature was contributed by @mpollmeier in #150
+
+### more exposure
+
+Exposes values and methods such `name`, `getMinOccurs`, `getMaxOccurs`, `isHidden`, `desc`, `shortOpt`, and `valueName`. #138 by @rhpvorderman
