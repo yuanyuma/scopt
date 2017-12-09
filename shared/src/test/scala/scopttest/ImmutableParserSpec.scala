@@ -53,6 +53,12 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     stringParser("--foo=bar")
   }
 
+  test("option string parser should parse empty string") {
+    emptyStringParser("--foo", "")
+    emptyStringParser("--foo:")
+    emptyStringParser("--foo=")
+  }
+
   test("char parser should parse 'b'") {
     charParser("--foo", "b")
     charParser("--foo:b")
@@ -324,6 +330,10 @@ Usage: scopt [options]
   def stringParser(args: String*): Unit = {
     val result = stringParser1.parse(args.toSeq, Config())
     assert(result.get.stringValue == "bar")
+  }
+  def emptyStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.stringValue == "")
   }
 
   val charParser1 = new scopt.OptionParser[Config]("scopt") {
