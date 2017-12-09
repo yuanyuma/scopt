@@ -138,6 +138,16 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     nonEmptyLiftedOptionParser("--foo=1")
   }
 
+  test("optional string parser") {
+    noneOptStringParser()
+    emptyOptStringParser("--bar", "")
+    emptyOptStringParser("--bar:")
+    emptyOptStringParser("--bar=")
+    bazOptStringParser("--bar", "baz")
+    bazOptStringParser("--bar:baz")
+    bazOptStringParser("--bar=baz")
+  }
+
   test(".required() should fail when the option is missing") {
     requiredFail()
   }
@@ -334,6 +344,7 @@ Usage: scopt [options]
   val stringParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[String]("foo").action((x, c) => c.copy(stringValue = x))
+    opt[String]("bar").action((x, c) => c.copy(optStringValue = Some(x)))
     help("help")
   }
   def stringParser(args: String*): Unit = {
@@ -343,6 +354,18 @@ Usage: scopt [options]
   def emptyStringParser(args: String*): Unit = {
     val result = stringParser1.parse(args.toSeq, Config())
     assert(result.get.stringValue == "")
+  }
+  def noneOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == None)
+  }
+  def emptyOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == Some(""))
+  }
+  def bazOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == Some("baz"))
   }
 
   val charParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -871,5 +894,6 @@ Usage: scopt [options]
       mapStringToBool: Map[String, Boolean] = Map(),
       seqTupleStringString: Seq[(String, String)] = Nil,
       charValue: Char = 0,
+      optStringValue: Option[String] = None,
       optIntValue: Option[Int] = None)
 }
