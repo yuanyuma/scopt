@@ -129,6 +129,15 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     seqTupleParserFail("foo")
   }
 
+  test("option parser") {
+    emptyLiftedOptionParser("--foo", "")
+    emptyLiftedOptionParser("--foo:")
+    emptyLiftedOptionParser("--foo=")
+    nonEmptyLiftedOptionParser("--foo", "1")
+    nonEmptyLiftedOptionParser("--foo:1")
+    nonEmptyLiftedOptionParser("--foo=1")
+  }
+
   test(".required() should fail when the option is missing") {
     requiredFail()
   }
@@ -474,6 +483,18 @@ Usage: scopt [options]
   def seqTupleParserFail(args: String*): Unit = {
     val result = seqTupleParser1.parse(args.toSeq, Config())
     assert(result == None)
+  }
+
+  val liftedOptionParser1 = new scopt.OptionParser[Config]("foo") {
+    opt[Option[Int]]("foo").action((i, c) => c.copy(optIntValue = i))
+  }
+  def emptyLiftedOptionParser(args: String*): Unit = {
+    val result = liftedOptionParser1.parse(args.toSeq, Config())
+    assert(result.get.optIntValue == None)
+  }
+  def nonEmptyLiftedOptionParser(args: String*): Unit = {
+    val result = liftedOptionParser1.parse(args.toSeq, Config())
+    assert(result.get.optIntValue == Some(1))
   }
 
   //parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
@@ -849,5 +870,6 @@ Usage: scopt [options]
       seqInts: Seq[Int] = Seq(),
       mapStringToBool: Map[String, Boolean] = Map(),
       seqTupleStringString: Seq[(String, String)] = Nil,
-      charValue: Char = 0)
+      charValue: Char = 0,
+      optIntValue: Option[Int] = None)
 }
