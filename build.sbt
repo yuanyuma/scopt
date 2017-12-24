@@ -27,12 +27,10 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     // site
     // to preview, preview-site
     // to push, ghpages-push-site
-    site.settings,
-    site.includeScaladoc(s"$v/api"),
-    ghpages.settings,
+    siteSubdirName in SiteScaladoc := "$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     description := """a command line options parsing library""",
-    libraryDependencies += specs2 % Test,
+    libraryDependencies += specs2.value % Test,
     scalacOptions ++= Seq("-language:existentials"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
@@ -44,7 +42,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
   )
 
 lazy val scoptJS = scopt.js
-lazy val scoptJVM = scopt.jvm
+lazy val scoptJVM = scopt.jvm.enablePlugins(SiteScaladocPlugin)
 lazy val scoptNative = scopt.native
 
 lazy val nativeTest = project.in(file("nativeTest")).
