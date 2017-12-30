@@ -1,7 +1,6 @@
 import org.specs2._
-import java.util.{Calendar, GregorianCalendar}
-import java.io.{ByteArrayOutputStream, File}
-import java.net.{ URI, InetAddress }
+import java.io.ByteArrayOutputStream
+import java.net.URI
 import scala.concurrent.duration.Duration
 
 class ImmutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
@@ -78,23 +77,9 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     fail to parse --foo bar                                     ${bigDecimalParserFail("--foo", "bar")}
     fail to parse --foo=bar                                     ${bigDecimalParserFail("--foo=bar")}
 
-  opt[Calendar]("foo") action { x => x } should
-    parse 2000-01-01 out of --foo 2000-01-01                    ${calendarParser("--foo", "2000-01-01")}
-    parse 2000-01-01 out of --foo=2000-01-01                    ${calendarParser("--foo=2000-01-01")}
-    fail to parse --foo bar                                     ${calendarParserFail("--foo", "bar")}
-    fail to parse --foo=bar                                     ${calendarParserFail("--foo=bar")}
-
-  opt[File]("foo") action { x => x } should
-    parse test.txt out of --foo test.txt                        ${fileParser("--foo", "test.txt")}
-    parse test.txt out of --foo=test.txt                        ${fileParser("--foo=test.txt")}
-
   opt[URI]("foo") action { x => x } should
     parse http://github.com/ out of --foo http://github.com/    ${uriParser("--foo", "http://github.com/")}
     parse http://github.com/ out of --foo=http://github.com/    ${uriParser("--foo=http://github.com/")}
-
-  opt[InetAddress]("foo") action { x => x } should
-    parse 8.8.8.8 out of --foo 8.8.8.8                          ${inetAddressParser("--foo", "8.8.8.8")}
-    parse 8.8.8.8 out of --foo=8.8.8.8                          ${inetAddressParser("--foo=8.8.8.8")}
 
   opt[Duration]("foo") action { x => x } should
     parse 30s out of --foo 30s                                  ${durationParser("--foo", "30s")}
@@ -319,30 +304,6 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     result === None
   }
 
-  val calendarParser1 = new scopt.OptionParser[Config]("scopt") {
-    head("scopt", "3.x")
-    opt[Calendar]("foo").action( (x, c) => c.copy(calendarValue = x) )
-    help("help")
-  }
-  def calendarParser(args: String*) = {
-    val result = calendarParser1.parse(args.toSeq, Config())
-    result.get.calendarValue.getTime === new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime
-  }
-  def calendarParserFail(args: String*) = {
-    val result = calendarParser1.parse(args.toSeq, Config())
-    result === None
-  }
-
-  val fileParser1 = new scopt.OptionParser[Config]("scopt") {
-    head("scopt", "3.x")
-    opt[File]("foo").action( (x, c) => c.copy(fileValue = x) )
-    help("help")
-  }
-  def fileParser(args: String*) = {
-    val result = fileParser1.parse(args.toSeq, Config())
-    result.get.fileValue === new File("test.txt")
-  }
-
   val uriParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[URI]("foo").action( (x, c) => c.copy(uriValue = x) )
@@ -351,16 +312,6 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   def uriParser(args: String*) = {
     val result = uriParser1.parse(args.toSeq, Config())
     result.get.uriValue === new URI("http://github.com/")
-  }
-
-  val inetAddressParser1 = new scopt.OptionParser[Config]("scopt") {
-    head("scopt", "3.x")
-    opt[InetAddress]("foo").action( (x, c) => c.copy(inetAddressValue = x) )
-    help("help")
-  }
-  def inetAddressParser(args: String*) = {
-    val result = inetAddressParser1.parse(args.toSeq, Config())
-    result.get.inetAddressValue === InetAddress.getByName("8.8.8.8")
   }
 
   val durationParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -583,20 +534,16 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
   }
 
   def helpParserOneColumn(args: String*) = {
-    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
+    case class Config(foo: Int = -1, xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
-      jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
+      mode: String = "", keepalive: Boolean = false,
+      kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
 
       opt[Int]('f', "foo").action( (x, c) =>
         c.copy(foo = x) ).text("foo is an integer property")
-
-      opt[File]('o', "out").required().valueName("<file>").
-        action( (x, c) => c.copy(out = x) ).
-        text("out is a required file property")
 
       opt[(String, Int)]("max").action({
           case ((k, v), c) => c.copy(libName = k, maxCount = v) }).
@@ -605,9 +552,6 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
           else failure("Value <max> must be >0") ).
         keyValueName("<libname>", "<max>").
         text("maximum count for <libname>")
-
-      opt[Seq[File]]('j', "jars").valueName("<jar1>,<jar2>...").action( (x,c) =>
-        c.copy(jars = x) ).text("jars to include")
 
       opt[Map[String,String]]("kwargs").valueName("k1=v1,k2=v2...").action( (x, c) =>
         c.copy(kwargs = x) ).text("other arguments")
@@ -619,9 +563,6 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
         c.copy(debug = true) ).text("this option is hidden in the usage text")
 
       help("help").text("prints this usage text")
-
-      arg[File]("<file>...").unbounded().optional().action( (x, c) =>
-        c.copy(files = c.files :+ x) ).text("optional unbounded args")
 
       note("some notes.".newline)
 
@@ -641,24 +582,18 @@ class ImmutableParserSpec extends Specification { def is = args(sequential = tru
     }
     parser.parse(args.toSeq, Config())
     val expectedUsage = """scopt 3.x
-Usage: scopt [update] [options] [<file>...]
+Usage: scopt [update] [options]
 
   -f <value> | --foo <value>
         foo is an integer property
-  -o <file> | --out <file>
-        out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
-  -j <jar1>,<jar2>... | --jars <jar1>,<jar2>...
-        jars to include
   --kwargs k1=v1,k2=v2...
         other arguments
   --verbose
         verbose is a flag
   --help
         prints this usage text
-  <file>...
-        optional unbounded args
 some notes.
 
 Command: update [options]
@@ -673,19 +608,15 @@ update is a command.
   }
 
   def helpParserTwoColumns(args: String*) = {
-    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
+    case class Config(foo: Int = -1, xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
-      jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
+      mode: String = "", keepalive: Boolean = false,
+      kwargs: Map[String,String] = Map())
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
 
       opt[Int]('f', "foo").action( (x, c) =>
         c.copy(foo = x) ).text("foo is an integer property")
-
-      opt[File]('o', "out").required().valueName("<file>").
-        action( (x, c) => c.copy(out = x) ).
-        text("out is a required file property")
 
       opt[(String, Int)]("max").action({
           case ((k, v), c) => c.copy(libName = k, maxCount = v) }).
@@ -694,9 +625,6 @@ update is a command.
           else failure("Value <max> must be >0") ).
         keyValueName("<libname>", "<max>").
         text("maximum count for <libname>")
-
-      opt[Seq[File]]('j', "jars").valueName("<jar1>,<jar2>...").action( (x,c) =>
-        c.copy(jars = x) ).text("jars to include")
 
       opt[Map[String,String]]("kwargs").valueName("k1=v1,k2=v2...").action( (x, c) =>
         c.copy(kwargs = x) ).text("other arguments")
@@ -708,9 +636,6 @@ update is a command.
         c.copy(debug = true) ).text("this option is hidden in the usage text")
 
       help("help").text("prints this usage text")
-
-      arg[File]("<file>...").unbounded().optional().action( (x, c) =>
-        c.copy(files = c.files :+ x) ).text("optional unbounded args")
 
       note("some notes.".newline)
 
@@ -730,17 +655,13 @@ update is a command.
     }
     parser.parse(args.toSeq, Config())
     val expectedUsage= """scopt 3.x
-Usage: scopt [update] [options] [<file>...]
+Usage: scopt [update] [options]
 
   -f, --foo <value>        foo is an integer property
-  -o, --out <file>         out is a required file property
   --max:<libname>=<max>    maximum count for <libname>
-  -j, --jars <jar1>,<jar2>...
-                           jars to include
   --kwargs k1=v1,k2=v2...  other arguments
   --verbose                verbose is a flag
   --help                   prints this usage text
-  <file>...                optional unbounded args
 some notes.
 
 Command: update [options]
@@ -825,10 +746,7 @@ Usage: scopt [update] [options]
   case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",
     doubleValue: Double = 0.0, boolValue: Boolean = false, debug: Boolean = false,
     bigDecimalValue: BigDecimal = BigDecimal("0.0"),
-    calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
-    fileValue: File = new File("."),
     uriValue: URI = new URI("http://localhost"),
-    inetAddressValue: InetAddress = InetAddress.getByName("0.0.0.0"),
     durationValue: Duration = Duration("0s"),
     key: String = "", a: String = "", b: String = "",
     seqInts: Seq[Int] = Seq(),
