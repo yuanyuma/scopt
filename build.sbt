@@ -30,13 +30,33 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     siteSubdirName in SiteScaladoc := "$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     description := """a command line options parsing library""",
-    libraryDependencies += specs2.value % Test,
     scalacOptions ++= Seq("-language:existentials"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   ).
+  platformsSettings(JVMPlatform, JSPlatform)(
+    libraryDependencies += specs2.value % Test,
+    libraryDependencies ++= parserCombinators.value
+  ).
+  jsSettings(
+    scalaJSModuleKind := ModuleKind.CommonJSModule,
+    sources in Test := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 10)) =>
+          // specs 4.x does not support scala 2.10
+          // specs 3.x does not support scala-js
+          Nil
+        case Some((2, v)) if v >= 13 =>
+          // https://github.com/scala/scala-parser-combinators/issues/119
+          Nil
+        case _ =>
+          (sources in Test).value
+      }
+    }
+  ).
   nativeSettings(
+    sources in Test := Nil, // https://github.com/etorreborre/specs2/issues/591
     scalaVersion := scala211,
     crossScalaVersions := Nil
   )

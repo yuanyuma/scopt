@@ -1,5 +1,5 @@
 import org.specs2._
-import java.io.{ByteArrayOutputStream, File}
+import java.io.ByteArrayOutputStream
 
 class MutableParserSpec extends Specification { def is = args(sequential = true) ^ s2"""
   This is a specification to check the mutable parser
@@ -361,9 +361,9 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
   }
 
   def helpParserOneColumn(args: String*) = {
-    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
+    case class Config(foo: Int = -1, xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
+      mode: String = "", keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
@@ -371,9 +371,6 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
 
       opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
         text("foo is an integer property")
-
-      opt[File]('o', "out").required().valueName("<file>").
-        foreach( x => c = c.copy(out = x) ).text("out is a required file property")
 
       opt[(String, Int)]("max").foreach( { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) }).
@@ -391,10 +388,6 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
 
       help("help").text("prints this usage text")
 
-      arg[File]("<file>...").unbounded().optional().
-        foreach( x => c = c.copy(files = c.files :+ x) ).
-        text("optional unbounded args")
-
       note("some notes.".newline)
 
       cmd("update").foreach( _ => c.copy(mode = "update") ).
@@ -411,20 +404,16 @@ class MutableParserSpec extends Specification { def is = args(sequential = true)
     }
     parser.parse(args.toSeq)
     parser.usage === """scopt 3.x
-Usage: scopt [update] [options] [<file>...]
+Usage: scopt [update] [options]
 
   -f <value> | --foo <value>
         foo is an integer property
-  -o <file> | --out <file>
-        out is a required file property
   --max:<libname>=<max>
         maximum count for <libname>
   --verbose
         verbose is a flag
   --help
         prints this usage text
-  <file>...
-        optional unbounded args
 some notes.
 
 Command: update [options]
@@ -436,18 +425,15 @@ update is a command.
   }
 
   def helpParserTwoColumns(args: String*) = {
-    case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
+    case class Config(foo: Int = -1, xyz: Boolean = false,
       libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false)
+      mode: String = "", keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
 
       opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
         text("foo is an integer property")
-
-      opt[File]('o', "out").required().valueName("<file>").
-        foreach( x => c = c.copy(out = x) ).text("out is a required file property")
 
       opt[(String, Int)]("max").foreach( { case (k, v) =>
         c = c.copy(libName = k, maxCount = v) }).
@@ -465,10 +451,6 @@ update is a command.
 
       help("help").text("prints this usage text")
 
-      arg[File]("<file>...").unbounded().optional().
-        foreach( x => c = c.copy(files = c.files :+ x) ).
-        text("optional unbounded args")
-
       note("some notes.".newline)
 
       cmd("update").foreach( _ => c.copy(mode = "update") ).
@@ -485,14 +467,12 @@ update is a command.
     }
     parser.parse(args.toSeq)
     parser.usage === """scopt 3.x
-Usage: scopt [update] [options] [<file>...]
+Usage: scopt [update] [options]
 
   -f, --foo <value>        foo is an integer property
-  -o, --out <file>         out is a required file property
   --max:<libname>=<max>    maximum count for <libname>
   --verbose                verbose is a flag
   --help                   prints this usage text
-  <file>...                optional unbounded args
 some notes.
 
 Command: update [options]
