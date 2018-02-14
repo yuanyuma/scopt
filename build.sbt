@@ -47,9 +47,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
           // specs 4.x does not support scala 2.10
           // specs 3.x does not support scala-js
           Nil
-        case Some((2, v)) if v >= 13 =>
-          // https://github.com/scala/scala-parser-combinators/issues/119
-          Nil
         case _ =>
           (sources in Test).value
       }
