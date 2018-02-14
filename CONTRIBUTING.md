@@ -2,7 +2,7 @@
 
 ```
 > publishSigned
-> ++2.13.0-M2
+> ++2.13.0-M3
 > scoptJVM/publishSigned
 > exit
 
