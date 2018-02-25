@@ -41,6 +41,11 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
   ).
   jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule,
+    scalacOptions += {
+      val a = (baseDirectory in LocalRootProject).value.toURI.toString
+      val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process.Process("git rev-parse HEAD").lines_!.head
+      s"-P:scalajs:mapSourceURI:$a->$g/"
+    },
     sources in Test := {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 10)) =>
