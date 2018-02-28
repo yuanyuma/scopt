@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import sbtcrossproject.CrossPlugin.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
   lazy val scala210 = "2.10.7"
