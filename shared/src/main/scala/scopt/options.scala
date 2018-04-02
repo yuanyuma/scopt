@@ -302,7 +302,7 @@ abstract class OptionParser[C](programName: String) {
   def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
     makeDef[Unit](Check, "") validateConfig(f)
 
-  def showHeader() {
+  def showHeader(): Unit = {
     Console.out.println(header)
   }
   def header: String = {
