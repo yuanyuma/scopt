@@ -90,7 +90,7 @@ object Read extends platform.PlatformReadInstances {
 
   // reads("1,2,3,4,5") == Seq(1,2,3,4,5)
   implicit def seqRead[A: Read]: Read[Seq[A]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[A]].reads)
+    s.split(sep).toSeq.map(implicitly[Read[A]].reads)
   }
 
   // reads("1=false,2=true") == Map(1 -> false, 2 -> true)
