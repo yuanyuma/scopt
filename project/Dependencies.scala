@@ -12,15 +12,18 @@ object Dependencies {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 10)) =>
         // specs2 4.x does not support Scala 2.10
-        "org.specs2" %% "specs2-core" % "3.9.5"
+        Seq("org.specs2" %% "specs2-core" % "3.9.5" % "test")
+      case Some((2, v)) if v >= 13 && scalaVersion.value != "2.13.0-M3" =>
+        // TODO specs2 for Scala 2.13.0-M4
+        Nil
       case _ =>
-        "org.specs2" %%% "specs2-core" % "4.0.2"
+        Seq("org.specs2" %%% "specs2-core" % "4.2.0" % "test")
     }
   }
 
   lazy val parserCombinators = Def.setting {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 10)) =>
+      case Some((2, 10 | 13)) =>
         Nil
       case _ =>
         Seq("org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.0" % Test)

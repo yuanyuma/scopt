@@ -30,6 +30,9 @@ jdk: oraclejdk8
 
 matrix:
   include:
+  - scala: 2.13.0-M4
+    script:
+    - sbt "++ ${TRAVIS_SCALA_VERSION}!" scoptJVM/compile scoptJS/compile
   - scala: 2.11.12
     sudo: required
     before_script:
