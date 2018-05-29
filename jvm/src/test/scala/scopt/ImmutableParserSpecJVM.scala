@@ -1,26 +1,26 @@
-import org.specs2._
+import minitest._
 import java.util.{Calendar, GregorianCalendar}
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{ URI, InetAddress }
 import scala.concurrent.duration.Duration
 
-class ImmutableParserSpecJVM extends Specification { def is = args(sequential = true) ^ s2"""
-  This is a specification to check the immutable parser
+object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
+  test("calendar parser should parse 2000-01-01") {
+    calendarParser("--foo", "2000-01-01")
+    calendarParser("--foo=2000-01-01")
+    calendarParserFail("--foo", "bar")
+    calendarParserFail("--foo=bar")
+  }
 
-  opt[Calendar]("foo") action { x => x } should
-    parse 2000-01-01 out of --foo 2000-01-01                    ${calendarParser("--foo", "2000-01-01")}
-    parse 2000-01-01 out of --foo=2000-01-01                    ${calendarParser("--foo=2000-01-01")}
-    fail to parse --foo bar                                     ${calendarParserFail("--foo", "bar")}
-    fail to parse --foo=bar                                     ${calendarParserFail("--foo=bar")}
+  test("file parser should parse test.txt") {
+    fileParser("--foo", "test.txt")
+    fileParser("--foo=test.txt")
+  }
 
-  opt[File]("foo") action { x => x } should
-    parse test.txt out of --foo test.txt                        ${fileParser("--foo", "test.txt")}
-    parse test.txt out of --foo=test.txt                        ${fileParser("--foo=test.txt")}
-
-  opt[InetAddress]("foo") action { x => x } should
-    parse 8.8.8.8 out of --foo 8.8.8.8                          ${inetAddressParser("--foo", "8.8.8.8")}
-    parse 8.8.8.8 out of --foo=8.8.8.8                          ${inetAddressParser("--foo=8.8.8.8")}
-  """
+  test("InetAddress parser should parse 8.8.8.8") {
+    inetAddressParser("--foo", "8.8.8.8")
+    inetAddressParser("--foo=8.8.8.8")
+  }
 
   import SpecUtil._
 
@@ -29,13 +29,13 @@ class ImmutableParserSpecJVM extends Specification { def is = args(sequential = 
     opt[Calendar]("foo").action( (x, c) => c.copy(calendarValue = x) )
     help("help")
   }
-  def calendarParser(args: String*) = {
+  def calendarParser(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
-    result.get.calendarValue.getTime === new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime
+    assert(result.get.calendarValue.getTime == new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime)
   }
-  def calendarParserFail(args: String*) = {
+  def calendarParserFail(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
-    result === None
+    assert(result == None)
   }
 
   val fileParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -43,9 +43,9 @@ class ImmutableParserSpecJVM extends Specification { def is = args(sequential = 
     opt[File]("foo").action( (x, c) => c.copy(fileValue = x) )
     help("help")
   }
-  def fileParser(args: String*) = {
+  def fileParser(args: String*): Unit = {
     val result = fileParser1.parse(args.toSeq, Config())
-    result.get.fileValue === new File("test.txt")
+    assert(result.get.fileValue == new File("test.txt"))
   }
 
   val inetAddressParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -53,9 +53,9 @@ class ImmutableParserSpecJVM extends Specification { def is = args(sequential = 
     opt[InetAddress]("foo").action( (x, c) => c.copy(inetAddressValue = x) )
     help("help")
   }
-  def inetAddressParser(args: String*) = {
+  def inetAddressParser(args: String*): Unit = {
     val result = inetAddressParser1.parse(args.toSeq, Config())
-    result.get.inetAddressValue === InetAddress.getByName("8.8.8.8")
+    assert(result.get.inetAddressValue == InetAddress.getByName("8.8.8.8"))
   }
 
   case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",

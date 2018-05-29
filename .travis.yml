@@ -1,19 +1,9 @@
 sudo: false
 
-# These directories are cached to S3 at the end of the build
-cache:
-  directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt/boot/
-
 language: scala
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "project $TEST_PROJECT" test
-
-  # Tricks to avoid unnecessary cache updates
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+  - sbt ++${TRAVIS_SCALA_VERSION}! -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "project $TEST_PROJECT" test
 
 env:
   matrix:
@@ -24,7 +14,6 @@ scala:
    - 2.10.7
    - 2.11.12
    - 2.12.6
-   - 2.13.0-M3
 
 jdk: oraclejdk8
 
@@ -32,12 +21,30 @@ matrix:
   include:
   - scala: 2.13.0-M4
     script:
-    - sbt "++ ${TRAVIS_SCALA_VERSION}!" scoptJVM/compile scoptJS/compile
+    - sbt -Dsbt.sourcemode=true ++${TRAVIS_SCALA_VERSION}! scoptJVM/test
+    before_install:
+    - mkdir $HOME/workspace
+    - pushd $HOME/workspace
+    - git clone https://github.com/eed3si9n/minitest.git
+    - cd minitest
+    - git checkout wip/2.13
+    - popd
+
   - scala: 2.11.12
     sudo: required
     before_script:
     - sudo chmod +x /usr/local/bin/sbt
     before_install:
+    - sudo apt-get update
     - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     script:
-    - sbt ++$TRAVIS_SCALA_VERSION nativeTest/run
+    - sbt ++${TRAVIS_SCALA_VERSION}! nativeTest/run
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
+before_cache:
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt        -name "*.lock"               -delete

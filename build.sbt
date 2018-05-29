@@ -37,7 +37,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
   ).
   platformsSettings(JVMPlatform, JSPlatform)(
     libraryDependencies ++= specs2.value,
-    libraryDependencies ++= parserCombinators.value
+    libraryDependencies ++= parserCombinators.value,
   ).
   jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule,
@@ -63,8 +63,25 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     crossScalaVersions := Nil
   )
 
+val minitestJVMRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJVM")
+val minitestJVMLib = "io.monix" %% "minitest" % "2.1.1"
+
 lazy val scoptJS = scopt.js
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
+      "io.monix" %%% "minitest" % "2.1.1" % Test,
+    ),
+    testFrameworks += new TestFramework("minitest.runner.Framework")
+  )
+
 lazy val scoptJVM = scopt.jvm.enablePlugins(SiteScaladocPlugin)
+  .sourceDependency(minitestJVMRef % Test, minitestJVMLib % Test)
+  .settings(
+    libraryDependencies += "com.eed3si9n.expecty" %% "expecty" % "0.11.0" % Test,
+    testFrameworks += new TestFramework("minitest.runner.Framework")
+  )
+
 lazy val scoptNative = scopt.native
 
 lazy val nativeTest = project.in(file("nativeTest")).
