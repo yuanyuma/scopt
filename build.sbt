@@ -33,7 +33,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   ).
   platformsSettings(JVMPlatform, JSPlatform)(
-    libraryDependencies ++= specs2.value,
     libraryDependencies ++= parserCombinators.value,
   ).
   jsSettings(
@@ -55,7 +54,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     }
   ).
   nativeSettings(
-    sources in Test := Nil, // https://github.com/etorreborre/specs2/issues/591
+    sources in Test := Nil, // TODO https://github.com/monix/minitest/issues/12
     scalaVersion := scala211,
     crossScalaVersions := Nil
   )
