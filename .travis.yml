@@ -25,9 +25,9 @@ matrix:
     before_install:
     - mkdir $HOME/workspace
     - pushd $HOME/workspace
-    - git clone https://github.com/eed3si9n/minitest.git
+    - git clone https://github.com/monix/minitest.git
     - cd minitest
-    - git checkout wip/2.13
+    - git checkout 5f271e53e172
     - popd
 
   - scala: 2.11.12
