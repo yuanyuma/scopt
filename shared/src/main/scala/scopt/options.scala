@@ -2,7 +2,8 @@ package scopt
 
 
 
-import collection.mutable.{ListBuffer, ListMap}
+import collection.mutable.ListBuffer
+import collection.immutable.ListMap
 
 trait Read[A] { self =>
   def arity: Int
@@ -418,7 +419,7 @@ abstract class OptionParser[C](programName: String) {
     val pendingOptions = ListBuffer() ++ (nonArgs filterNot {_.hasParent})
     val pendingArgs = ListBuffer() ++ (arguments filterNot {_.hasParent})
     val pendingCommands = ListBuffer() ++ (commands filterNot {_.hasParent})
-    val occurrences = ListMap[OptionDef[_, C], Int]().withDefaultValue(0)
+    var occurrences: Map[OptionDef[_, C], Int] = ListMap[OptionDef[_, C], Int]().withDefaultValue(0)
     var _config: C = init
     var _error = false
 
@@ -451,7 +452,7 @@ abstract class OptionParser[C](programName: String) {
       }
     }
     def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]): Unit = {
-      occurrences(opt) += 1
+      occurrences += (opt -> 1)
       if (occurrences(opt) >= opt.getMaxOccurs) {
         pending -= opt
       }
