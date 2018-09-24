@@ -369,7 +369,7 @@ abstract class OptionParser[C](programName: String) {
     val text = new ListBuffer[String]()
     text += cmd map {commandName} getOrElse programName
     val parentId = cmd map {_.id}
-    val cs = commands filter {_.getParentId == parentId}
+    val cs = commands filter { c => c.getParentId == parentId && !c.isHidden }
     if (cs.nonEmpty) text += cs map {_.name} mkString("[", "|", "]")
     val os = options.toSeq filter { case x => x.kind == Opt && x.getParentId == parentId }
     val as = arguments filter {_.getParentId == parentId}
