@@ -766,7 +766,7 @@ Usage: scopt [options]
 
   def showUsageHiddenCmdParser(): Unit = {
     assert(printParserOut(printHiddenCmdParser1.showUsage()) == """scopt 3.x
-Usage: scopt [update] [options]
+Usage: scopt [options]
 
   --help  prints this usage text
 """)
