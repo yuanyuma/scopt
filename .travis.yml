@@ -19,6 +19,10 @@ jdk: oraclejdk8
 
 matrix:
   include:
+  - scala: 2.12.7
+    jdk: openjdk11
+    env: TEST_PROJECT="scoptJVM"
+
   - scala: 2.13.0-M4
     script:
     - sbt -Dsbt.sourcemode=true ++${TRAVIS_SCALA_VERSION}! scoptJVM/test
