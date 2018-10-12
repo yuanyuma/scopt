@@ -1,6 +1,6 @@
 package scopt
 
-import java.net.UnknownHostException
+import java.net.{URL, UnknownHostException}
 
 private[scopt] object platform {
   val _NL = System.getProperty("line.separator")
@@ -27,6 +27,7 @@ private[scopt] object platform {
     implicit val fileRead: Read[File]           = Read.reads { new File(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
     implicit val uriRead: Read[URI]             = Read.reads { new URI(_) }
+    implicit val urlRead: Read[URL]             = Read.reads { new URL(_) }
   }
 
   def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
