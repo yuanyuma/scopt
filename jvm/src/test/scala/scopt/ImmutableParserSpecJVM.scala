@@ -1,10 +1,14 @@
 import minitest._
 import java.util.{Calendar, GregorianCalendar}
-import java.io.{ByteArrayOutputStream, File}
-import java.net.{ URI, InetAddress }
+import java.io.File
+import java.net.{ URI, URL, InetAddress }
 import scala.concurrent.duration.Duration
 
 object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
+
+  private val url = new URL("https://example.com")
+  private val uri = new URI("https://example.com/robots.txt")
+
   test("calendar parser should parse 2000-01-01") {
     calendarParser("--foo", "2000-01-01")
     calendarParser("--foo=2000-01-01")
@@ -20,6 +24,16 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
   test("InetAddress parser should parse 8.8.8.8") {
     inetAddressParser("--foo", "8.8.8.8")
     inetAddressParser("--foo=8.8.8.8")
+  }
+
+  test(s"UrlParser parser should parse $url") {
+    urlParser("--foo", url.toString)
+    urlParser(s"--foo=${url.toString}")
+  }
+
+  test(s"UriParser parser should parse $uri") {
+    uriParser("--foo", uri.toString)
+    uriParser(s"--foo=${uri.toString}")
   }
 
   import SpecUtil._
@@ -58,6 +72,26 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
     assert(result.get.inetAddressValue == InetAddress.getByName("8.8.8.8"))
   }
 
+  val urlParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[URL]("foo").action( (x, c) => c.copy(url = x) )
+    help("help")
+  }
+  def urlParser(args: String*): Unit = {
+    val result = urlParser1.parse(args.toSeq, Config())
+    assert(result.get.url == url)
+  }
+
+  val uriParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[URI]("foo").action( (x, c) => c.copy(uri = x) )
+    help("help")
+  }
+  def uriParser(args: String*): Unit = {
+    val result = uriParser1.parse(args.toSeq, Config())
+    assert(result.get.uri == uri)
+  }
+
   case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",
     doubleValue: Double = 0.0, boolValue: Boolean = false, debug: Boolean = false,
     bigDecimalValue: BigDecimal = BigDecimal("0.0"),
@@ -69,5 +103,7 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
     key: String = "", a: String = "", b: String = "",
     seqInts: Seq[Int] = Seq(),
     mapStringToBool: Map[String,Boolean] = Map(),
-    seqTupleStringString: Seq[(String, String)] = Nil, charValue: Char = 0)
+    seqTupleStringString: Seq[(String, String)] = Nil, charValue: Char = 0,
+    url: URL = url,
+    uri: URI = uri)
 }
