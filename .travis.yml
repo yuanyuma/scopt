@@ -14,26 +14,12 @@ scala:
    - 2.10.7
    - 2.11.12
    - 2.12.6
+   - 2.13.0-M5
 
 jdk: oraclejdk8
 
 matrix:
   include:
-  - scala: 2.12.7
-    jdk: openjdk11
-    env: TEST_PROJECT="scoptJVM"
-
-  - scala: 2.13.0-M4
-    script:
-    - sbt -Dsbt.sourcemode=true ++${TRAVIS_SCALA_VERSION}! scoptJVM/test
-    before_install:
-    - mkdir $HOME/workspace
-    - pushd $HOME/workspace
-    - git clone https://github.com/monix/minitest.git
-    - cd minitest
-    - git checkout 5f271e53e172
-    - popd
-
   - scala: 2.11.12
     sudo: required
     before_script:
