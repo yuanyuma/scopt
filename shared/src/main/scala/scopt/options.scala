@@ -288,6 +288,12 @@ abstract class OptionParser[C](programName: String) {
     o
   }
 
+  /** adds an option invoked by `-x` or `--name` that displays usage text and exits.
+    * @param x name of the short option
+    * @param name name of the option
+    */
+  def help(x:Char, name:String): OptionDef[Unit, C] =
+    help(name) abbr(x.toString)
 
   /** adds an option invoked by `--name` that displays header text and exits.
    * @param name name of the option
@@ -298,6 +304,13 @@ abstract class OptionParser[C](programName: String) {
       terminate(Right(()))
       c
     }
+
+  /** adds an option invoked by `-x` or `--name` that displays header text and exits.
+   * @param x name of the short option
+   * @param name name of the option
+   */
+  def version(x: Char, name:String): OptionDef[Unit, C] =
+    version(name) abbr(x.toString)
 
   /** adds final check. */
   def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
