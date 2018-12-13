@@ -6,36 +6,34 @@ import sbtcrossproject.{crossProject, CrossType}
 
 def v: String = "3.7.0"
 
-lazy val root = project.in(file(".")).
-  aggregate(scoptJS, scoptJVM, scoptNative).
-  settings(
-    publish := {},
-    publishLocal := {},
-    skip in publish := true)
+ThisBuild / version := v
+ThisBuild / scalaVersion := scala212
+ThisBuild / crossScalaVersions := Seq(scala211, scala210, scala212, scala213)
 
-lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(".")).
-  settings(
-    inThisBuild(Seq(
-      version := v,
-      scalaVersion := scala212,
-      crossScalaVersions := Seq(scala211, scala210, scala212, scala213),
-    )),
+lazy val root = (project in file("."))
+  .aggregate(scoptJS, scoptJVM, scoptNative)
+  .settings(
+    name := "scopt root",
+    publish / skip := true
+  )
+
+lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("."))
+  .settings(
     name := "scopt",
     // site
     // to preview, preview-site
     // to push, ghpages-push-site
     siteSubdirName in SiteScaladoc := "$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
-    description := """a command line options parsing library""",
     scalacOptions ++= Seq("-language:existentials", "-Xfuture", "-deprecation"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
-  ).
-  platformsSettings(JVMPlatform, JSPlatform)(
+  )
+  .platformsSettings(JVMPlatform, JSPlatform)(
     libraryDependencies ++= parserCombinators.value,
-  ).
-  jsSettings(
+  )
+  .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule,
     scalacOptions += {
       val a = (baseDirectory in LocalRootProject).value.toURI.toString
@@ -52,8 +50,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
           (sources in Test).value
       }
     }
-  ).
-  nativeSettings(
+  )
+  .nativeSettings(
     sources in Test := Nil, // TODO https://github.com/monix/minitest/issues/12
     scalaVersion := scala211,
     crossScalaVersions := Nil
@@ -80,7 +78,7 @@ lazy val scoptJVM = scopt.jvm.enablePlugins(SiteScaladocPlugin)
 
 lazy val scoptNative = scopt.native
 
-lazy val nativeTest = project.in(file("nativeTest")).
-  dependsOn(scoptNative).
-  enablePlugins(ScalaNativePlugin).
-  settings(scalaVersion := scala211)
+lazy val nativeTest = (project in file("nativeTest"))
+  .enablePlugins(ScalaNativePlugin)
+  .dependsOn(scoptNative)
+  .settings(scalaVersion := scala211)
