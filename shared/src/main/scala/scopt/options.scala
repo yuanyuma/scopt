@@ -5,287 +5,117 @@ import collection.immutable.ListMap
 import scala.collection.{ Seq => CSeq }
 import scala.collection.immutable.{ Seq => ISeq }
 
-/** <code>scopt.immutable.OptionParser</code> is instantiated within your object,
- * set up by an (ordered) sequence of invocations of
- * the various builder methods such as
- * <a href="#opt[A](Char,String)(Read[A]):OptionDef[A,C]"><code>opt</code></a> method or
- * <a href="#arg[A](String)(Read[A]):OptionDef[A,C]"><code>arg</code></a> method.
- * {{{
- * val parser = new scopt.OptionParser[Config]("scopt") {
- *   head("scopt", "3.x")
- *
- *   opt[Int]('f', "foo").action( (x, c) =>
- *     c.copy(foo = x) ).text("foo is an integer property")
- *
- *   opt[File]('o', "out").required().valueName("<file>").
- *     action( (x, c) => c.copy(out = x) ).
- *     text("out is a required file property")
- *
- *   opt[(String, Int)]("max").action({
- *       case ((k, v), c) => c.copy(libName = k, maxCount = v) }).
- *     validate( x =>
- *       if (x._2 > 0) success
- *       else failure("Value <max> must be >0") ).
- *     keyValueName("<libname>", "<max>").
- *     text("maximum count for <libname>")
- *
- *   opt[Seq[File]]('j', "jars").valueName("<jar1>,<jar2>...").action( (x,c) =>
- *     c.copy(jars = x) ).text("jars to include")
- *
- *   opt[Map[String,String]]("kwargs").valueName("k1=v1,k2=v2...").action( (x, c) =>
- *     c.copy(kwargs = x) ).text("other arguments")
- *
- *   opt[Unit]("verbose").action( (_, c) =>
- *     c.copy(verbose = true) ).text("verbose is a flag")
- *
- *   opt[Unit]("debug").hidden().action( (_, c) =>
- *     c.copy(debug = true) ).text("this option is hidden in the usage text")
- *
- *   help("help").text("prints this usage text")
- *
- *   arg[File]("<file>...").unbounded().optional().action( (x, c) =>
- *     c.copy(files = c.files :+ x) ).text("optional unbounded args")
- *
- *   note("some notes.".newline)
- *
- *   cmd("update").action( (_, c) => c.copy(mode = "update") ).
- *     text("update is a command.").
- *     children(
- *       opt[Unit]("not-keepalive").abbr("nk").action( (_, c) =>
- *         c.copy(keepalive = false) ).text("disable keepalive"),
- *       opt[Boolean]("xyz").action( (x, c) =>
- *         c.copy(xyz = x) ).text("xyz is a boolean property"),
- *       opt[Unit]("debug-update").hidden().action( (_, c) =>
- *         c.copy(debug = true) ).text("this option is hidden in the usage text"),
- *       checkConfig( c =>
- *         if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
- *         else success )
- *     )
- * }
- *
- * // parser.parse returns Option[C]
- * parser.parse(args, Config()) match {
- *   case Some(config) =>
- *     // do stuff
- *
- *   case None =>
- *     // arguments are bad, error message will have been displayed
- * }
- * }}}
- */
-abstract class OptionParser[C](programName: String) {
-  protected val options = new ListBuffer[OptionDef[_, C]]
-  protected val helpOptions = new ListBuffer[OptionDef[_, C]]
-
-  import platform._
-
-  def errorOnUnknownArgument: Boolean = true
-  def showUsageOnError: Boolean = helpOptions.isEmpty
-  def renderingMode: RenderingMode = RenderingMode.TwoColumns
-  def terminate(exitState: Either[String, Unit]): Unit =
-    exitState match {
-      case Left(_)  => sys.exit(1)
-      case Right(_) => sys.exit(0)
-    }
-
-  def reportError(msg: String): Unit = {
-    Console.err.println("Error: " + msg)
-  }
-
-  def reportWarning(msg: String): Unit = {
-    Console.err.println("Warning: " + msg)
-  }
-
-  def showTryHelp(): Unit = {
-    def oxford(xs: List[String]): String = xs match {
-      case a :: b :: Nil => a + " or " + b
-      case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
-    }
-    Console.err.println("Try " + oxford(helpOptions.toList map {_.fullName}) + " for more information.")
-  }
-
-  /** adds usage text. */
-  def head(xs: String*): OptionDef[Unit, C] = makeDef[Unit](Head, "") text(xs.mkString(" "))
-
-  /** adds an option invoked by `--name x`.
-   * @param name name of the option
-   */
-  def opt[A: Read](name: String): OptionDef[A, C] = makeDef(Opt, name)
-
-  /** adds an option invoked by `-x value` or `--name value`.
-   * @param x name of the short option
-   * @param name name of the option
-   */
-  def opt[A: Read](x: Char, name: String): OptionDef[A, C] =
-    opt[A](name) abbr(x.toString)
-
-  /** adds usage text. */
-  def note(x: String): OptionDef[Unit, C] = makeDef[Unit](Note, "") text(x)
-
-  /** adds an argument invoked by an option without `-` or `--`.
-   * @param name name in the usage text
-   */
-  def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
-
-  /** adds a command invoked by an option without `-` or `--`.
-   * @param name name of the command
-   */
-  def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
-
-  /** adds an option invoked by `--name` that displays usage text and exits.
-   * @param name name of the option
-   */
-  def help(name: String): OptionDef[Unit, C] = {
-    val o = opt[Unit](name) action { (x, c) =>
-      showUsage()
-      terminate(Right(()))
-      c
-    }
-    helpOptions += o
-    o
-  }
-
-  /** adds an option invoked by `-x` or `--name` that displays usage text and exits.
-    * @param x name of the short option
-    * @param name name of the option
-    */
-  def help(x:Char, name:String): OptionDef[Unit, C] =
-    help(name) abbr(x.toString)
-
-  /** adds an option invoked by `--name` that displays header text and exits.
-   * @param name name of the option
-   */
-  def version(name: String): OptionDef[Unit, C] =
-    opt[Unit](name) action { (x, c) =>
-      showHeader()
-      terminate(Right(()))
-      c
-    }
-
-  /** adds an option invoked by `-x` or `--name` that displays header text and exits.
-   * @param x name of the short option
-   * @param name name of the option
-   */
-  def version(x: Char, name:String): OptionDef[Unit, C] =
-    version(name) abbr(x.toString)
-
-  /** adds final check. */
-  def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
-    makeDef[Unit](Check, "") validateConfig(f)
-
-  def showHeader(): Unit = {
-    Console.out.println(header)
-  }
-  def header: String = {
+private[scopt] object ScoptEngine {
+  def renderHeader[C](options: List[OptionDef[_, C]]): String = {
+    def heads: ISeq[OptionDef[_, C]] = options filter {_.kind == Head}
     import OptionDef._
     (heads map {_.usage}).mkString(NL)
   }
 
-  def showUsage(): Unit = {
-    Console.out.println(usage)
-  }
-  def showUsageAsError(): Unit = {
-    Console.err.println(usage)
-  }
-  def usage: String = renderUsage(renderingMode)
-  def renderUsage(mode: RenderingMode): String =
+  def renderUsage[C](
+      programName: String,
+      mode: RenderingMode,
+      options: List[OptionDef[_, C]]): String = {
+
+    def heads: ISeq[OptionDef[_, C]] = options filter {_.kind == Head}
+    def arguments: ISeq[OptionDef[_, C]] = options filter {_.kind == Arg}
+    def commands: ISeq[OptionDef[_, C]] = options filter {_.kind == Cmd}
+    def header: String = renderHeader[C](options)
+
+    def optionsForRender: List[OptionDef[_, C]] = {
+      val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
+      val (remaining, sorted) = unsorted partition {_.hasParent} match {
+        case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
+      }
+      var continue = true
+      while (!remaining.isEmpty && continue) {
+        continue = false
+        for {
+          parent <- sorted
+        } {
+          val childrenOfThisParent = remaining filter {_.getParentId == Some(parent.id)}
+          if (childrenOfThisParent.nonEmpty) {
+            remaining --= childrenOfThisParent
+            sorted.insertAll((sorted indexOf parent) + 1, childrenOfThisParent)
+            continue = true
+          }
+        }
+      }
+      sorted.toList
+    }
+
+    def renderOneColumnUsage: String = {
+      import OptionDef._
+      val descriptions = optionsForRender map {_.usage}
+      (if (header == "") "" else header + NL) +
+      "Usage: " + usageExample + NLNL +
+      descriptions.mkString(NL)
+    }
+
+    def renderTwoColumnsUsage: String = {
+      import OptionDef._
+      val xs = optionsForRender
+      val descriptions = {
+        val col1Len = math.min(column1MaxLength, xs map {_.usageColumn1.length + WW.length} match {
+          case Nil => 0
+          case list => list.max
+        })
+        xs map {_.usageTwoColumn(col1Len)}
+      }
+      (if (header == "") "" else header + NL) +
+      "Usage: " + usageExample + NLNL +
+      descriptions.mkString(NL)
+    }
+
+    def usageExample: String = commandExample(programName, None, options)
+
     mode match {
       case RenderingMode.OneColumn => renderOneColumnUsage
       case RenderingMode.TwoColumns => renderTwoColumnsUsage
     }
-  def renderOneColumnUsage: String = {
-    import OptionDef._
-    val descriptions = optionsForRender map {_.usage}
-    (if (header == "") "" else header + NL) +
-    "Usage: " + usageExample + NLNL +
-    descriptions.mkString(NL)
   }
-  def renderTwoColumnsUsage: String = {
-    import OptionDef._
-    val xs = optionsForRender
-    val descriptions = {
-      val col1Len = math.min(column1MaxLength, xs map {_.usageColumn1.length + WW.length} match {
-        case Nil => 0
-        case list => list.max
-      })
-      xs map {_.usageTwoColumn(col1Len)}
-    }
-    (if (header == "") "" else header + NL) +
-    "Usage: " + usageExample + NLNL +
-    descriptions.mkString(NL)
-  }
-  def optionsForRender: List[OptionDef[_, C]] = {
-    val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
-    val (remaining, sorted) = unsorted partition {_.hasParent} match {
-      case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
-    }
-    var continue = true
-    while (!remaining.isEmpty && continue) {
-      continue = false
-      for {
-        parent <- sorted
-      } {
-        val childrenOfThisParent = remaining filter {_.getParentId == Some(parent.id)}
-        if (childrenOfThisParent.nonEmpty) {
-          remaining --= childrenOfThisParent
-          sorted.insertAll((sorted indexOf parent) + 1, childrenOfThisParent)
-          continue = true
-        }
-      }
-    }
-    sorted.toList
-  }
-  def usageExample: String = commandExample(None)
-  private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
+
+  def commandExample[C](
+      programName: String,
+      cmd: Option[OptionDef[_, C]],
+      options: List[OptionDef[_, C]]
+      ): String = {
+
+    def arguments: ISeq[OptionDef[_, C]] = options filter {_.kind == Arg}
+    def commands: ISeq[OptionDef[_, C]] = options filter {_.kind == Cmd}
+    def commandName(cmd: OptionDef[_, C]): String =
+      (cmd.getParentId map { x =>
+        (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
+      } getOrElse {""}) + cmd.name
+
     val text = new ListBuffer[String]()
     text += cmd map {commandName} getOrElse programName
     val parentId = cmd map {_.id}
     val cs = commands filter { c => c.getParentId == parentId && !c.isHidden }
     if (cs.nonEmpty) text += cs map {_.name} mkString("[", "|", "]")
-    val os = options.toList filter { case x => x.kind == Opt && x.getParentId == parentId }
+    val os = options.toSeq filter { case x => x.kind == Opt && x.getParentId == parentId }
     val as = arguments filter {_.getParentId == parentId}
     if (os.nonEmpty) text += "[options]"
     if (cs exists { case x => arguments exists {_.getParentId == Some(x.id)}}) text += "<args>..."
     else if (as.nonEmpty) text ++= as map {_.argName}
     text.mkString(" ")
   }
-  private[scopt] def commandName(cmd: OptionDef[_, C]): String =
-    (cmd.getParentId map { x =>
-      (commands find {_.id == x} map {commandName} getOrElse {""}) + " "
-    } getOrElse {""}) + cmd.name
-
-  /** call this to express success in custom validation. */
-  def success: Either[String, Unit] = OptionDef.makeSuccess[String]
-  /** call this to express failure in custom validation. */
-  def failure(msg: String): Either[String, Unit] = Left(msg)
-
-  protected def heads: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Head}
-  protected def nonArgs: ISeq[OptionDef[_, C]] = options.toList filter { case x => x.kind == Opt || x.kind == Note }
-  protected def arguments: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Arg}
-  protected def commands: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Cmd}
-  protected def checks: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Check}
-  protected def makeDef[A: Read](kind: OptionDefKind, name: String): OptionDef[A, C] =
-    updateOption(new OptionDef[A, C](parser = this, kind = kind, name = name))
-  private[scopt] def updateOption[A: Read](option: OptionDef[A, C]): OptionDef[A, C] = {
-    val idx = options indexWhere { _.id == option.id }
-    if (idx > -1) options(idx) = option
-    else options += option
-    option
-  }
-
-  /** parses the given `args`.
-   * @return `true` if successful, `false` otherwise
-   */
-  def parse(args: CSeq[String])(implicit ev: Zero[C]): Boolean =
-    parse(args, ev.zero) match {
-      case Some(x) => true
-      case None    => false
-    }
 
   /** parses the given `args`.
    */
-  def parse(args: CSeq[String], init: C): Option[C] = {
+  def parse[C](
+      args: CSeq[String],
+      init: C,
+      options: List[OptionDef[_, C]],
+      configuration: ScoptConfiguration): Option[C] = {
     var i = 0
+    import configuration._
+    def heads: ISeq[OptionDef[_, C]] = options filter {_.kind == Head}
+    def nonArgs: ISeq[OptionDef[_, C]] = options filter { case x => x.kind == Opt || x.kind == Note }
+    def arguments: ISeq[OptionDef[_, C]] = options filter {_.kind == Arg}
+    def commands: ISeq[OptionDef[_, C]] = options filter {_.kind == Cmd}
+    def checks: ISeq[OptionDef[_, C]] = options filter {_.kind == Check}
+
     val pendingOptions = ListBuffer() ++ (nonArgs filterNot {_.hasParent})
     val pendingArgs = ListBuffer() ++ (arguments filterNot {_.hasParent})
     val pendingCommands = ListBuffer() ++ (commands filterNot {_.hasParent})
@@ -331,7 +161,7 @@ abstract class OptionParser[C](programName: String) {
       pendingCommands find {_.name == cmd}
     // greedy match
     def handleShortOptions(g0: String): Unit = {
-      val gs =  (0 to g0.size - 1).toList map { n => g0.substring(0, g0.size - n) }
+      val gs =  (0 to g0.size - 1).toSeq map { n => g0.substring(0, g0.size - n) }
       gs flatMap { g => pendingOptions map {(g, _)} } find { case (g, opt) =>
         opt.shortOptTokens("-" + g) == 1
       } match {
