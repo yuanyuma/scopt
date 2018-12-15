@@ -1,3 +1,5 @@
+package scopttest
+
 import com.eed3si9n.expecty.Expecty
 
 trait PowerAssertions {

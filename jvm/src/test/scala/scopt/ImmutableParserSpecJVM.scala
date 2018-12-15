@@ -1,5 +1,7 @@
+package scopttest
+
 import minitest._
-import java.util.{Calendar, GregorianCalendar}
+import java.util.{ Calendar, GregorianCalendar }
 import java.io.File
 import java.net.{ URI, URL, InetAddress }
 import scala.concurrent.duration.Duration
@@ -40,12 +42,13 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
 
   val calendarParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[Calendar]("foo").action( (x, c) => c.copy(calendarValue = x) )
+    opt[Calendar]("foo").action((x, c) => c.copy(calendarValue = x))
     help("help")
   }
   def calendarParser(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
-    assert(result.get.calendarValue.getTime == new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime)
+    assert(
+      result.get.calendarValue.getTime == new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime)
   }
   def calendarParserFail(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
@@ -54,7 +57,7 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
 
   val fileParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[File]("foo").action( (x, c) => c.copy(fileValue = x) )
+    opt[File]("foo").action((x, c) => c.copy(fileValue = x))
     help("help")
   }
   def fileParser(args: String*): Unit = {
@@ -64,7 +67,7 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
 
   val inetAddressParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[InetAddress]("foo").action( (x, c) => c.copy(inetAddressValue = x) )
+    opt[InetAddress]("foo").action((x, c) => c.copy(inetAddressValue = x))
     help("help")
   }
   def inetAddressParser(args: String*): Unit = {
@@ -74,7 +77,7 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
 
   val urlParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[URL]("foo").action( (x, c) => c.copy(url = x) )
+    opt[URL]("foo").action((x, c) => c.copy(url = x))
     help("help")
   }
   def urlParser(args: String*): Unit = {
@@ -84,7 +87,7 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
 
   val uriParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[URI]("foo").action( (x, c) => c.copy(uri = x) )
+    opt[URI]("foo").action((x, c) => c.copy(uri = x))
     help("help")
   }
   def uriParser(args: String*): Unit = {
@@ -92,18 +95,27 @@ object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
     assert(result.get.uri == uri)
   }
 
-  case class Config(flag: Boolean = false, intValue: Int = 0, longValue: Long = 0L, stringValue: String = "",
-    doubleValue: Double = 0.0, boolValue: Boolean = false, debug: Boolean = false,
-    bigDecimalValue: BigDecimal = BigDecimal("0.0"),
-    calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
-    fileValue: File = new File("."),
-    uriValue: URI = new URI("http://localhost"),
-    inetAddressValue: InetAddress = InetAddress.getByName("0.0.0.0"),
-    durationValue: Duration = Duration("0s"),
-    key: String = "", a: String = "", b: String = "",
-    seqInts: Seq[Int] = Seq(),
-    mapStringToBool: Map[String,Boolean] = Map(),
-    seqTupleStringString: Seq[(String, String)] = Nil, charValue: Char = 0,
-    url: URL = url,
-    uri: URI = uri)
+  case class Config(
+      flag: Boolean = false,
+      intValue: Int = 0,
+      longValue: Long = 0L,
+      stringValue: String = "",
+      doubleValue: Double = 0.0,
+      boolValue: Boolean = false,
+      debug: Boolean = false,
+      bigDecimalValue: BigDecimal = BigDecimal("0.0"),
+      calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
+      fileValue: File = new File("."),
+      uriValue: URI = new URI("http://localhost"),
+      inetAddressValue: InetAddress = InetAddress.getByName("0.0.0.0"),
+      durationValue: Duration = Duration("0s"),
+      key: String = "",
+      a: String = "",
+      b: String = "",
+      seqInts: Seq[Int] = Seq(),
+      mapStringToBool: Map[String, Boolean] = Map(),
+      seqTupleStringString: Seq[(String, String)] = Nil,
+      charValue: Char = 0,
+      url: URL = url,
+      uri: URI = uri)
 }

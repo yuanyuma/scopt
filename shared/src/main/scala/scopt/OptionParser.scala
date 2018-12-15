@@ -71,126 +71,94 @@ import scala.collection.{ Seq => CSeq }
  * }
  * }}}
  */
-abstract class OptionParser[C](programName: String) { self =>
+abstract class OptionParser[C](programName: String) extends OptionDefCallback[C] { self =>
   protected val options = new ListBuffer[OptionDef[_, C]]
-  protected val helpOptions = new ListBuffer[OptionDef[_, C]]
 
   import platform._
-  private[scopt] val defaultConfig: DefaultScoptConfiguration = new DefaultScoptConfiguration {}
+  private[scopt] val defaultConfig: DefaultOParserSetup = new DefaultOParserSetup {}
+  private[scopt] lazy val (header0, usage0) =
+    ORunner.renderUsage(renderingMode, optionsWithProgramName)
 
   def errorOnUnknownArgument: Boolean = defaultConfig.errorOnUnknownArgument
-  def showUsageOnError: Boolean = helpOptions.isEmpty
+  def showUsageOnError: Option[Boolean] = defaultConfig.showUsageOnError
   def reportError(msg: String): Unit = defaultConfig.reportError(msg)
   def reportWarning(msg: String): Unit = defaultConfig.reportWarning(msg)
-  def renderingMode: RenderingMode = RenderingMode.TwoColumns
+  def renderingMode: RenderingMode = defaultConfig.renderingMode
   def terminate(exitState: Either[String, Unit]): Unit =
-    exitState match {
-      case Left(_)  => sys.exit(1)
-      case Right(_) => sys.exit(0)
-    }
-
-  def showTryHelp(): Unit = {
-    def oxford(xs: List[String]): String = xs match {
-      case a :: b :: Nil => a + " or " + b
-      case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
-    }
-    Console.err.println("Try " + oxford(helpOptions.toList map {_.fullName}) + " for more information.")
-  }
+    defaultConfig.terminate(exitState)
 
   /** adds usage text. */
-  def head(xs: String*): OptionDef[Unit, C] = makeDef[Unit](Head, "") text(xs.mkString(" "))
+  def head(xs: String*): OptionDef[Unit, C] =
+    makeDef[Unit](OptionDefKind.Head, "") text (xs.mkString(" "))
 
   /** adds an option invoked by `--name x`.
    * @param name name of the option
    */
-  def opt[A: Read](name: String): OptionDef[A, C] = makeDef(Opt, name)
+  def opt[A: Read](name: String): OptionDef[A, C] = makeDef(OptionDefKind.Opt, name)
 
   /** adds an option invoked by `-x value` or `--name value`.
    * @param x name of the short option
    * @param name name of the option
    */
   def opt[A: Read](x: Char, name: String): OptionDef[A, C] =
-    opt[A](name) abbr(x.toString)
+    opt[A](name) abbr (x.toString)
 
   /** adds usage text. */
-  def note(x: String): OptionDef[Unit, C] = makeDef[Unit](Note, "") text(x)
+  def note(x: String): OptionDef[Unit, C] = makeDef[Unit](OptionDefKind.Note, "") text (x)
 
   /** adds an argument invoked by an option without `-` or `--`.
    * @param name name in the usage text
    */
-  def arg[A: Read](name: String): OptionDef[A, C] = makeDef(Arg, name) required()
+  def arg[A: Read](name: String): OptionDef[A, C] = makeDef(OptionDefKind.Arg, name) required ()
 
   /** adds a command invoked by an option without `-` or `--`.
    * @param name name of the command
    */
-  def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](Cmd, name)
+  def cmd(name: String): OptionDef[Unit, C] = makeDef[Unit](OptionDefKind.Cmd, name)
 
   /** adds an option invoked by `--name` that displays usage text and exits.
    * @param name name of the option
    */
-  def help(name: String): OptionDef[Unit, C] = {
-    val o = opt[Unit](name) action { (x, c) =>
-      showUsage()
-      terminate(Right(()))
-      c
-    }
-    helpOptions += o
-    o
-  }
+  def help(name: String): OptionDef[Unit, C] = makeDef[Unit](OptionDefKind.OptHelp, name)
 
   /** adds an option invoked by `-x` or `--name` that displays usage text and exits.
-    * @param x name of the short option
-    * @param name name of the option
-    */
-  def help(x:Char, name:String): OptionDef[Unit, C] =
-    help(name) abbr(x.toString)
+   * @param x name of the short option
+   * @param name name of the option
+   */
+  def help(x: Char, name: String): OptionDef[Unit, C] =
+    help(name).abbr(x.toString)
 
   /** adds an option invoked by `--name` that displays header text and exits.
    * @param name name of the option
    */
-  def version(name: String): OptionDef[Unit, C] =
-    opt[Unit](name) action { (x, c) =>
-      showHeader()
-      terminate(Right(()))
-      c
-    }
+  def version(name: String): OptionDef[Unit, C] = makeDef[Unit](OptionDefKind.OptVersion, name)
 
   /** adds an option invoked by `-x` or `--name` that displays header text and exits.
    * @param x name of the short option
    * @param name name of the option
    */
-  def version(x: Char, name:String): OptionDef[Unit, C] =
-    version(name) abbr(x.toString)
+  def version(x: Char, name: String): OptionDef[Unit, C] =
+    version(name).abbr(x.toString)
 
   /** adds final check. */
   def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
-    makeDef[Unit](Check, "") validateConfig(f)
+    makeDef[Unit](OptionDefKind.Check, "") validateConfig (f)
 
-  def showHeader(): Unit = {
-    Console.out.println(header)
-  }
-  def header: String = ScoptEngine.renderHeader(options.toList)
+  def displayToOut(msg: String): Unit = defaultConfig.displayToOut(msg)
+  def displayToErr(msg: String): Unit = defaultConfig.displayToErr(msg)
 
-  def showUsage(): Unit = {
-    Console.out.println(usage)
-  }
-  def showUsageAsError(): Unit = {
-    Console.err.println(usage)
-  }
-  def usage: String = renderUsage(renderingMode)
-  def renderUsage(mode: RenderingMode): String =
-    ScoptEngine.renderUsage(programName, mode, options.toList)
-
-  private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String =
-    ScoptEngine.commandExample(programName, cmd, options.toList)
+  def header: String = header0
+  def usage: String = usage0
 
   /** call this to express success in custom validation. */
   def success: Either[String, Unit] = OptionDef.makeSuccess[String]
+
   /** call this to express failure in custom validation. */
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
   protected def makeDef[A: Read](kind: OptionDefKind, name: String): OptionDef[A, C] =
-    updateOption(new OptionDef[A, C](parser = this, kind = kind, name = name))
+    updateOption(new OptionDef[A, C](defCallback = this, kind = kind, name = name))
+  private[scopt] def onChange[A: Read](option: OptionDef[A, C]): Unit = updateOption(option)
   private[scopt] def updateOption[A: Read](option: OptionDef[A, C]): OptionDef[A, C] = {
     val idx = options indexWhere { _.id == option.id }
     if (idx > -1) options(idx) = option
@@ -207,16 +175,26 @@ abstract class OptionParser[C](programName: String) { self =>
       case None    => false
     }
 
+  private[scopt] def optionsWithProgramName =
+    (new OptionDef[Unit, C](OptionDefKind.ProgramName, "").text(programName)) :: options.toList
+
   /** parses the given `args`.
    */
   def parse(args: CSeq[String], init: C): Option[C] =
-    ScoptEngine.parse(args, init, options.toList,
-      new ScoptConfiguration {
+    ORunner.parse(
+      args,
+      init,
+      optionsWithProgramName,
+      new OParserSetup {
+        override def renderingMode: RenderingMode = self.renderingMode
         override def errorOnUnknownArgument: Boolean = self.errorOnUnknownArgument
-        override def showUsageOnError: Boolean = self.showUsageOnError
+        override def showUsageOnError: Option[Boolean] = self.showUsageOnError
+        override def displayToOut(msg: String): Unit = self.displayToOut(msg)
+        override def displayToErr(msg: String): Unit = self.displayToErr(msg)
         override def reportError(msg: String): Unit = self.reportError(msg)
         override def reportWarning(msg: String): Unit = self.reportWarning(msg)
-        override def showUsageAsError(): Unit = self.showUsageAsError()
-        override def showTryHelp(): Unit = self.showTryHelp()
-      })
+
+        override def terminate(exitState: Either[String, Unit]): Unit = self.terminate(exitState)
+      }
+    )
 }

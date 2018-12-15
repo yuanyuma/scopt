@@ -21,25 +21,29 @@ object Read extends platform.PlatformReadInstances {
     val arity = 1
     val reads = f
   }
-  implicit val stringRead: Read[String]       = reads { identity }
-  implicit val charRead: Read[Char]           =
-    reads { _.getBytes match {
-      case Array(char) => char.toChar
-      case s           =>
-        throw new IllegalArgumentException("'" + s + "' is not a char.")
-    }}
-  implicit val doubleRead: Read[Double]       = reads { _.toDouble }
-  implicit val booleanRead: Read[Boolean]     =
-    reads { _.toLowerCase match {
-      case "true"  => true
-      case "false" => false
-      case "yes"   => true
-      case "no"    => false
-      case "1"     => true
-      case "0"     => false
-      case s       =>
-        throw new IllegalArgumentException("'" + s + "' is not a boolean.")
-    }}
+  implicit val stringRead: Read[String] = reads { identity }
+  implicit val charRead: Read[Char] =
+    reads {
+      _.getBytes match {
+        case Array(char) => char.toChar
+        case s =>
+          throw new IllegalArgumentException("'" + s + "' is not a char.")
+      }
+    }
+  implicit val doubleRead: Read[Double] = reads { _.toDouble }
+  implicit val booleanRead: Read[Boolean] =
+    reads {
+      _.toLowerCase match {
+        case "true"  => true
+        case "false" => false
+        case "yes"   => true
+        case "no"    => false
+        case "1"     => true
+        case "0"     => false
+        case s =>
+          throw new IllegalArgumentException("'" + s + "' is not a boolean.")
+      }
+    }
 
   private def fixedPointWithRadix(str: String): (String, Int) = str.toLowerCase match {
     case s if s.startsWith("0x") => (s.stripPrefix("0x"), 16)
@@ -60,12 +64,14 @@ object Read extends platform.PlatformReadInstances {
 
   implicit val bigDecimalRead: Read[BigDecimal] = reads { BigDecimal(_) }
 
-  implicit val durationRead: Read[Duration]   =
-    reads { try {
-      Duration(_)
-    } catch {
-      case e: NumberFormatException => throw platform.mkParseEx(e.getMessage, -1)
-    }}
+  implicit val durationRead: Read[Duration] =
+    reads {
+      try {
+        Duration(_)
+      } catch {
+        case e: NumberFormatException => throw platform.mkParseEx(e.getMessage, -1)
+      }
+    }
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {
     val arity = 2
@@ -82,7 +88,9 @@ object Read extends platform.PlatformReadInstances {
     }
   implicit val unitRead: Read[Unit] = new Read[Unit] {
     val arity = 0
-    val reads = { (s: String) => () }
+    val reads = { (s: String) =>
+      ()
+    }
   }
 
   val sep = ","
@@ -91,22 +99,22 @@ object Read extends platform.PlatformReadInstances {
   implicit def seqRead[A: Read]: Read[CSeq[A]] = reads { (s: String) =>
     s.split(sep).toList.map(implicitly[Read[A]].reads)
   }
-   // reads("1,2,3,4,5") == List(1,2,3,4,5)
+  // reads("1,2,3,4,5") == List(1,2,3,4,5)
   implicit def immutableSeqRead[A: Read]: Read[ISeq[A]] = reads { (s: String) =>
     s.split(sep).toList.map(implicitly[Read[A]].reads)
   }
 
   // reads("1=false,2=true") == Map(1 -> false, 2 -> true)
-  implicit def mapRead[K: Read, V: Read]: Read[Map[K,V]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[(K,V)]].reads).toMap
+  implicit def mapRead[K: Read, V: Read]: Read[Map[K, V]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K, V)]].reads).toMap
   }
 
   // reads("1=false,1=true") == List((1 -> false), (1 -> true))
-  implicit def seqTupleRead[K: Read, V: Read]: Read[CSeq[(K,V)]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[(K,V)]].reads).toList
+  implicit def seqTupleRead[K: Read, V: Read]: Read[CSeq[(K, V)]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K, V)]].reads).toList
   }
-   // reads("1=false,1=true") == List((1 -> false), (1 -> true))
-  implicit def immutableSeqTupleRead[K: Read, V: Read]: Read[ISeq[(K,V)]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[(K,V)]].reads).toList
+  // reads("1=false,1=true") == List((1 -> false), (1 -> true))
+  implicit def immutableSeqTupleRead[K: Read, V: Read]: Read[ISeq[(K, V)]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K, V)]].reads).toList
   }
 }
