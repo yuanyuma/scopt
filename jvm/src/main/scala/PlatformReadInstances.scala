@@ -1,6 +1,7 @@
 package scopt
 
 import java.net.{URL, UnknownHostException}
+import collection.{ Seq => CSeq }
 
 private[scopt] object platform {
   val _NL = System.getProperty("line.separator")
@@ -30,11 +31,11 @@ private[scopt] object platform {
     implicit val urlRead: Read[URL]             = Read.reads { new URL(_) }
   }
 
-  def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
-      case e: NumberFormatException => Left(Seq(desc + " expects a number but was given '" + arg + "'"))
-      case e: UnknownHostException  => Left(Seq(desc + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
-      case e: ParseException        => Left(Seq(desc + " expects a Scala duration but was given '" + arg + "'"))
-      case e: Throwable             => Left(Seq(desc + " failed when given '" + arg + "'. " + e.getMessage))
+  def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[CSeq[String], C]] = {
+      case e: NumberFormatException => Left(List(desc + " expects a number but was given '" + arg + "'"))
+      case e: UnknownHostException  => Left(List(desc + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
+      case e: ParseException        => Left(List(desc + " expects a Scala duration but was given '" + arg + "'"))
+      case e: Throwable             => Left(List(desc + " failed when given '" + arg + "'. " + e.getMessage))
     }
 
 

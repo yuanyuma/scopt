@@ -2,8 +2,10 @@ package scopt
 
 
 
-import collection.mutable.ListBuffer
-import collection.immutable.ListMap
+import scala.collection.mutable.ListBuffer
+import scala.collection.immutable.ListMap
+import scala.collection.{ Seq => CSeq }
+import scala.collection.immutable.{ Seq => ISeq }
 
 trait Read[A] { self =>
   def arity: Int
@@ -90,8 +92,13 @@ object Read extends platform.PlatformReadInstances {
   val sep = ","
 
   // reads("1,2,3,4,5") == Seq(1,2,3,4,5)
-  implicit def seqRead[A: Read]: Read[Seq[A]] = reads { (s: String) =>
-    s.split(sep).toSeq.map(implicitly[Read[A]].reads)
+  implicit def seqRead[A: Read]: Read[CSeq[A]] = reads { (s: String) =>
+    s.split(sep).toList.map(implicitly[Read[A]].reads)
+  }
+
+  // reads("1,2,3,4,5") == List(1,2,3,4,5)
+  implicit def immutableSeqRead[A: Read]: Read[ISeq[A]] = reads { (s: String) =>
+    s.split(sep).toList.map(implicitly[Read[A]].reads)
   }
 
   // reads("1=false,2=true") == Map(1 -> false, 2 -> true)
@@ -100,8 +107,13 @@ object Read extends platform.PlatformReadInstances {
   }
 
   // reads("1=false,1=true") == List((1 -> false), (1 -> true))
-  implicit def seqTupleRead[K: Read, V: Read]: Read[Seq[(K,V)]] = reads { (s: String) =>
-    s.split(sep).map(implicitly[Read[(K,V)]].reads).toSeq
+  implicit def seqTupleRead[K: Read, V: Read]: Read[CSeq[(K,V)]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K,V)]].reads).toList
+  }
+
+  // reads("1=false,1=true") == List((1 -> false), (1 -> true))
+  implicit def immutableSeqTupleRead[K: Read, V: Read]: Read[ISeq[(K,V)]] = reads { (s: String) =>
+    s.split(sep).map(implicitly[Read[(K,V)]].reads).toList
   }
 }
 
@@ -117,17 +129,17 @@ object Zero {
 }
 
 object Validation {
-  def validateValue[A](vs: Seq[A => Either[String, Unit]])(value: A): Either[Seq[String], Unit] = {
+  def validateValue[A](vs: CSeq[A => Either[String, Unit]])(value: A): Either[CSeq[String], Unit] = {
     val results = vs map {_.apply(value)}
-    results.foldLeft(OptionDef.makeSuccess[Seq[String]]) { (acc, r) =>
+    results.foldLeft(OptionDef.makeSuccess[CSeq[String]]) { (acc, r) =>
       (acc match {
-        case Right(_) => Seq[String]()
+        case Right(_) => List[String]()
         case Left(xs) => xs
       }) ++ (r match {
-        case Right(_) => Seq[String]()
-        case Left(x)  => Seq[String](x)
+        case Right(_) => List[String]()
+        case Left(x)  => List[String](x)
       }) match {
-        case Seq()    => acc
+        case CSeq()   => acc
         case xs       => Left(xs)
       }
     }
@@ -385,7 +397,7 @@ abstract class OptionParser[C](programName: String) {
     val parentId = cmd map {_.id}
     val cs = commands filter { c => c.getParentId == parentId && !c.isHidden }
     if (cs.nonEmpty) text += cs map {_.name} mkString("[", "|", "]")
-    val os = options.toSeq filter { case x => x.kind == Opt && x.getParentId == parentId }
+    val os = options.toList filter { case x => x.kind == Opt && x.getParentId == parentId }
     val as = arguments filter {_.getParentId == parentId}
     if (os.nonEmpty) text += "[options]"
     if (cs exists { case x => arguments exists {_.getParentId == Some(x.id)}}) text += "<args>..."
@@ -402,11 +414,11 @@ abstract class OptionParser[C](programName: String) {
   /** call this to express failure in custom validation. */
   def failure(msg: String): Either[String, Unit] = Left(msg)
 
-  protected def heads: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Head}
-  protected def nonArgs: Seq[OptionDef[_, C]] = options.toSeq filter { case x => x.kind == Opt || x.kind == Note }
-  protected def arguments: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Arg}
-  protected def commands: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Cmd}
-  protected def checks: Seq[OptionDef[_, C]] = options.toSeq filter {_.kind == Check}
+  protected def heads: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Head}
+  protected def nonArgs: ISeq[OptionDef[_, C]] = options.toList filter { case x => x.kind == Opt || x.kind == Note }
+  protected def arguments: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Arg}
+  protected def commands: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Cmd}
+  protected def checks: ISeq[OptionDef[_, C]] = options.toList filter {_.kind == Check}
   protected def makeDef[A: Read](kind: OptionDefKind, name: String): OptionDef[A, C] =
     updateOption(new OptionDef[A, C](parser = this, kind = kind, name = name))
   private[scopt] def updateOption[A: Read](option: OptionDef[A, C]): OptionDef[A, C] = {
@@ -419,7 +431,7 @@ abstract class OptionParser[C](programName: String) {
   /** parses the given `args`.
    * @return `true` if successful, `false` otherwise
    */
-  def parse(args: Seq[String])(implicit ev: Zero[C]): Boolean =
+  def parse(args: CSeq[String])(implicit ev: Zero[C]): Boolean =
     parse(args, ev.zero) match {
       case Some(x) => true
       case None    => false
@@ -427,7 +439,7 @@ abstract class OptionParser[C](programName: String) {
 
   /** parses the given `args`.
    */
-  def parse(args: Seq[String], init: C): Option[C] = {
+  def parse(args: CSeq[String], init: C): Option[C] = {
     var i = 0
     val pendingOptions = ListBuffer() ++ (nonArgs filterNot {_.hasParent})
     val pendingArgs = ListBuffer() ++ (arguments filterNot {_.hasParent})
@@ -474,7 +486,7 @@ abstract class OptionParser[C](programName: String) {
       pendingCommands find {_.name == cmd}
     // greedy match
     def handleShortOptions(g0: String): Unit = {
-      val gs =  (0 to g0.size - 1).toSeq map { n => g0.substring(0, g0.size - n) }
+      val gs =  (0 to g0.size - 1).toList map { n => g0.substring(0, g0.size - n) }
       gs flatMap { g => pendingOptions map {(g, _)} } find { case (g, opt) =>
         opt.shortOptTokens("-" + g) == 1
       } match {
@@ -565,8 +577,8 @@ class OptionDef[A: Read, C](
   _valueName: Option[String],
   _desc: String,
   _action: (A, C) => C,
-  _validations: Seq[A => Either[String, Unit]],
-  _configValidations: Seq[C => Either[String, Unit]],
+  _validations: CSeq[A => Either[String, Unit]],
+  _configValidations: CSeq[C => Either[String, Unit]],
   _parentId: Option[Int],
   _minOccurs: Int,
   _maxOccurs: Int,
@@ -580,7 +592,7 @@ class OptionDef[A: Read, C](
     this(_parser = parser, _id = OptionDef.generateId, _kind = kind, _name = name,
       _shortOpt = None, _keyName = None, _valueName = None,
       _desc = "", _action = { (a: A, c: C) => c },
-      _validations = Seq(), _configValidations = Seq(),
+      _validations = List(), _configValidations = List(),
       _parentId = None, _minOccurs = 0, _maxOccurs = 1,
       _isHidden = false, _fallback = None)
 
@@ -594,8 +606,8 @@ class OptionDef[A: Read, C](
     _valueName: Option[String] = this._valueName,
     _desc: String = this._desc,
     _action: (A, C) => C = this._action,
-    _validations: Seq[A => Either[String, Unit]] = this._validations,
-    _configValidations: Seq[C => Either[String, Unit]] = this._configValidations,
+    _validations: CSeq[A => Either[String, Unit]] = this._validations,
+    _configValidations: CSeq[C => Either[String, Unit]] = this._configValidations,
     _parentId: Option[Int] = this._parentId,
     _minOccurs: Int = this._minOccurs,
     _maxOccurs: Int = this._maxOccurs,
@@ -681,12 +693,12 @@ class OptionDef[A: Read, C](
   def isHidden: Boolean = _isHidden
   def hasFallback: Boolean = _fallback.isDefined
   def getFallback: A = _fallback.get.apply
-  private[scopt] def checks: Seq[C => Either[String, Unit]] = _configValidations
+  private[scopt] def checks: CSeq[C => Either[String, Unit]] = _configValidations
   def desc: String = _desc
   def shortOpt: Option[String] = _shortOpt
   def valueName: Option[String] = _valueName
 
-  private[scopt] def applyArgument(arg: String, config: C): Either[Seq[String], C] =
+  private[scopt] def applyArgument(arg: String, config: C): Either[CSeq[String], C] =
     try {
       val x = read.reads(arg)
       Validation.validateValue(_validations)(x) match {
@@ -707,14 +719,14 @@ class OptionDef[A: Read, C](
     if (arg == fullName) 1 + read.tokensToRead
     else if ((arg startsWith (fullName + ":")) || (arg startsWith (fullName + "="))) 1
     else 0
-  private[scopt] def tokensToRead(i: Int, args: Seq[String]): Int =
+  private[scopt] def tokensToRead(i: Int, args: CSeq[String]): Int =
     if (i >= args.length || kind != Opt) 0
     else args(i) match {
       case arg if longOptTokens(arg) > 0  => longOptTokens(arg)
       case arg if shortOptTokens(arg) > 0 => shortOptTokens(arg)
       case _ => 0
     }
-  private[scopt] def apply(i: Int, args: Seq[String]): Either[String, String] =
+  private[scopt] def apply(i: Int, args: CSeq[String]): Either[String, String] =
     if (i >= args.length || kind != Opt) Left("Option does not match")
     else args(i) match {
       case arg if longOptTokens(arg) == 2 || shortOptTokens(arg) == 2 =>
@@ -725,7 +737,7 @@ class OptionDef[A: Read, C](
         Right(arg drop ("-" + shortOptOrBlank + ":").length)
       case _ => Right("")
     }
-  private[scopt] def token(i: Int, args: Seq[String]): Option[String] =
+  private[scopt] def token(i: Int, args: CSeq[String]): Option[String] =
     if (i >= args.length || kind != Opt) None
     else Some(args(i))
   private[scopt] def usage: String =
