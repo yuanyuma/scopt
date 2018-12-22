@@ -1,3 +1,5 @@
+package scopttest
+
 import minitest._
 import java.io.ByteArrayOutputStream
 
@@ -19,7 +21,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     intParser("--foo=0x01")
     intParser("-f", "0x1")
     intParser("-f:0x1")
-    intParserFail{"--foo"}
+    intParserFail { "--foo" }
     intParserFail("--foo", "bar")
     intParserFail("--foo=bar")
   }
@@ -130,10 +132,6 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     reportWarningParser("foo")
   }
 
-  test("showHeader") {
-    showHeaderParser()
-  }
-
   test("showUsage") {
     showUsageParser()
   }
@@ -144,7 +142,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Unit]('f', "foo").foreach( _ => foo = true )
+      opt[Unit]('f', "foo").foreach(_ => foo = true)
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -155,7 +153,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var debug = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Unit]("debug").hidden().foreach( _ => debug = true )
+      opt[Unit]("debug").hidden().foreach(_ => debug = true)
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -166,7 +164,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo").foreach( x => foo = x )
+      opt[Int]('f', "foo").foreach(x => foo = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -177,7 +175,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0L
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Long]('f', "foo").foreach( x => foo = x )
+      opt[Long]('f', "foo").foreach(x => foo = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -188,7 +186,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo").foreach( x => foo = x )
+      opt[Int]('f', "foo").foreach(x => foo = x)
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -198,7 +196,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo").foreach( x => foo = x )
+      opt[String]("foo").foreach(x => foo = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -209,7 +207,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0.0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo").foreach( x => foo = x )
+      opt[Double]("foo").foreach(x => foo = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -220,7 +218,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0.0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Double]("foo").foreach( x => foo = x )
+      opt[Double]("foo").foreach(x => foo = x)
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -230,7 +228,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo").foreach( x => foo = x )
+      opt[Boolean]("foo").foreach(x => foo = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -241,7 +239,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Boolean]("foo").foreach( x => foo = x )
+      opt[Boolean]("foo").foreach(x => foo = x)
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -252,9 +250,10 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo").foreach({ case (k, v) =>
-        foo = k
-        value = v
+      opt[(String, Int)]("foo").foreach({
+        case (k, v) =>
+          foo = k
+          value = v
       })
       help("help")
     }
@@ -267,9 +266,10 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo").foreach({ case (k, v) =>
-        foo = k
-        value = v
+      opt[(String, Int)]("foo").foreach({
+        case (k, v) =>
+          foo = k
+          value = v
       })
       help("help")
     }
@@ -280,7 +280,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("foo").required().foreach( x => foo = x )
+      opt[String]("foo").required().foreach(x => foo = x)
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -290,8 +290,10 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var stringValue = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[String]("stringValue").required().withFallback(() => "someFallback")
-        .foreach( x => stringValue = x )
+      opt[String]("stringValue")
+        .required()
+        .withFallback(() => "someFallback")
+        .foreach(x => stringValue = x)
       help("help")
     }
     assert {
@@ -304,11 +306,12 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[Int]('f', "foo").foreach( x => foo = x ).
-        validate( x =>
+      opt[Int]('f', "foo")
+        .foreach(x => foo = x)
+        .validate(x =>
           if (x > 0) success
-          else failure("Option --foo must be >0") ).
-        validate( x => failure("Just because") )
+          else failure("Option --foo must be >0"))
+        .validate(x => failure("Just because"))
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -318,7 +321,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var port = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>").foreach( x => port = x )
+      arg[Int]("<port>").foreach(x => port = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -329,7 +332,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var port = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[Int]("<port>").foreach( x => port = x )
+      arg[Int]("<port>").foreach(x => port = x)
       help("help")
     }
     assert(parser.parse(args.toSeq) == false)
@@ -340,8 +343,8 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>").foreach( x => a = x )
-      arg[String]("<b>").foreach( x => b = x )
+      arg[String]("<a>").foreach(x => a = x)
+      arg[String]("<b>").foreach(x => b = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -353,8 +356,8 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>").foreach( x => a = x ).unbounded()
-      arg[String]("<b>").foreach( x => b = x )
+      arg[String]("<a>").foreach(x => a = x).unbounded()
+      arg[String]("<b>").foreach(x => b = x)
       help("help")
     }
     parser.parse(args.toSeq)
@@ -366,8 +369,8 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var b = ""
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      arg[String]("<a>").foreach( x => a = x ).unbounded().optional()
-      arg[String]("<b>").foreach( x => b = x ).optional()
+      arg[String]("<a>").foreach(x => a = x).unbounded().optional()
+      arg[String]("<b>").foreach(x => b = x).optional()
       help("help")
     }
     assert(parser.parse(args.toSeq) == true)
@@ -377,7 +380,7 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
     var foo = false
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      cmd("update").foreach( _ => foo = true )
+      cmd("update").foreach(_ => foo = true)
       help("help")
     }
     val result = parser.parse(args.toSeq)
@@ -385,45 +388,57 @@ object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   def helpParserOneColumn(args: String*): Unit = {
-    case class Config(foo: Int = -1, xyz: Boolean = false,
-      libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", keepalive: Boolean = false)
+    case class Config(
+        foo: Int = -1,
+        xyz: Boolean = false,
+        libName: String = "",
+        maxCount: Int = -1,
+        verbose: Boolean = false,
+        debug: Boolean = false,
+        mode: String = "",
+        keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
 
-      opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
-        text("foo is an integer property")
+      opt[Int]('f', "foo").foreach(x => c = c.copy(foo = x)).text("foo is an integer property")
 
-      opt[(String, Int)]("max").foreach( { case (k, v) =>
-        c = c.copy(libName = k, maxCount = v) }).
-        validate( x =>
+      opt[(String, Int)]("max")
+        .foreach({
+          case (k, v) =>
+            c = c.copy(libName = k, maxCount = v)
+        })
+        .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0") ).
-        keyValueName("<libname>", "<max>").
-        text("maximum count for <libname>")
+          else failure("Value <max> must be >0"))
+        .keyValueName("<libname>", "<max>")
+        .text("maximum count for <libname>")
 
-      opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
-        text("verbose is a flag")
+      opt[Unit]("verbose").foreach(_ => c = c.copy(verbose = true)).text("verbose is a flag")
 
-      opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
-        text("this option is hidden in the usage text")
+      opt[Unit]("debug")
+        .hidden()
+        .foreach(_ => c = c.copy(debug = true))
+        .text("this option is hidden in the usage text")
 
       help("help").text("prints this usage text")
 
       note("some notes.".newline)
 
-      cmd("update").foreach( _ => c.copy(mode = "update") ).
-        text("update is a command.").
-        children(
-          opt[Unit]("not-keepalive").abbr("nk").
-            foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
-          opt[Boolean]("xyz").foreach( x =>
-            c = c.copy(xyz = x) ).text("xyz is a boolean property"),
-          opt[Unit]("debug-update").hidden().
-            foreach( _ => c = c.copy(debug = true) ).
-            text("this option is hidden in the usage text")
+      cmd("update")
+        .foreach(_ => c.copy(mode = "update"))
+        .text("update is a command.")
+        .children(
+          opt[Unit]("not-keepalive")
+            .abbr("nk")
+            .foreach(_ => c.copy(keepalive = false))
+            .text("disable keepalive"),
+          opt[Boolean]("xyz").foreach(x => c = c.copy(xyz = x)).text("xyz is a boolean property"),
+          opt[Unit]("debug-update")
+            .hidden()
+            .foreach(_ => c = c.copy(debug = true))
+            .text("this option is hidden in the usage text")
         )
     }
     parser.parse(args.toSeq)
@@ -449,44 +464,56 @@ update is a command.
   }
 
   def helpParserTwoColumns(args: String*): Unit = {
-    case class Config(foo: Int = -1, xyz: Boolean = false,
-      libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-      mode: String = "", keepalive: Boolean = false)
+    case class Config(
+        foo: Int = -1,
+        xyz: Boolean = false,
+        libName: String = "",
+        maxCount: Int = -1,
+        verbose: Boolean = false,
+        debug: Boolean = false,
+        mode: String = "",
+        keepalive: Boolean = false)
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
 
-      opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
-        text("foo is an integer property")
+      opt[Int]('f', "foo").foreach(x => c = c.copy(foo = x)).text("foo is an integer property")
 
-      opt[(String, Int)]("max").foreach( { case (k, v) =>
-        c = c.copy(libName = k, maxCount = v) }).
-        validate( x =>
+      opt[(String, Int)]("max")
+        .foreach({
+          case (k, v) =>
+            c = c.copy(libName = k, maxCount = v)
+        })
+        .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0") ).
-        keyValueName("<libname>", "<max>").
-        text("maximum count for <libname>")
+          else failure("Value <max> must be >0"))
+        .keyValueName("<libname>", "<max>")
+        .text("maximum count for <libname>")
 
-      opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
-        text("verbose is a flag")
+      opt[Unit]("verbose").foreach(_ => c = c.copy(verbose = true)).text("verbose is a flag")
 
-      opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
-        text("this option is hidden in the usage text")
+      opt[Unit]("debug")
+        .hidden()
+        .foreach(_ => c = c.copy(debug = true))
+        .text("this option is hidden in the usage text")
 
       help("help").text("prints this usage text")
 
       note("some notes.".newline)
 
-      cmd("update").foreach( _ => c.copy(mode = "update") ).
-        text("update is a command.").
-        children(
-          opt[Unit]("not-keepalive").abbr("nk").
-            foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
-          opt[Boolean]("xyz").foreach( x =>
-            c = c.copy(xyz = x) ).text("xyz is a boolean property"),
-          opt[Unit]("debug-update").hidden().
-            foreach( _ => c = c.copy(debug = true) ).
-            text("this option is hidden in the usage text")
+      cmd("update")
+        .foreach(_ => c.copy(mode = "update"))
+        .text("update is a command.")
+        .children(
+          opt[Unit]("not-keepalive")
+            .abbr("nk")
+            .foreach(_ => c.copy(keepalive = false))
+            .text("disable keepalive"),
+          opt[Boolean]("xyz").foreach(x => c = c.copy(xyz = x)).text("xyz is a boolean property"),
+          opt[Unit]("debug-update")
+            .hidden()
+            .foreach(_ => c = c.copy(debug = true))
+            .text("this option is hidden in the usage text")
         )
     }
     parser.parse(args.toSeq)
@@ -508,7 +535,8 @@ update is a command.
   def printParserError(body: scopt.OptionParser[Unit] => Unit): String = {
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      help("help") text("prints this usage text")
+      help("help") text ("prints this usage text")
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
     }
     val bos = new ByteArrayOutputStream()
     Console.withErr(bos) { body(parser) }
@@ -517,7 +545,8 @@ update is a command.
   def printParserOut(body: scopt.OptionParser[Unit] => Unit): String = {
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      help("help") text("prints this usage text")
+      help("help") text ("prints this usage text")
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
     }
     val bos = new ByteArrayOutputStream()
     Console.withOut(bos) { body(parser) }
@@ -529,11 +558,8 @@ update is a command.
   def reportWarningParser(msg: String): Unit = {
     assert(printParserError(_.reportWarning(msg)) == "Warning: foo".newline)
   }
-  def showHeaderParser(): Unit = {
-    assert(printParserOut(_.showHeader) == "scopt 3.x".newline)
-  }
   def showUsageParser(): Unit = {
-    assert(printParserOut(_.showUsage) == """scopt 3.x
+    assert(printParserOut(_.parse(List("--help"), ())) == """scopt 3.x
 Usage: scopt [options]
 
   --help  prints this usage text

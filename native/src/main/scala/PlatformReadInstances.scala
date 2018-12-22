@@ -2,6 +2,7 @@ package scopt
 
 import java.io.File
 import java.net.UnknownHostException
+import collection.{ Seq => CSeq }
 
 private[scopt] object platform {
   val _NL = System.getProperty("line.separator")
@@ -13,10 +14,12 @@ private[scopt] object platform {
     implicit val fileRead: Read[File] = Read.reads { new File(_) }
   }
 
-  def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
-      case e: NumberFormatException => Left(Seq(desc + " expects a number but was given '" + arg + "'"))
-      case e: Throwable             => Left(Seq(desc + " failed when given '" + arg + "'. " + e.getMessage))
-    }
-
+  def applyArgumentExHandler[C](
+      desc: String,
+      arg: String): PartialFunction[Throwable, Either[CSeq[String], C]] = {
+    case e: NumberFormatException =>
+      Left(List(desc + " expects a number but was given '" + arg + "'"))
+    case e: Throwable => Left(List(desc + " failed when given '" + arg + "'. " + e.getMessage))
+  }
 
 }
