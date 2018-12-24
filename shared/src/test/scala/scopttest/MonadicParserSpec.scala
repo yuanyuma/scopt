@@ -23,6 +23,11 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("head(s, ...) should generate usage text") {
+    val builder = OParser.builder[Config]
+    val head1: OParser[Unit, Config] = {
+      import builder._
+      head("scopt", "3.x")
+    }
     assert(
       OParser.usage(head1) ==
         """scopt 3.x
@@ -31,6 +36,15 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("head(s, ...) should compose using ++") {
+    val builder = OParser.builder[Config]
+    val head1: OParser[Unit, Config] = {
+      import builder._
+      head("scopt", "3.x")
+    }
+    val head2: OParser[Unit, Config] = {
+      import builder._
+      head("x", "y")
+    }
     val p = head1 ++ head2
     assert(
       OParser.usage(p) ==
@@ -46,6 +60,10 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       programName("scopt")
     }
+    val head1: OParser[Unit, Config] = {
+      import builder._
+      head("scopt", "3.x")
+    }
     val p: OParser[Unit, Config] = for {
       _ <- programName1
       _ <- head1
@@ -59,15 +77,37 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     ()
   }
 
+  test("OParser.sequence should compose OParsers") {
+    val builder = OParser.builder[Config]
+    val head1: OParser[Unit, Config] = {
+      import builder._
+      head("scopt", "3.x")
+    }
+    val p: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head1
+      )
+    }
+    assert(
+      OParser.usage(p) ==
+        """scopt 3.x
+        |Usage: scopt
+        |
+        |""".stripMargin)
+    ()
+  }
+
   test("unit parser should generate usage") {
     val builder = OParser.builder[Config]
     val unitParser1: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- opt[Unit]('f', "foo").action((x, c: Config) => c.copy(flag = true))
-      } yield ()
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Unit]('f', "foo").action((x, c: Config) => c.copy(flag = true))
+      )
     }
     assert(
       OParser.usage(unitParser1) ==
@@ -80,32 +120,36 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("unit parser should parse ()") {
     val builder = OParser.builder[Config]
-    val unitParser1: OParser[Unit, Config] = {
+    val parser: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- opt[Unit]('f', "foo") action { (x, c: Config) =>
-          c.copy(flag = true)
-        }
-      } yield ()
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Unit]('f', "foo").action((x, c: Config) => c.copy(flag = true))
+      )
     }
-
     def unitParser(args: String*): Unit = {
-      val result = OParser.parse(unitParser1, args.toSeq, Config())
+      val result = OParser.parse(parser, args.toSeq, Config())
       assert(result.get.flag == true)
     }
     unitParser("--foo")
     unitParser("-f")
   }
 
-  test("""for {
-    |  _ <- opt[Unit]('a', "alice")
-    |  _ <- opt[Unit]('b', "bob")
-    |  _ <- opt[Unit]("alicebob") abbr("ab") action { x => x }
-    |} yield ()""".stripMargin + " should generate usage") {
+  test("options should generate usage text") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Unit]('a', "alice"),
+        opt[Unit]('b', "bob"),
+        opt[Unit]("alicebob").abbr("ab").action((x, c) => c.copy(flag = true))
+      )
+    }
     assert(
-      OParser.usage(groupParser1) ==
+      OParser.usage(parser) ==
         """scopt 3.x
         |Usage: scopt [options]
         |
@@ -116,13 +160,38 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("grouped parser should parse ()") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Unit]('a', "alice"),
+        opt[Unit]('b', "bob"),
+        opt[Unit]("alicebob").abbr("ab").action((x, c) => c.copy(flag = true))
+      )
+    }
+    def groupParser(args: String*): Unit = {
+      val result = OParser.parse(parser, args.toSeq, Config())
+      assert(result.get.flag)
+    }
     groupParser("-ab")
     groupParser("-abab")
   }
 
   test("int parser should generate usage") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Int]('f', "foo").action((x, c) => c.copy(intValue = x)),
+        help("help")
+      )
+    }
     assert(
-      OParser.usage(intParser1) ==
+      OParser.usage(parser) ==
         """scopt 3.x
         |Usage: scopt [options]
         |
@@ -132,6 +201,24 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("int parser should parse 1") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Int]('f', "foo").action((x, c) => c.copy(intValue = x)),
+        help("help")
+      )
+    }
+    def intParser(args: String*): Unit = {
+      val result = OParser.parse(parser, args.toSeq, Config())
+      assert(result.get.intValue == 1)
+    }
+    def intParserFail(args: String*): Unit = {
+      val result = OParser.parse(parser, args.toSeq, Config())
+      assert(result == None)
+    }
     intParser("--foo", "1")
     intParser("--foo:1")
     intParser("--foo=1")
@@ -149,8 +236,18 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("BigDecimal parser should generate usage") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[BigDecimal]('f', "foo").action((x, c) => c.copy(bigDecimalValue = x)),
+        help("help")
+      )
+    }
     assert(
-      OParser.usage(bigDecimalParser1) ==
+      OParser.usage(parser) ==
         """scopt 3.x
         |Usage: scopt [options]
         |
@@ -160,6 +257,24 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("BigDecimal parser should parse 1.0") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[BigDecimal]('f', "foo").action((x, c) => c.copy(bigDecimalValue = x)),
+        help("help")
+      )
+    }
+    def bigDecimalParser(args: String*): Unit = {
+      val result = OParser.parse(parser, args.toSeq, Config())
+      assert(result.get.bigDecimalValue == BigDecimal("1.0"))
+    }
+    def bigDecimalParserFail(args: String*): Unit = {
+      val result = OParser.parse(parser, args.toSeq, Config())
+      assert(result == None)
+    }
     bigDecimalParser("--foo", "1.0")
     bigDecimalParser("--foo=1.0")
     bigDecimalParserFail("--foo", "bar")
@@ -170,12 +285,12 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val parser: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- opt[String]("foo").required().action((x, c) => c.copy(stringValue = x))
-        _ <- help("help")
-      } yield ()
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[String]("foo").required().action((x, c) => c.copy(stringValue = x)),
+        help("help")
+      )
     }
     val result = OParser.parse(parser, Nil, Config())
     assert(result == None)
@@ -186,16 +301,16 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val parser: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- opt[Int]('f', "foo")
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        opt[Int]('f', "foo")
           .action((x, c) => c.copy(intValue = x))
           .validate(x =>
             if (x > 0) success
             else failure("Option --foo must be >0"))
           .validate(x => failure("Just because"))
-      } yield ()
+      )
     }
     val result = OParser.parse(parser, List("--foo", "0"), Config())
     assert(result == None)
@@ -203,8 +318,24 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("command usage") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        cmd("update")
+          .action((x, c) => c.copy(flag = true))
+          .children(
+            OParser.sequence(
+              opt[Unit]("foo").action((x, c) => c.copy(stringValue = "foo")),
+              opt[Int]("bar").action((x, c) => c.copy(intValue = x))
+            )
+          )
+      )
+    }
     assert(
-      OParser.usage(cmdParser1) ==
+      OParser.usage(parser) ==
         """scopt 3.x
         |Usage: scopt [update]
         |
@@ -216,8 +347,30 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
   }
 
   test("option parser can be reused across multiple commands") {
+    val builder = OParser.builder[Config]
+    val suboptionParser1: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        opt[Unit]("foo").action((x, c) => c.copy(stringValue = "foo")),
+        opt[Int]("bar").action((x, c) => c.copy(intValue = x)),
+        note("")
+      )
+    }
+    val parser: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        cmd("update")
+          .action((x, c) => c.copy(flag = true))
+          .children(suboptionParser1),
+        cmd("status")
+          .action((x, c) => c.copy(flag = true))
+          .children(suboptionParser1)
+      )
+    }
     assert(
-      OParser.usage(cmdParser2) ==
+      OParser.usage(parser) ==
         """scopt 3.x
         |Usage: scopt [update|status]
         |
@@ -238,11 +391,11 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val parser: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- version("version")
-      } yield ()
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        version("version")
+      )
     }
     val out = printParserOut {
       OParser.parse(parser, List("--version"), Config(), new scopt.DefaultOParserSetup {
@@ -257,11 +410,11 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val parser: OParser[Unit, Config] = {
       import builder._
-      for {
-        _ <- programName("scopt")
-        _ <- head("scopt", "3.x")
-        _ <- help("help").text("prints this usage text")
-      } yield ()
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "3.x"),
+        help("help").text("prints this usage text")
+      )
     }
     val out = printParserOut {
       OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOParserSetup {
@@ -276,124 +429,6 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
         |  --help  prints this usage text
         |""".stripMargin)
     ()
-  }
-
-  // examples
-  val builder = OParser.builder[Config]
-
-  lazy val head1: OParser[Unit, Config] = {
-    import builder._
-    head("scopt", "3.x")
-  }
-
-  lazy val head2: OParser[Unit, Config] = {
-    import builder._
-    head("x", "y")
-  }
-
-  lazy val groupParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- opt[Unit]('a', "alice")
-      _ <- opt[Unit]('b', "bob")
-      _ <- opt[Unit]("alicebob").abbr("ab").action((x, c) => c.copy(flag = true))
-      // _ <_ help("help")
-    } yield ()
-  }
-
-  def groupParser(args: String*): Unit = {
-    val result = OParser.parse(groupParser1, args.toSeq, Config())
-    assert(result.get.flag)
-  }
-
-  lazy val intParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- opt[Int]('f', "foo").action((x, c) => c.copy(intValue = x))
-      _ <- help("help")
-    } yield ()
-  }
-
-  def intParser(args: String*): Unit = {
-    val result = OParser.parse(intParser1, args.toSeq, Config())
-    assert(result.get.intValue == 1)
-  }
-  def intParserFail(args: String*): Unit = {
-    val result = OParser.parse(intParser1, args.toSeq, Config())
-    assert(result == None)
-  }
-
-  lazy val bigDecimalParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- opt[BigDecimal]('f', "foo").action((x, c) => c.copy(bigDecimalValue = x))
-      _ <- help("help")
-    } yield ()
-  }
-
-  def bigDecimalParser(args: String*): Unit = {
-    val result = OParser.parse(bigDecimalParser1, args.toSeq, Config())
-    assert(result.get.bigDecimalValue == BigDecimal("1.0"))
-  }
-
-  def bigDecimalParserFail(args: String*): Unit = {
-    val result = OParser.parse(bigDecimalParser1, args.toSeq, Config())
-    assert(result == None)
-  }
-
-  lazy val checkParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- opt[Unit]('f', "foo").action((x, c) => c.copy(flag = true))
-      _ <- checkConfig { c =>
-        if (c.flag) success else failure("flag is false")
-      }
-    } yield ()
-  }
-
-  lazy val cmdParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- cmd("update")
-        .action((x, c) => c.copy(flag = true))
-        .children(for {
-          _ <- opt[Unit]("foo").action((x, c) => c.copy(stringValue = "foo"))
-          _ <- opt[Int]("bar").action((x, c) => c.copy(intValue = x))
-        } yield ())
-    } yield ()
-  }
-
-  lazy val suboptionParser1: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- opt[Unit]("foo").action((x, c) => c.copy(stringValue = "foo"))
-      _ <- opt[Int]("bar").action((x, c) => c.copy(intValue = x))
-      _ <- note("")
-    } yield ()
-  }
-
-  lazy val cmdParser2: OParser[Unit, Config] = {
-    import builder._
-    for {
-      _ <- programName("scopt")
-      _ <- head("scopt", "3.x")
-      _ <- cmd("update")
-        .action((x, c) => c.copy(flag = true))
-        .children(suboptionParser1)
-      _ <- cmd("status")
-        .action((x, c) => c.copy(flag = true))
-        .children(suboptionParser1)
-    } yield ()
   }
 
   case class Config(
