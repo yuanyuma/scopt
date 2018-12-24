@@ -153,6 +153,14 @@ object OParser {
     u
   }
 
+  def sequence[A, C](parser: OParser[A, C], parsers: OParser[_, C]*): OParser[A, C] =
+    if (parsers.isEmpty) parser
+    else
+      parser flatMap { p =>
+        val ps = parsers.toList
+        sequence(ps.head, ps.tail: _*)
+      }
+
   private[this] lazy val setup = new DefaultOParserSetup with OParserSetup {
     def showUsageAsError(): Unit = ()
     def showTryHelp(): Unit = ()
