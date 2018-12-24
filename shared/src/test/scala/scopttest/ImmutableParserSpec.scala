@@ -53,6 +53,12 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     stringParser("--foo=bar")
   }
 
+  test("option string parser should parse empty string") {
+    emptyStringParser("--foo", "")
+    emptyStringParser("--foo:")
+    emptyStringParser("--foo=")
+  }
+
   test("char parser should parse 'b'") {
     charParser("--foo", "b")
     charParser("--foo:b")
@@ -121,6 +127,25 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
   test("seq tuple parser") {
     seqTupleParser("--foo", "key=1,key=2")
     seqTupleParserFail("foo")
+  }
+
+  test("option parser") {
+    emptyLiftedOptionParser("--foo", "")
+    emptyLiftedOptionParser("--foo:")
+    emptyLiftedOptionParser("--foo=")
+    nonEmptyLiftedOptionParser("--foo", "1")
+    nonEmptyLiftedOptionParser("--foo:1")
+    nonEmptyLiftedOptionParser("--foo=1")
+  }
+
+  test("optional string parser") {
+    noneOptStringParser()
+    emptyOptStringParser("--bar", "")
+    emptyOptStringParser("--bar:")
+    emptyOptStringParser("--bar=")
+    bazOptStringParser("--bar", "baz")
+    bazOptStringParser("--bar:baz")
+    bazOptStringParser("--bar=baz")
   }
 
   test(".required() should fail when the option is missing") {
@@ -319,11 +344,28 @@ Usage: scopt [options]
   val stringParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[String]("foo").action((x, c) => c.copy(stringValue = x))
+    opt[String]("bar").action((x, c) => c.copy(optStringValue = Some(x)))
     help("help")
   }
   def stringParser(args: String*): Unit = {
     val result = stringParser1.parse(args.toSeq, Config())
     assert(result.get.stringValue == "bar")
+  }
+  def emptyStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.stringValue == "")
+  }
+  def noneOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == None)
+  }
+  def emptyOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == Some(""))
+  }
+  def bazOptStringParser(args: String*): Unit = {
+    val result = stringParser1.parse(args.toSeq, Config())
+    assert(result.get.optStringValue == Some("baz"))
   }
 
   val charParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -464,6 +506,18 @@ Usage: scopt [options]
   def seqTupleParserFail(args: String*): Unit = {
     val result = seqTupleParser1.parse(args.toSeq, Config())
     assert(result == None)
+  }
+
+  val liftedOptionParser1 = new scopt.OptionParser[Config]("foo") {
+    opt[Option[Int]]("foo").action((i, c) => c.copy(optIntValue = i))
+  }
+  def emptyLiftedOptionParser(args: String*): Unit = {
+    val result = liftedOptionParser1.parse(args.toSeq, Config())
+    assert(result.get.optIntValue == None)
+  }
+  def nonEmptyLiftedOptionParser(args: String*): Unit = {
+    val result = liftedOptionParser1.parse(args.toSeq, Config())
+    assert(result.get.optIntValue == Some(1))
   }
 
   //parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
@@ -839,5 +893,7 @@ Usage: scopt [options]
       seqInts: Seq[Int] = Seq(),
       mapStringToBool: Map[String, Boolean] = Map(),
       seqTupleStringString: Seq[(String, String)] = Nil,
-      charValue: Char = 0)
+      charValue: Char = 0,
+      optStringValue: Option[String] = None,
+      optIntValue: Option[Int] = None)
 }
