@@ -99,6 +99,31 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     ()
   }
 
+  test("OParser.sequence should allow duplicates") {
+    val builder = OParser.builder[Config]
+    val parser1: OParser[Unit, Config] = {
+      import builder._
+      opt[Unit]('b', "bob")
+    }
+    val p: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        head("scopt", "4.x"),
+        programName("scopt"),
+        parser1.text("text"),
+        parser1
+      )
+    }
+    assert(
+      OParser.usage(p) ==
+        """scopt 4.x
+        |Usage: scopt [options]
+        |
+        |  -b, --bob  text
+        |  -b, --bob  """.stripMargin)
+    ()
+  }
+
   test("unit parser should generate usage") {
     val builder = OParser.builder[Config]
     val unitParser1: OParser[Unit, Config] = {
