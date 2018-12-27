@@ -114,11 +114,28 @@ class OParser[A, C](head: OptionDef[A, C], rest: List[OptionDef[_, C]]) {
   /** Hides the option in any usage text. */
   def hidden(): OParser[A, C] = subHead[A](head.hidden())
 
+  /** Adds value name used in the usage text. */
+  def valueName(x: String): OParser[A, C] =
+    subHead[A](head.valueName(x))
+
+  /** Adds key name used in the usage text. */
+  def keyName(x: String): OParser[A, C] =
+    subHead[A](head.keyName(x))
+
+  /** Adds key and value names used in the usage text. */
+  def keyValueName(k: String, v: String): OParser[A, C] =
+    subHead[A](head.keyValueName(k, v))
+
   /** Adds a parser under this command. */
-  def children(c: OParser[A, C]): OParser[A, C] = {
-    val childList = c.toList
-    val childListModified = c.toList map { _.parent(head) }
-    OParser(head, rest ::: childListModified)
+  def children(cs: OParser[_, C]*): OParser[A, C] = {
+    cs.toList match {
+      case List(c) =>
+        val childList = c.toList
+        val childListModified = c.toList map { _.parent(head) }
+        OParser(head, rest ::: childListModified)
+      case x :: xs =>
+        children(OParser.sequence(x, xs: _*))
+    }
   }
 
   /** Adds custom validation. */
