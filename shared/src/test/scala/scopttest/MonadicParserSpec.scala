@@ -115,6 +115,51 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     ()
   }
 
+  test("compose configuration type") {
+    trait ConfigLike1[R] {
+      def withDebug(value: Boolean): R
+    }
+    def parser1[R <: ConfigLike1[R]]: OParser[_, R] = {
+      val builder = OParser.builder[R]
+      import builder._
+      OParser.sequence(
+        opt[Unit]("debug").action((_, c) => c.withDebug(true)),
+        note("something")
+      )
+    }
+
+    trait ConfigLike2[R] {
+      def withVerbose(value: Boolean): R
+    }
+    def parser2[R <: ConfigLike2[R]]: OParser[_, R] = {
+      val builder = OParser.builder[R]
+      import builder._
+      OParser.sequence(
+        opt[Unit]("verbose").action((_, c) => c.withVerbose(true)),
+        note("something else")
+      )
+    }
+    case class Config1(debug: Boolean = false, verbose: Boolean = false)
+        extends ConfigLike1[Config1]
+        with ConfigLike2[Config1] {
+      override def withDebug(value: Boolean) = copy(debug = value)
+      override def withVerbose(value: Boolean) = copy(verbose = value)
+    }
+    val parser3: OParser[_, Config1] = {
+      val builder = OParser.builder[Config1]
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "4.x"),
+        parser1,
+        parser2
+      )
+    }
+    val result = OParser.parse(parser3, Array("--verbose"), Config1())
+    assert(result.get.verbose == true)
+    ()
+  }
+
   test("OParser.sequence should allow duplicates") {
     val builder = OParser.builder[Config]
     val parser1: OParser[Unit, Config] = {
