@@ -39,7 +39,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val head1: OParser[Unit, Config] = {
       import builder._
-      head("scopt", "3.x")
+      head("scopt", "4.x")
     }
     val head2: OParser[Unit, Config] = {
       import builder._
@@ -48,7 +48,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val p = head1 ++ head2
     assert(
       OParser.usage(p) ==
-        """scopt 3.x
+        """scopt 4.x
         |x y
         |""".stripMargin)
     ()
@@ -62,7 +62,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     val head1: OParser[Unit, Config] = {
       import builder._
-      head("scopt", "3.x")
+      head("scopt", "4.x")
     }
     val p: OParser[Unit, Config] = for {
       _ <- programName1
@@ -70,7 +70,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     } yield ()
     assert(
       OParser.usage(p) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt
         |
         |""".stripMargin)
@@ -81,7 +81,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     val builder = OParser.builder[Config]
     val head1: OParser[Unit, Config] = {
       import builder._
-      head("scopt", "3.x")
+      head("scopt", "4.x")
     }
     val p: OParser[Unit, Config] = {
       import builder._
@@ -92,10 +92,35 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     assert(
       OParser.usage(p) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt
         |
         |""".stripMargin)
+    ()
+  }
+
+  test("OParser.sequence should allow duplicates") {
+    val builder = OParser.builder[Config]
+    val parser1: OParser[Unit, Config] = {
+      import builder._
+      opt[Unit]('b', "bob")
+    }
+    val p: OParser[Unit, Config] = {
+      import builder._
+      OParser.sequence(
+        head("scopt", "4.x"),
+        programName("scopt"),
+        parser1.text("text"),
+        parser1
+      )
+    }
+    assert(
+      OParser.usage(p) ==
+        """scopt 4.x
+        |Usage: scopt [options]
+        |
+        |  -b, --bob  text
+        |  -b, --bob""".stripMargin)
     ()
   }
 
@@ -105,16 +130,16 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Unit]('f', "foo").action((x, c: Config) => c.copy(flag = true))
       )
     }
     assert(
       OParser.usage(unitParser1) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [options]
         |
-        |  -f, --foo  """.stripMargin)
+        |  -f, --foo""".stripMargin)
     ()
   }
 
@@ -124,7 +149,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Unit]('f', "foo").action((x, c: Config) => c.copy(flag = true))
       )
     }
@@ -142,7 +167,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Unit]('a', "alice"),
         opt[Unit]('b', "bob"),
         opt[Unit]("alicebob").abbr("ab").action((x, c) => c.copy(flag = true))
@@ -150,12 +175,12 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     assert(
       OParser.usage(parser) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [options]
         |
-        |  -a, --alice      
-        |  -b, --bob        
-        |  -ab, --alicebob  """.stripMargin)
+        |  -a, --alice
+        |  -b, --bob
+        |  -ab, --alicebob""".stripMargin)
     ()
   }
 
@@ -165,7 +190,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Unit]('a', "alice"),
         opt[Unit]('b', "bob"),
         opt[Unit]("alicebob").abbr("ab").action((x, c) => c.copy(flag = true))
@@ -185,18 +210,18 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Int]('f', "foo").action((x, c) => c.copy(intValue = x)),
         help("help")
       )
     }
     assert(
       OParser.usage(parser) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [options]
         |
-        |  -f, --foo <value>  
-        |  --help             """.stripMargin)
+        |  -f, --foo <value>
+        |  --help""".stripMargin)
     ()
   }
 
@@ -206,7 +231,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Int]('f', "foo").action((x, c) => c.copy(intValue = x)),
         help("help")
       )
@@ -241,18 +266,18 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[BigDecimal]('f', "foo").action((x, c) => c.copy(bigDecimalValue = x)),
         help("help")
       )
     }
     assert(
       OParser.usage(parser) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [options]
         |
-        |  -f, --foo <value>  
-        |  --help             """.stripMargin)
+        |  -f, --foo <value>
+        |  --help""".stripMargin)
     ()
   }
 
@@ -262,7 +287,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[BigDecimal]('f', "foo").action((x, c) => c.copy(bigDecimalValue = x)),
         help("help")
       )
@@ -287,7 +312,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[String]("foo").required().action((x, c) => c.copy(stringValue = x)),
         help("help")
       )
@@ -303,7 +328,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         opt[Int]('f', "foo")
           .action((x, c) => c.copy(intValue = x))
           .validate(x =>
@@ -323,7 +348,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         cmd("update")
           .action((x, c) => c.copy(flag = true))
           .children(
@@ -336,13 +361,13 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     assert(
       OParser.usage(parser) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [update]
         |
         |Command: update [options]
         |
-        |  --foo                    
-        |  --bar <value>            """.stripMargin)
+        |  --foo
+        |  --bar <value>""".stripMargin)
     ()
   }
 
@@ -360,7 +385,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         cmd("update")
           .action((x, c) => c.copy(flag = true))
           .children(suboptionParser1),
@@ -371,18 +396,18 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     assert(
       OParser.usage(parser) ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [update|status]
         |
         |Command: update [options]
         |
-        |  --foo                    
-        |  --bar <value>            
+        |  --foo
+        |  --bar <value>
         |
         |Command: status [options]
         |
-        |  --foo                    
-        |  --bar <value>            
+        |  --foo
+        |  --bar <value>
         |""".stripMargin)
     ()
   }
@@ -393,7 +418,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         version("version")
       )
     }
@@ -402,7 +427,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
         override def terminate(exitState: Either[String, Unit]): Unit = ()
       })
     }
-    assert(out == "scopt 3.x".newline)
+    assert(out == "scopt 4.x".newline)
     ()
   }
 
@@ -412,7 +437,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       OParser.sequence(
         programName("scopt"),
-        head("scopt", "3.x"),
+        head("scopt", "4.x"),
         help("help").text("prints this usage text")
       )
     }
@@ -423,7 +448,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     }
     assert(
       out ==
-        """scopt 3.x
+        """scopt 4.x
         |Usage: scopt [options]
         |
         |  --help  prints this usage text

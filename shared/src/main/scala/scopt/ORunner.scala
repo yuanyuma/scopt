@@ -99,17 +99,22 @@ private[scopt] object ORunner {
       }
 
     def usageTwoColumn(value: OptionDef[_, C], col1Length: Int): String = {
-      def spaceToDesc(str: String) =
-        if (str.length <= col1Length) str + " " * (col1Length - str.length)
-        else str.dropRight(WW.length) + NL + " " * col1Length
+      def spaceToDesc(str: String, description: String) = {
+        if (description.isEmpty) str
+        else {
+          if ((str.length + WW.length) <= col1Length)
+            str + (" " * (col1Length - str.length)) + description
+          else str + NL + (" " * col1Length) + description
+        }
+      }
       value.kind match {
         case ProgramName                  => value.desc
         case Head | Note | Check          => value.desc
         case Cmd                          => usageColumn1(value) + value.desc
-        case Arg                          => spaceToDesc(usageColumn1(value) + WW) + value.desc
-        case Opt if value.read.arity == 2 => spaceToDesc(usageColumn1(value) + WW) + value.desc
-        case Opt if value.read.arity == 1 => spaceToDesc(usageColumn1(value) + WW) + value.desc
-        case Opt | OptHelp | OptVersion   => spaceToDesc(usageColumn1(value) + WW) + value.desc
+        case Arg                          => spaceToDesc(usageColumn1(value), value.desc)
+        case Opt if value.read.arity == 2 => spaceToDesc(usageColumn1(value), value.desc)
+        case Opt if value.read.arity == 1 => spaceToDesc(usageColumn1(value), value.desc)
+        case Opt | OptHelp | OptVersion   => spaceToDesc(usageColumn1(value), value.desc)
       }
     }
 
