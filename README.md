@@ -48,7 +48,7 @@ Here's how you create a `scopt.OParser[Config]`.
 ```scala
 import scopt.OParser
 val builder = OParser.builder[Config]
-val parser1: OParser[Config, Unit] = {
+val parser1 = {
   import builder._
   OParser.sequence(
     programName("scopt"),
@@ -77,7 +77,7 @@ See [Scaladoc API][1] and the rest of this page for the details on various build
 ```scala
 import scopt.OParser
 val builder = OParser.builder[Config]
-val parser1: OParser[Config, Unit] = {
+val parser1 = {
   import builder._
   OParser.sequence(
     programName("scopt"),

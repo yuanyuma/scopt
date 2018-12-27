@@ -64,7 +64,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       head("scopt", "4.x")
     }
-    val p: OParser[Unit, Config] = for {
+    val p: OParser[_, Config] = for {
       _ <- programName1
       _ <- head1
     } yield ()
@@ -79,23 +79,39 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("OParser.sequence should compose OParsers") {
     val builder = OParser.builder[Config]
-    val head1: OParser[Unit, Config] = {
-      import builder._
-      head("scopt", "4.x")
-    }
-    val p: OParser[Unit, Config] = {
-      import builder._
+    import builder._
+    val p1 =
       OParser.sequence(
-        programName("scopt"),
-        head1
+        opt[Int]('f', "foo")
+          .action((x, c) => c.copy(intValue = x))
+          .text("foo is an integer property"),
+        opt[Unit]("debug")
+          .action((_, c) => c.copy(debug = true))
+          .text("debug is a flag")
       )
-    }
+    val p2 =
+      OParser.sequence(
+        arg[String]("<source>")
+          .action((x, c) => c.copy(a = x)),
+        arg[String]("<dest>")
+          .action((x, c) => c.copy(b = x))
+      )
+    val p =
+      OParser.sequence(
+        head("scopt", "4.x"),
+        programName("scopt"),
+        p1,
+        p2
+      )
     assert(
       OParser.usage(p) ==
         """scopt 4.x
-        |Usage: scopt
+        |Usage: scopt [options] <source> <dest>
         |
-        |""".stripMargin)
+        |  -f, --foo <value>  foo is an integer property
+        |  --debug            debug is a flag
+        |  <source>
+        |  <dest>""".stripMargin)
     ()
   }
 
@@ -105,7 +121,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
       import builder._
       opt[Unit]('b', "bob")
     }
-    val p: OParser[Unit, Config] = {
+    val p: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         head("scopt", "4.x"),
@@ -126,7 +142,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("unit parser should generate usage") {
     val builder = OParser.builder[Config]
-    val unitParser1: OParser[Unit, Config] = {
+    val unitParser1: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -145,7 +161,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("unit parser should parse ()") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -163,7 +179,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("options should generate usage text") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -186,7 +202,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("grouped parser should parse ()") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -206,7 +222,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("int parser should generate usage") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -227,7 +243,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("int parser should parse 1") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -262,7 +278,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("BigDecimal parser should generate usage") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -283,7 +299,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("BigDecimal parser should parse 1.0") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -308,7 +324,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("""opt[String]("foo").required() action { x => x }""" + " should fail to parse Nil") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -324,7 +340,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("custom validation") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -344,7 +360,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("command usage") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -373,7 +389,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("option parser can be reused across multiple commands") {
     val builder = OParser.builder[Config]
-    val suboptionParser1: OParser[Unit, Config] = {
+    val suboptionParser1: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         opt[Unit]("foo").action((x, c) => c.copy(stringValue = "foo")),
@@ -414,7 +430,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("--version should display header") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
@@ -433,7 +449,7 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
 
   test("--help should display the usage text") {
     val builder = OParser.builder[Config]
-    val parser: OParser[Unit, Config] = {
+    val parser: OParser[_, Config] = {
       import builder._
       OParser.sequence(
         programName("scopt"),
