@@ -127,18 +127,22 @@ class OptionDef[A: Read, C](
   def minOccurs(n: Int): OptionDef[A, C] =
     fireChange(copy(_minOccurs = n))
 
+  /** Allows the argument to appear at most `n` times. */
+  def maxOccurs(n: Int): OptionDef[A, C] =
+    fireChange(copy(_maxOccurs = n))
+
   /** Requires the option to appear at least once. */
   def required(): OptionDef[A, C] = minOccurs(1)
 
   /** Changes the option to be optional. */
   def optional(): OptionDef[A, C] = minOccurs(0)
 
-  /** Allows the argument to appear at most `n` times. */
-  def maxOccurs(n: Int): OptionDef[A, C] =
-    fireChange(copy(_maxOccurs = n))
-
   /** Allows the argument to appear multiple times. */
   def unbounded(): OptionDef[A, C] = maxOccurs(UNBOUNDED)
+
+  /** Hides the option in any usage text. */
+  def hidden(): OptionDef[A, C] =
+    fireChange(copy(_isHidden = true))
 
   /** Adds description in the usage text. */
   def text(x: String): OptionDef[A, C] =
@@ -154,15 +158,11 @@ class OptionDef[A: Read, C](
 
   /** Adds key and value names used in the usage text. */
   def keyValueName(k: String, v: String): OptionDef[A, C] =
-    keyName(k) valueName (v)
+    keyName(k).valueName(v)
 
   /** Adds custom validation. */
   def validate(f: A => Either[String, Unit]) =
     fireChange(copy(_validations = _validations :+ f))
-
-  /** Hides the option in any usage text. */
-  def hidden(): OptionDef[A, C] =
-    fireChange(copy(_isHidden = true))
 
   /** provides a default to fallback to, e.g. for System.getenv */
   def withFallback(to: () => A): OptionDef[A, C] =

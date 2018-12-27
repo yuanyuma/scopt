@@ -19,83 +19,134 @@ See the Maven Central badge above.
 Usage
 -----
 
-scopt provides two styles of parsing: immutable and mutable.
+scopt 4.x provides two styles of constructing a command line option parser: functional DSL and object-oriented DSL.
 Either case, first you need a case class that represents the configuration:
 
 ```scala
 import java.io.File
-case class Config(foo: Int = -1, out: File = new File("."), xyz: Boolean = false,
-  libName: String = "", maxCount: Int = -1, verbose: Boolean = false, debug: Boolean = false,
-  mode: String = "", files: Seq[File] = Seq(), keepalive: Boolean = false,
-  jars: Seq[File] = Seq(), kwargs: Map[String,String] = Map())
+case class Config(
+    foo: Int = -1,
+    out: File = new File("."),
+    xyz: Boolean = false,
+    libName: String = "",
+    maxCount: Int = -1,
+    verbose: Boolean = false,
+    debug: Boolean = false,
+    mode: String = "",
+    files: Seq[File] = Seq(),
+    keepalive: Boolean = false,
+    jars: Seq[File] = Seq(),
+    kwargs: Map[String, String] = Map())
 ```
 
-In immutable parsing style, a config object is passed around as an argument into `action` callbacks.
-On the other hand, in mutable parsing style you are expected to modify the config object in place.
+During the parsing process, a config object is passed around as an argument into `action` callbacks.
 
-### Immutable parsing
+### Functional DSL
 
-Here's how you create a `scopt.OptionParser[Config]`. See [Scaladoc API][1] for the details on various builder methods.
+Here's how you create a `scopt.OParser[Config]`.
 
 ```scala
-val parser = new scopt.OptionParser[Config]("scopt") {
-  head("scopt", "3.x")
-
-  opt[Int]('f', "foo").action( (x, c) =>
-    c.copy(foo = x) ).text("foo is an integer property")
-
-  opt[File]('o', "out").required().valueName("<file>").
-    action( (x, c) => c.copy(out = x) ).
-    text("out is a required file property")
-
-  opt[(String, Int)]("max").action({
-      case ((k, v), c) => c.copy(libName = k, maxCount = v) }).
-    validate( x =>
-      if (x._2 > 0) success
-      else failure("Value <max> must be >0") ).
-    keyValueName("<libname>", "<max>").
-    text("maximum count for <libname>")
-
-  opt[Seq[File]]('j', "jars").valueName("<jar1>,<jar2>...").action( (x,c) =>
-    c.copy(jars = x) ).text("jars to include")
-
-  opt[Map[String,String]]("kwargs").valueName("k1=v1,k2=v2...").action( (x, c) =>
-    c.copy(kwargs = x) ).text("other arguments")
-
-  opt[Unit]("verbose").action( (_, c) =>
-    c.copy(verbose = true) ).text("verbose is a flag")
-
-  opt[Unit]("debug").hidden().action( (_, c) =>
-    c.copy(debug = true) ).text("this option is hidden in the usage text")
-
-  help("help").text("prints this usage text")
-
-  arg[File]("<file>...").unbounded().optional().action( (x, c) =>
-    c.copy(files = c.files :+ x) ).text("optional unbounded args")
-
-  note("some notes.".newline)
-
-  cmd("update").action( (_, c) => c.copy(mode = "update") ).
-    text("update is a command.").
-    children(
-      opt[Unit]("not-keepalive").abbr("nk").action( (_, c) =>
-        c.copy(keepalive = false) ).text("disable keepalive"),
-      opt[Boolean]("xyz").action( (x, c) =>
-        c.copy(xyz = x) ).text("xyz is a boolean property"),
-      opt[Unit]("debug-update").hidden().action( (_, c) =>
-        c.copy(debug = true) ).text("this option is hidden in the usage text"),
-      checkConfig( c =>
-        if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
-        else success )
-    )
+import scopt.OParser
+val builder = OParser.builder[Config]
+val parser1: OParser[Config, Unit] = {
+  import builder._
+  OParser.sequence(
+    programName("scopt"),
+    head("scopt", "4.x"),
+    // option -f, --foo
+    opt[Int]('f', "foo")
+      .action((x, c) => c.copy(foo = x))
+      .text("foo is an integer property"),
+    // more options here...
+  )
 }
 
-// parser.parse returns Option[C]
-parser.parse(args, Config()) match {
+// OParser.parse returns Option[Config]
+OParser.parse(parser1, args, Config()) match {
   case Some(config) =>
-    // do stuff
+    // do something
+  case _ =>
+    // arguments are bad, error message will have been displayed
+}
+```
 
-  case None =>
+See [Scaladoc API][1] and the rest of this page for the details on various builder methods.
+
+#### Full example
+
+```scala
+import scopt.OParser
+val builder = OParser.builder[Config]
+val parser1: OParser[Config, Unit] = {
+  import builder._
+  OParser.sequence(
+    programName("scopt"),
+    head("scopt", "4.x"),
+    opt[Int]('f', "foo")
+      .action((x, c) => c.copy(foo = x))
+      .text("foo is an integer property"),
+    opt[File]('o', "out")
+      .required()
+      .valueName("<file>")
+      .action((x, c) => c.copy(out = x))
+      .text("out is a required file property"),
+    opt[(String, Int)]("max")
+      .action({ case ((k, v), c) => c.copy(libName = k, maxCount = v) })
+      .validate(x =>
+        if (x._2 > 0) success
+        else failure("Value <max> must be >0"))
+      .keyValueName("<libname>", "<max>")
+      .text("maximum count for <libname>"),
+    opt[Seq[File]]('j', "jars")
+      .valueName("<jar1>,<jar2>...")
+      .action((x, c) => c.copy(jars = x))
+      .text("jars to include"),
+    opt[Map[String, String]]("kwargs")
+      .valueName("k1=v1,k2=v2...")
+      .action((x, c) => c.copy(kwargs = x))
+      .text("other arguments"),
+    opt[Unit]("verbose")
+      .action((_, c) => c.copy(verbose = true))
+      .text("verbose is a flag"),
+    opt[Unit]("debug")
+      .hidden()
+      .action((_, c) => c.copy(debug = true))
+      .text("this option is hidden in the usage text"),
+    help("help").text("prints this usage text"),
+    arg[File]("<file>...")
+      .unbounded()
+      .optional()
+      .action((x, c) => c.copy(files = c.files :+ x))
+      .text("optional unbounded args"),
+    note("some notes." + sys.props("line.separator")),
+    cmd("update")
+      .action((_, c) => c.copy(mode = "update"))
+      .text("update is a command.")
+      .children(
+        opt[Unit]("not-keepalive")
+          .abbr("nk")
+          .action((_, c) => c.copy(keepalive = false))
+          .text("disable keepalive"),
+        opt[Boolean]("xyz")
+          .action((x, c) => c.copy(xyz = x))
+          .text("xyz is a boolean property"),
+        opt[Unit]("debug-update")
+          .hidden()
+          .action((_, c) => c.copy(debug = true))
+          .text("this option is hidden in the usage text"),
+        checkConfig(
+          c =>
+            if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+            else success)
+      )
+  )
+}
+
+// OParser.parse returns Option[Config]
+OParser.parse(parser1, args, Config()) match {
+  case Some(config) =>
+    // do something
+  case _ =>
     // arguments are bad, error message will have been displayed
 }
 ```
@@ -103,7 +154,7 @@ parser.parse(args, Config()) match {
 The above generates the following usage text:
 
 ```
-scopt 3.x
+scopt 4.x
 Usage: scopt [update] [options] [<file>...]
 
   -f, --foo <value>        foo is an integer property
@@ -161,11 +212,7 @@ opt[Unit]("no-keepalive").abbr("nk").action( (x, c) => c.copy(keepalive = false)
 
 #### Help, Version, and Notes
 
-There are special options with predefined action called `help("help")` and `version("version")`, which prints usage text and header text respectively. When `help("help")` is defined, parser will print out short error message when it fails instead of printing the entire usage text. This behavior could be changed by overriding `showUsageOnError` as follows:
-
-```scala
-override def showUsageOnError = true
-```
+There are special options with predefined action called `help("help")` and `version("version")`, which prints usage text and header text respectively. When `help("help")` is defined, parser will print out short error message when it fails instead of printing the entire usage text.
 
 `note("...")` is used add given string to the usage text.
 
@@ -200,8 +247,10 @@ arg[String]("<file>...").minOccurs(0).maxOccurs(1024) // same as above
 Each opt/arg can be hidden from the usage text using `hidden()` method:
 
 ```scala
-opt[Unit]("debug").hidden().action( (_, c) =>
-  c.copy(debug = true) ).text("this option is hidden in the usage text")
+opt[Unit]("debug")
+  .hidden()
+  .action( (_, c) => c.copy(debug = true) )
+  .text("this option is hidden in the usage text")
 ```
 
 #### Validation
@@ -209,11 +258,12 @@ opt[Unit]("debug").hidden().action( (_, c) =>
 Each opt/arg can carry multiple validation functions.
 
 ```scala
-opt[Int]('f', "foo").action( (x, c) => c.copy(intValue = x) ).
-  validate( x =>
+opt[Int]('f', "foo")
+  .action( (x, c) => c.copy(intValue = x) )
+  .validate( x =>
     if (x > 0) success
-    else failure("Option --foo must be >0") ).
-  validate( x => failure("Just because") )
+    else failure("Option --foo must be >0") )
+  .validate( x => failure("Just because") )
 ```
 
 The first function validates if the values are positive, and
@@ -236,10 +286,10 @@ These are called at the end of parsing.
 Commands may be defined using `cmd("update")`. Commands could be used to express `git branch` kind of argument, whose name means something. Using `children` method, a command may define child opts/args that get inserted in the presence of the command. To distinguish commands from arguments, they must appear in the first position within the level. It is generally recommended to avoid mixing args both in parent level and commands to avoid confusion.
 
 ```scala
-cmd("update").
-  action( (_, c) => c.copy(mode = "update") ).
-  text("update is a command.").
-  children(
+cmd("update")
+  .action( (_, c) => c.copy(mode = "update") )
+  .text("update is a command.")
+  .children(
     opt[Unit]("not-keepalive").abbr("nk").action( (_, c) =>
       c.copy(keepalive = false) ).text("disable keepalive"),
     opt[Boolean]("xyz").action( (x, c) =>
@@ -255,25 +305,102 @@ In the above, `update test.txt` would trigger the update command, but `test.txt 
 Commands could be nested into another command as follows:
 
 ```scala
-cmd("backend").text("commands to manipulate backends:\n").
-  action( (x, c) => c.copy(flag = true) ).
-  children(
+cmd("backend")
+  .text("commands to manipulate backends:\n")
+  .action( (x, c) => c.copy(flag = true) )
+  .children(
     cmd("update").children(
       arg[String]("<a>").action( (x, c) => c.copy(a = x) )
     )
   )
 ```
 
-### Termination Handling
+### Object-oriented DSL, immutable parsing
+
+Here's the object-oriented DSL that's mostly source-compatible with scopt 3.x.
+
+Create a parser by extending `scopt.OptionParser[Config]`. See [Scaladoc API][1] for the details on various builder methods.
+
+```scala
+val parser = new scopt.OptionParser[Config]("scopt") {
+  head("scopt", "3.x")
+
+  opt[Int]('f', "foo")
+    .action((x, c) => c.copy(foo = x))
+    .text("foo is an integer property")
+
+  opt[File]('o', "out")
+    .required()
+    .valueName("<file>")
+    .action((x, c) => c.copy(out = x))
+    .text("out is a required file property")
+}
+
+// parser.parse returns Option[C]
+parser.parse(args, Config()) match {
+  case Some(config) =>
+    // do stuff
+
+  case None =>
+    // arguments are bad, error message will have been displayed
+}
+```
+
+### Object-oriented DSL, mutable parsing
+
+Create a `scopt.OptionParser[Unit]` and customize it with the options you need, passing in functions to process each option or argument. Use `foreach` instead of `action`.
+
+```scala
+val parser = new scopt.OptionParser[Unit]("scopt") {
+  head("scopt", "3.x")
+
+  opt[Int]('f', "foo")
+    .foreach( x => c = c.copy(foo = x) )
+    .text("foo is an integer property")
+
+  opt[File]('o', "out")
+    .required()
+    .valueName("<file>")
+    .foreach( x => c = c.copy(out = x) )
+    .text("out is a required file property")
+}
+if (parser.parse(args)) {
+  // do stuff
+}
+else {
+  // arguments are bad, usage message will have been displayed
+}
+```
+
+### Advanced: showUsageOnError
+
+When `help("help")` is defined, parser will print out short error message when it fails instead of printing the entire usage text.
+
+This behavior could be changed by overriding `showUsageOnError` as follows:
+
+```scala
+import scopt.{ OParserSetup, DefaultOParserSetup }
+val setup: OParserSetup = new DefaultOParserSetup {
+  override def showUsageOnError = Some(true)
+}
+val result = OParser.parse(parser1, args, Config(), setup)
+```
+
+
+### Advanced: Termination handling
 
 By default, when the `--help` or `--version` are invoked, they call `sys.exit(0)` after printing the help or version information. If this is not desired (e.g. testing purposes), you can override the `terminate(exitState: Either[String, Unit])` method:
 
 ```scala
-// Overriding the termination handler to no-op.
-override def terminate(exitState: Either[String, Unit]): Unit = ()
+import scopt.{ OParserSetup, DefaultOParserSetup }
+val setup: OParserSetup = new DefaultOParserSetup {
+  // Overriding the termination handler to no-op.
+  override def terminate(exitState: Either[String, Unit]): Unit = ()
+}
+val result = OParser.parse(parser1, args, Config(), setup)
 ```
 
-### Captured Output
+### Advanced: Captured output
 
 By default, scopt emits output when needed to stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to capture stderr and stdout output rather than emit them directly.   Redirecting Console in Scala can accomplish this in a thread-safe way, within a scope of your chosing, like this:
 
@@ -283,106 +410,22 @@ val errCapture = new ByteArrayOutputStream
 
 Console.withOut(outCapture) {
   Console.withErr(errCapture) {
-    parser.parse(args, config)
+    val result = OParser.parse(parser1, args, Config())
   }
 }
 // Now stderr output from this block is in errCapture.toString, and stdout in outCapture.toString
 ```
 
-### Rendering mode
+### Advanced: Rendering mode
 
 scopt 3.5.0 introduced rendering mode, and adopted two-column rendeing of the usage text by default. To switch back to the older one-column rendering override the `renderingMode` method:
 
 ```scala
-override def renderingMode = scopt.RenderingMode.OneColumn
-```
-
-This will output the sample usage as follows:
-
-```
-scopt 3.x
-Usage: scopt [update] [options] [<file>...]
-
-  -f <value> | --foo <value>
-        foo is an integer property
-  -o <file> | --out <file>
-        out is a required file property
-  --max:<libname>=<max>
-        maximum count for <libname>
-  -j <jar1>,<jar2>... | --jars <jar1>,<jar2>...
-        jars to include
-  --kwargs k1=v1,k2=v2...
-        other arguments
-  --verbose
-        verbose is a flag
-  --help
-        prints this usage text
-  <file>...
-        optional unbounded args
-some notes.
-
-Command: update [options]
-update is a command.
-  -nk | --not-keepalive
-        disable keepalive
-  --xyz <value>
-        xyz is a boolean property
-```
-
-### Mutable parsing
-
-Create a `scopt.OptionParser[Unit]` and customize it with the options you need, passing in functions to process each option or argument. Use `foreach` instead of `action`.
-
-```scala
-val parser = new scopt.OptionParser[Unit]("scopt") {
-  head("scopt", "3.x")
-
-  opt[Int]('f', "foo").foreach( x => c = c.copy(foo = x) ).
-    text("foo is an integer property")
-
-  opt[File]('o', "out").required().valueName("<file>").
-    foreach( x => c = c.copy(out = x) ).text("out is a required file property")
-
-  opt[(String, Int)]("max").foreach( { case (k, v) =>
-    c = c.copy(libName = k, maxCount = v) }).
-    validate( x =>
-      if (x._2 > 0) success
-      else failure("Value <max> must be >0") ).
-    keyValueName("<libname>", "<max>").
-    text("maximum count for <libname>")
-
-  opt[Unit]("verbose").foreach( _ => c = c.copy(verbose = true) ).
-    text("verbose is a flag")
-
-  opt[Unit]("debug").hidden().foreach( _ => c = c.copy(debug = true) ).
-    text("this option is hidden in the usage text")
-
-  help("help").text("prints this usage text")
-
-  arg[File]("<file>...").unbounded().optional().
-    foreach( x => c = c.copy(files = c.files :+ x) ).
-    text("optional unbounded args")
-
-  note("some notes.".newline)
-
-  cmd("update").foreach( _ => c.copy(mode = "update") ).
-    text("update is a command.").
-    children(
-      opt[Unit]("not-keepalive").abbr("nk").
-        foreach( _ => c.copy(keepalive = false) ).text("disable keepalive"),
-      opt[Boolean]("xyz").foreach( x =>
-        c = c.copy(xyz = x) ).text("xyz is a boolean property"),
-      opt[Unit]("debug-update").hidden().
-        foreach( _ => c = c.copy(debug = true) ).
-        text("this option is hidden in the usage text")
-    )
+import scopt.{ OParserSetup, DefaultOParserSetup }
+val setup: OParserSetup = new DefaultOParserSetup {
+  override def renderingMode = scopt.RenderingMode.OneColumn
 }
-if (parser.parse(args)) {
-  // do stuff
-}
-else {
-  // arguments are bad, usage message will have been displayed
-}
+val result = OParser.parse(parser1, args, Config(), setup)
 ```
 
 Building
