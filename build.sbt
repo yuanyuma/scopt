@@ -4,7 +4,7 @@ import com.typesafe.sbt.pgp.PgpKeys._
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtcrossproject.{ crossProject, CrossType }
 
-def v: String = "3.7.2-SNAPSHOT"
+def v: String = "4.0.0-SNAPSHOT"
 
 ThisBuild / version := v
 ThisBuild / scalaVersion := scala212
