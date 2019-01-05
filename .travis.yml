@@ -3,7 +3,7 @@ sudo: false
 language: scala
 
 script:
-  - sbt ++${TRAVIS_SCALA_VERSION}! -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "project $TEST_PROJECT" test
+  - sbt ++${TRAVIS_SCALA_VERSION}! -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M scalafmtCheck test:scalafmtCheck scalafmtSbtCheck "project $TEST_PROJECT" test
 
 env:
   matrix:
