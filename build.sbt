@@ -44,16 +44,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
         .head
       s"-P:scalajs:mapSourceURI:$a->$g/"
     },
-    sources in Test := {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) =>
-          // specs 4.x does not support scala 2.10
-          // specs 3.x does not support scala-js
-          Nil
-        case _ =>
-          (sources in Test).value
-      }
-    }
   )
   .nativeSettings(
     sources in Test := Nil, // TODO https://github.com/monix/minitest/issues/12
