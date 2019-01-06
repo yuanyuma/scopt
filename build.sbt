@@ -28,8 +28,20 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     scalacOptions ++= Seq("-language:existentials", "-Xfuture", "-deprecation"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
+    libraryDependencies ++= Seq(
+      "io.monix" %%% "minitest" % "2.2.2" % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
+    ),
+    testFrameworks += new TestFramework("minitest.runner.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
+  )
+  .platformsSettings(JVMPlatform, JSPlatform)(
+    Seq(Compile, Test).map { x =>
+      unmanagedSourceDirectories in x += {
+        baseDirectory.value.getParentFile / s"jvm_js/src/${Defaults.nameForSrc(x.name)}/scala/"
+      }
+    }
   )
   .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule,
@@ -43,34 +55,13 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     },
   )
   .nativeSettings(
-    sources in Test := Nil, // TODO https://github.com/monix/minitest/issues/12
     scalaVersion := scala211,
     crossScalaVersions := Nil
   )
 
-val minitestJVMRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJVM")
-val minitestJVMLib = "io.monix" %% "minitest" % "2.2.2"
-
 lazy val scoptJS = scopt.js
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
-      "io.monix" %%% "minitest" % "2.2.2" % Test,
-    ),
-    testFrameworks += new TestFramework("minitest.runner.Framework")
-  )
 
 lazy val scoptJVM = scopt.jvm
   .enablePlugins(SiteScaladocPlugin)
-  .sourceDependency(minitestJVMRef % Test, minitestJVMLib % Test)
-  .settings(
-    libraryDependencies += "com.eed3si9n.expecty" %% "expecty" % "0.11.0" % Test,
-    testFrameworks += new TestFramework("minitest.runner.Framework")
-  )
 
 lazy val scoptNative = scopt.native
-
-lazy val nativeTest = (project in file("nativeTest"))
-  .enablePlugins(ScalaNativePlugin)
-  .dependsOn(scoptNative)
-  .settings(scalaVersion := scala211)

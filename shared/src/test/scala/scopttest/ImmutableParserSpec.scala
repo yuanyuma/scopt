@@ -92,11 +92,6 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     bigDecimalParserFail("--foo=bar")
   }
 
-  test("URI parser should parse an URI") {
-    uriParser("--foo", "http://github.com/")
-    uriParser("--foo=http://github.com/")
-  }
-
   test("Duration parser should parse a Duration") {
     durationParser("--foo", "30s")
     durationParser("--foo=30s")
@@ -422,16 +417,6 @@ Usage: scopt [options]
   def bigDecimalParserFail(args: String*): Unit = {
     val result = bigDecimalParser1.parse(args.toSeq, Config())
     assert(result == None)
-  }
-
-  val uriParser1 = new scopt.OptionParser[Config]("scopt") {
-    head("scopt", "3.x")
-    opt[URI]("foo").action((x, c) => c.copy(uriValue = x))
-    help("help")
-  }
-  def uriParser(args: String*): Unit = {
-    val result = uriParser1.parse(args.toSeq, Config())
-    assert(result.get.uriValue == new URI("http://github.com/"))
   }
 
   val durationParser1 = new scopt.OptionParser[Config]("scopt") {
