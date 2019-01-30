@@ -109,7 +109,7 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
   /** adds an argument invoked by an option without `-` or `--`.
    * @param name name in the usage text
    */
-  def arg[A: Read](name: String): OptionDef[A, C] = makeDef(OptionDefKind.Arg, name) required ()
+  def arg[A: Read](name: String): OptionDef[A, C] = makeDef(OptionDefKind.Arg, name).required()
 
   /** adds a command invoked by an option without `-` or `--`.
    * @param name name of the command
