@@ -26,7 +26,15 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     // to push, ghpages-push-site
     siteSubdirName in SiteScaladoc := "$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
-    scalacOptions ++= Seq("-language:existentials", "-Xfuture", "-deprecation"),
+    scalacOptions ++= Seq("-language:existentials", "-deprecation"),
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, v)) if v <= 12 =>
+          Seq("-Xfuture")
+        case _ =>
+          Nil
+      }
+    },
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies ++= Seq(
       "io.monix" %%% "minitest" % "2.2.2" % Test,
