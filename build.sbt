@@ -59,13 +59,13 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
 
 val minitestJVMRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJVM")
 val minitestJVMLib = "io.monix" %% "minitest" % "2.2.2"
+val minitestJSRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJS")
+val minitestJSLib = "io.monix" %% "minitest" % "2.2.2"
 
 lazy val scoptJS = scopt.js
+  .sourceDependency(minitestJSRef % Test, minitestJSLib % Test)
   .settings(
-    libraryDependencies ++= Seq(
-      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
-      "io.monix" %%% "minitest" % "2.2.2" % Test,
-    ),
+    libraryDependencies += "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
     testFrameworks += new TestFramework("minitest.runner.Framework")
   )
 
