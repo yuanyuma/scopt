@@ -6,8 +6,8 @@ import sbtcrossproject.crossProject
 def v: String = "4.0.0-SNAPSHOT"
 
 ThisBuild / version := v
-ThisBuild / scalaVersion := scala212
-ThisBuild / crossScalaVersions := Seq(scala211, scala210, scala212, scala213)
+ThisBuild / scalaVersion := scala213
+ThisBuild / crossScalaVersions := Seq(scala210, scala211, scala212, scala213)
 ThisBuild / scalafmtOnCompile := true
 
 lazy val root = (project in file("."))
