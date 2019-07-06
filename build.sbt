@@ -1,14 +1,13 @@
 import Dependencies._
-import com.typesafe.sbt.pgp.PgpKeys._
 
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
-import sbtcrossproject.{ crossProject, CrossType }
+import sbtcrossproject.crossProject
 
 def v: String = "4.0.0-SNAPSHOT"
 
 ThisBuild / version := v
-ThisBuild / scalaVersion := scala212
-ThisBuild / crossScalaVersions := Seq(scala211, scala210, scala212, scala213)
+ThisBuild / scalaVersion := scala213
+ThisBuild / crossScalaVersions := Seq(scala210, scala211, scala212, scala213)
 ThisBuild / scalafmtOnCompile := true
 
 lazy val root = (project in file("."))
@@ -37,7 +36,14 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     },
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies ++= Seq(
-      "io.monix" %%% "minitest" % "2.3.2" % Test,
+      "io.monix" %%% "minitest" % {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, v)) if v <= 10 =>
+            "2.3.2"
+          case _ =>
+            "2.5.0"
+        }
+      } % Test,
       "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
     ),
     testFrameworks += new TestFramework("minitest.runner.Framework"),
