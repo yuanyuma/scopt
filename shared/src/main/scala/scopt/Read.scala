@@ -24,8 +24,8 @@ object Read extends platform.PlatformReadInstances {
   implicit val stringRead: Read[String] = reads { identity }
   implicit val charRead: Read[Char] =
     reads {
-      _.getBytes match {
-        case Array(char) => char.toChar
+      _.toCharArray match {
+        case Array(char) => char
         case s =>
           throw new IllegalArgumentException("'" + s + "' is not a char.")
       }
