@@ -67,6 +67,15 @@ object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
     charParserFail("--foo=bar")
   }
 
+  // 0xA1 in ISO-8859-1
+  test("char parser should parse '¡'") {
+    charParserUTF16("--foo", "¡")
+    charParserUTF16("--foo:¡")
+    charParserUTF16("--foo=¡")
+    charParserFail("--foo", "¡ar")
+    charParserFail("--foo=¡ar")
+  }
+
   test("double parser should parse 1.0") {
     doubleParser("--foo", "1.0")
     doubleParser("--foo:1.0")
@@ -371,6 +380,10 @@ Usage: scopt [options]
   def charParser(args: String*): Unit = {
     val result = charParser1.parse(args.toSeq, Config())
     assert(result.get.charValue == 'b')
+  }
+  def charParserUTF16(args: String*): Unit = {
+    val result = charParser1.parse(args.toSeq, Config())
+    assert(result.get.charValue == '¡')
   }
   def charParserFail(args: String*): Unit = {
     val result = charParser1.parse(args.toSeq, Config())
