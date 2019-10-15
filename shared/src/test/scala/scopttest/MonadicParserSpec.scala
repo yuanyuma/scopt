@@ -517,6 +517,20 @@ object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
     ()
   }
 
+  test("empty children list should not throw exception") {
+    val builder = OParser.builder[Config]
+    val parser: OParser[_, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        cmd("issue_271").children()
+      )
+    }
+    // run parse with no exception
+    OParser.parse(parser, List("issue_271"), Config())
+    ()
+  }
+
   case class Config(
       flag: Boolean = false,
       intValue: Int = 0,

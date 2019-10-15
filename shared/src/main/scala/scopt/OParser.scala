@@ -129,6 +129,7 @@ class OParser[A, C](head: OptionDef[A, C], rest: List[OptionDef[_, C]]) {
   /** Adds a parser under this command. */
   def children(cs: OParser[_, C]*): OParser[A, C] = {
     cs.toList match {
+      case List() => this
       case List(c) =>
         val childList = c.toList
         val childListModified = c.toList map { _.parent(head) }
