@@ -48,7 +48,10 @@ private[scopt] object ORunner {
       sorted.toList
     }
 
-    def itemUsage(value: OptionDef[_, C]): String =
+    def itemUsage(value: OptionDef[_, C]): String = {
+
+      def indentDescription(desc: String): String = desc.split(NL).mkString(NLTB)
+
       value.kind match {
         case ProgramName         => value.desc
         case Head | Note | Check => value.desc
@@ -59,18 +62,19 @@ private[scopt] object ORunner {
           WW + (value.shortOpt map { o =>
             "-" + o + ":" + value.keyValueString + " | "
           } getOrElse { "" }) +
-            value.fullName + ":" + value.keyValueString + NLTB + value.desc
+            value.fullName + ":" + value.keyValueString + NLTB + indentDescription(value.desc)
         case Opt if value.read.arity == 1 =>
           WW + (value.shortOpt map { o =>
             "-" + o + " " + value.valueString + " | "
           } getOrElse { "" }) +
-            value.fullName + " " + value.valueString + NLTB + value.desc
+            value.fullName + " " + value.valueString + NLTB + indentDescription(value.desc)
         case Opt | OptHelp | OptVersion =>
           WW + (value.shortOpt map { o =>
             "-" + o + " | "
           } getOrElse { "" }) +
-            value.fullName + NLTB + value.desc
+            value.fullName + NLTB + indentDescription(value.desc)
       }
+    }
 
     lazy val header = (heads map { itemUsage }).mkString(NL)
 
@@ -104,7 +108,10 @@ private[scopt] object ORunner {
         else {
           if ((str.length + WW.length) <= col1Length)
             str + (" " * (col1Length - str.length)) + description
-          else str + NL + (" " * col1Length) + description
+              .split(NL)
+              .mkString(NL + " " * col1Length)
+          else
+            str + NL + description.split(NL).map(s => (" " * col1Length) + s).mkString(NL)
         }
       }
       value.kind match {
