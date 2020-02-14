@@ -15,7 +15,7 @@ object Dependencies {
       case Some((2, 10 | 13)) =>
         Nil
       case _ =>
-        Seq("org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.0" % Test)
+        Seq("org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.2" % Test)
     }
   }
 }

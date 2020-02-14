@@ -30,4 +30,6 @@ private[scopt] object platform {
     case e: ParseException        => Left(List(desc + " expects a Scala duration but was given '" + arg + "'"))
     case e: Throwable             => Left(List(desc + " failed when given '" + arg + "'. " + e.getMessage))
   }
+
+  def exit(status: Int): Unit = ()
 }
