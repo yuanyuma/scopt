@@ -22,4 +22,5 @@ private[scopt] object platform {
     case e: Throwable => Left(List(desc + " failed when given '" + arg + "'. " + e.getMessage))
   }
 
+  def exit(status: Int): Nothing = sys.exit(status)
 }

@@ -35,7 +35,7 @@ abstract class DefaultOParserSetup extends OParserSetup {
   }
   override def terminate(exitState: Either[String, Unit]): Unit =
     exitState match {
-      case Left(_)  => sys.exit(1)
-      case Right(_) => sys.exit(0)
+      case Left(_)  => platform.exit(1)
+      case Right(_) => platform.exit(0)
     }
 }
