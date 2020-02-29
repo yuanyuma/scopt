@@ -7,14 +7,15 @@ def v: String = "4.0.0-SNAPSHOT"
 
 ThisBuild / version := v
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq(scala210, scala211, scala212, scala213)
+ThisBuild / crossScalaVersions := Seq(scala211, scala212, scala213)
 ThisBuild / scalafmtOnCompile := true
 
 lazy val root = (project in file("."))
   .aggregate(scoptJS, scoptJVM, scoptNative)
   .settings(
     name := "scopt root",
-    publish / skip := true
+    publish / skip := true,
+    crossScalaVersions := Nil,
   )
 
 lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("."))
@@ -35,18 +36,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
       }
     },
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
-    libraryDependencies ++= Seq(
-      "io.monix" %%% "minitest" % {
-        CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, v)) if v <= 10 =>
-            "2.3.2"
-          case _ =>
-            "2.5.0"
-        }
-      } % Test,
-      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
-    ),
-    testFrameworks += new TestFramework("minitest.runner.Framework"),
+    libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
+    testFrameworks += new TestFramework("verify.runner.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
@@ -58,7 +49,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     }
   )
   .jsSettings(
-    scalaJSModuleKind := ModuleKind.CommonJSModule,
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     scalacOptions += {
       val a = (baseDirectory in LocalRootProject).value.toURI.toString
       val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process

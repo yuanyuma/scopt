@@ -1,11 +1,11 @@
 package scopttest
 
-import minitest._
+import verify._
 import java.net.URI
 import scala.concurrent.duration.Duration
 import SpecUtil._
 
-object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
+object ImmutableParserSpec extends BasicTestSuite {
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")

@@ -1,11 +1,11 @@
 package scopttest
 
-import minitest._
+import verify._
 import scala.concurrent.duration.Duration
 import scopt.OParser
 import SpecUtil._
 
-object MonadicParserSpec extends SimpleTestSuite with PowerAssertions {
+object MonadicParserSpec extends BasicTestSuite {
   val NL = System.getProperty("line.separator")
 
   test("programName(s) should generate usage text") {

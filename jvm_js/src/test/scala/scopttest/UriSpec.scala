@@ -1,10 +1,10 @@
 package scopttest
 
-import minitest._
+import verify._
 import java.net.URI
 import SpecUtil._
 
-object UriSpec extends SimpleTestSuite with PowerAssertions {
+object UriSpec extends BasicTestSuite {
   test("URI parser should parse an URI") {
     uriParser("--foo", "http://github.com/")
     uriParser("--foo=http://github.com/")

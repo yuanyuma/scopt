@@ -1,9 +1,9 @@
 package scopttest
 
-import minitest._
+import verify._
 import java.io.ByteArrayOutputStream
 
-object MutableParserSpec extends SimpleTestSuite with PowerAssertions {
+object MutableParserSpec extends BasicTestSuite {
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")

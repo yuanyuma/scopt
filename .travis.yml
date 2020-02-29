@@ -2,20 +2,6 @@ sudo: false
 
 language: scala
 
-script:
-  - sbt ++${TRAVIS_SCALA_VERSION}! -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M scalafmtCheck test:scalafmtCheck scalafmtSbtCheck "project $TEST_PROJECT" test
-
-env:
-  matrix:
-    - TEST_PROJECT="scoptJVM"
-    - TEST_PROJECT="scoptJS"
-
-scala:
-   - 2.10.7
-   - 2.11.12
-   - 2.12.9
-   - 2.13.0
-
 jdk:
   - openjdk8
   - openjdk11
@@ -29,14 +15,18 @@ matrix:
     before_install:
     - sudo apt-get update
     - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
-    env:
-    - TEST_PROJECT="scoptNative"
+    script:
+    - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M scoptNative/test
 
-cache:
-  directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+script:
+  - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M scalafmtCheck test:scalafmtCheck scalafmtSbtCheck +scoptJS/test +scoptJVM/test
 
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -delete
   - find $HOME/.sbt        -name "*.lock"               -delete
+
+cache:
+  directories:
+    - $HOME/.cache/
+    - $HOME/.ivy2/cache/
+    - $HOME/.sbt/
