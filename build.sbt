@@ -34,19 +34,10 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
           Nil
       }
     },
+
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
-    libraryDependencies ++= Seq(
-      "io.monix" %%% "minitest" % {
-        CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, v)) if v <= 10 =>
-            "2.3.2"
-          case _ =>
-            "2.5.0"
-        }
-      } % Test,
-      "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
-    ),
-    testFrameworks += new TestFramework("minitest.runner.Framework"),
+    libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
+    testFrameworks += new TestFramework("verify.runner.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
