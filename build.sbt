@@ -34,7 +34,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
           Nil
       }
     },
-
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
     testFrameworks += new TestFramework("verify.runner.Framework"),
@@ -49,6 +48,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     }
   )
   .jsSettings(
+    crossScalaVersions := Seq(scala211, scala212, scala213),
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     scalacOptions += {
       val a = (baseDirectory in LocalRootProject).value.toURI.toString
