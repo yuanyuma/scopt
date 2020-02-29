@@ -1,9 +1,9 @@
-import minitest._
+import verify._
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import scala.concurrent.duration.Duration
 
-object ImmutableParserSpec extends SimpleTestSuite with PowerAssertions {
+object ImmutableParserSpec extends BasicTestSuite {
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")

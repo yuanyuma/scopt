@@ -11,13 +11,12 @@ env:
     - TEST_PROJECT="scoptJS"
 
 scala:
-   - 2.10.7
    - 2.11.12
    - 2.12.8
-   - 2.13.0-M5
+   - 2.13.1
 
 jdk:
-  - oraclejdk8
+  - openjdk8
   - openjdk11
 
 matrix:

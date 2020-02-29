@@ -39,4 +39,5 @@ private[scopt] object platform {
     }
 
 
+  def exit(status: Int): Nothing = sys.exit(status)
 }

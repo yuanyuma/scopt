@@ -1,10 +1,10 @@
-import minitest._
+import verify._
 import java.util.{Calendar, GregorianCalendar}
 import java.io.File
 import java.net.{ URI, URL, InetAddress }
 import scala.concurrent.duration.Duration
 
-object ImmutableParserSpecJVM extends SimpleTestSuite with PowerAssertions {
+object ImmutableParserSpecJVM extends BasicTestSuite {
 
   private val url = new URL("https://example.com")
   private val uri = new URI("https://example.com/robots.txt")

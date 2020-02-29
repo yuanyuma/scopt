@@ -1,5 +1,4 @@
 import Dependencies._
-import com.typesafe.sbt.pgp.PgpKeys._
 
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtcrossproject.{crossProject, CrossType}
@@ -28,13 +27,14 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     scalacOptions ++= Seq("-language:existentials", "-Xfuture", "-deprecation"),
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     // scaladoc fix
-    unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
+    unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist")),
+    testFrameworks += new TestFramework("verify.runner.Framework"),
   )
   .platformsSettings(JVMPlatform, JSPlatform)(
     libraryDependencies ++= parserCombinators.value,
   )
   .jsSettings(
-    scalaJSModuleKind := ModuleKind.CommonJSModule,
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     scalacOptions += {
       val a = (baseDirectory in LocalRootProject).value.toURI.toString
       val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process.Process("git rev-parse HEAD").lineStream_!.head
@@ -57,23 +57,14 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     crossScalaVersions := Nil
   )
 
-val minitestJVMRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJVM")
-val minitestJVMLib = "io.monix" %% "minitest" % "2.2.2"
-val minitestJSRef = ProjectRef(IO.toURI(workspaceDirectory / "minitest"), "minitestJS")
-val minitestJSLib = "io.monix" %% "minitest" % "2.2.2"
-
 lazy val scoptJS = scopt.js
-  .sourceDependency(minitestJSRef % Test, minitestJSLib % Test)
   .settings(
-    libraryDependencies += "com.eed3si9n.expecty" %%% "expecty" % "0.11.0" % Test,
-    testFrameworks += new TestFramework("minitest.runner.Framework")
+    libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
   )
 
 lazy val scoptJVM = scopt.jvm.enablePlugins(SiteScaladocPlugin)
-  .sourceDependency(minitestJVMRef % Test, minitestJVMLib % Test)
   .settings(
-    libraryDependencies += "com.eed3si9n.expecty" %% "expecty" % "0.11.0" % Test,
-    testFrameworks += new TestFramework("minitest.runner.Framework")
+    libraryDependencies += "com.eed3si9n.verify" %% "verify" % verifyVersion % Test,
   )
 
 lazy val scoptNative = scopt.native
