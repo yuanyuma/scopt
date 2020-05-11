@@ -15,7 +15,7 @@ trait Read[A] { self =>
 
 object Read extends platform.PlatformReadInstances {
 
-  import scala.concurrent.duration.Duration
+  import scala.concurrent.duration.{ Duration, FiniteDuration }
 
   def reads[A](f: String => A): Read[A] = new Read[A] {
     val arity = 1
@@ -71,6 +71,12 @@ object Read extends platform.PlatformReadInstances {
       } catch {
         case e: NumberFormatException => throw platform.mkParseEx(e.getMessage, -1)
       }
+    }
+
+  implicit val finiteDurationRead: Read[FiniteDuration] =
+    durationRead.map {
+      case d: FiniteDuration => d
+      case d                 => throw new IllegalArgumentException("'" + d + "' is not a finite duration.")
     }
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {

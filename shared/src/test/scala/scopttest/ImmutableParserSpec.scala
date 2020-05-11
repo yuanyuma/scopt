@@ -2,7 +2,7 @@ package scopttest
 
 import verify._
 import java.net.URI
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import SpecUtil._
 
 object ImmutableParserSpec extends BasicTestSuite {
@@ -104,6 +104,11 @@ object ImmutableParserSpec extends BasicTestSuite {
   test("Duration parser should parse a Duration") {
     durationParser("--foo", "30s")
     durationParser("--foo=30s")
+  }
+
+  test("FiniteDuration parser should parse a FiniteDuration") {
+    finiteDurationParser("--foo", "20s")
+    finiteDurationParser("--foo=20s")
   }
 
   test("pair parse should parse (k, 1)") {
@@ -440,6 +445,16 @@ Usage: scopt [options]
   def durationParser(args: String*): Unit = {
     val result = durationParser1.parse(args.toSeq, Config())
     assert(result.get.durationValue.toMillis == 30000L)
+  }
+
+  val finiteDurationParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[FiniteDuration]("foo").action((x, c) => c.copy(durationValue = x))
+    help("help")
+  }
+  def finiteDurationParser(args: String*): Unit = {
+    val result = finiteDurationParser1.parse(args.toSeq, Config())
+    assert(result.get.durationValue.toMillis == 20000L)
   }
 
   val pairParser1 = new scopt.OptionParser[Config]("scopt") {
@@ -885,6 +900,7 @@ Usage: scopt [options]
       bigDecimalValue: BigDecimal = BigDecimal("0.0"),
       uriValue: URI = new URI("http://localhost"),
       durationValue: Duration = Duration("0s"),
+      finiteDurationValue: FiniteDuration = 1.second,
       key: String = "",
       a: String = "",
       b: String = "",
