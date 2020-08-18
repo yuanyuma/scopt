@@ -263,6 +263,22 @@ private[scopt] object ORunner {
           xs foreach reportError
       }
     }
+    def handleFallback[A](opt: OptionDef[A, C], arg: A): Unit = {
+      // version and help are dependent on runner results, so the actions are provided here
+      val runnerAction = opt.kind match {
+        case OptHelp    => Some(helpAction)
+        case OptVersion => Some(versionAction)
+        case _          => None
+      }
+      opt.applyFallback(arg, _config, runnerAction) match {
+        case Right(c) =>
+          _config = c
+          pushChildren(opt)
+        case Left(xs) =>
+          _error = true
+          xs foreach reportError
+      }
+    }
     def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]): Unit = {
       occurrences += (opt -> 1)
       if (occurrences(opt) >= opt.getMaxOccurs) {
@@ -347,7 +363,7 @@ private[scopt] object ORunner {
       val fallback = opt.getFallback
       if (fallback != null) {
         handleOccurrence(opt, pendingOptions)
-        handleArgument(opt, fallback.toString)
+        handleFallback[Any](opt.asInstanceOf[OptionDef[Any, C]], fallback)
       }
     }
     (pendingOptions filter { opt =>
