@@ -136,6 +136,20 @@ object MutableParserSpec extends BasicTestSuite {
     showUsageParser()
   }
 
+  test("withFallback doesn't use .toString") {
+    val expectedConfig = NotToStringInverse("hi", 2)
+    var config = NotToStringInverse.empty
+    val parser = new scopt.OptionParser[Unit]("withFallback") {
+      head("withFallback")
+      opt[NotToStringInverse]('x', "x")
+        .withFallback(() => expectedConfig)
+        .foreach(value => config = value)
+    }
+
+    assert(parser.parse(Seq()))
+    assert(config == expectedConfig)
+  }
+
   import SpecUtil._
 
   def unitParser(args: String*): Unit = {
