@@ -218,6 +218,19 @@ object ImmutableParserSpec extends BasicTestSuite {
     noOptionTest()
   }
 
+  test("withFallback doesn't use .toString") {
+    val expectedValue: NotToStringInverse = NotToStringInverse("hi", 2)
+    val parser = new scopt.OptionParser[ConfigWithNotToStringInverse]("withFallback") {
+      head("withFallback")
+      opt[NotToStringInverse]('x', "x")
+        .withFallback(() => expectedValue)
+        .action { case (value, config) => config.copy(x = value) }
+    }
+
+    val parsed = parser.parse(Seq(), ConfigWithNotToStringInverse.empty)
+    assert(parsed.contains(ConfigWithNotToStringInverse(expectedValue)))
+  }
+
   import SpecUtil._
 
   val unitParser1 = new scopt.OptionParser[Config]("scopt") {
