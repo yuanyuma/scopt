@@ -476,6 +476,16 @@ abstract class OptionParser[C](programName: String) {
           xs foreach reportError
       }
     }
+    def handleFallback[A](opt: OptionDef[_, C], arg: A): Unit = {
+      opt.asInstanceOf[OptionDef[A, C]].applyFallback(arg, _config) match {
+        case Right(c) =>
+          _config = c
+          pushChildren(opt)
+        case Left(xs) =>
+          _error = true
+          xs foreach reportError
+      }
+    }
     def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]): Unit = {
       occurrences += (opt -> 1)
       if (occurrences(opt) >= opt.getMaxOccurs) {
@@ -544,7 +554,7 @@ abstract class OptionParser[C](programName: String) {
       val fallback = opt.getFallback
       if (fallback != null) {
         handleOccurrence(opt, pendingOptions)
-        handleArgument(opt, fallback.toString)
+        handleFallback(opt, fallback)
       }
     }
     (pendingOptions filter { opt => opt.getMinOccurs > occurrences(opt) }) foreach { opt =>
@@ -706,6 +716,14 @@ class OptionDef[A: Read, C](
         case Left(xs) => Left(xs)
       }
     } catch applyArgumentExHandler(shortDescription.capitalize, arg)
+
+  private[scopt] def applyFallback(x: A, config: C): Either[CSeq[String], C] =
+    try {
+      Validation.validateValue(_validations)(x) match {
+        case Right(_) => Right(callback(x, config))
+        case Left(xs) => Left(xs)
+      }
+    } catch applyArgumentExHandler(shortDescription.capitalize, x.toString)
 
   // number of tokens to read: 0 for no match, 2 for "--foo 1", 1 for "--foo:1"
   private[scopt] def shortOptTokens(arg: String): Int =
