@@ -2,10 +2,9 @@ package scopt
 
 
 
-import scala.collection.mutable.ListBuffer
-import scala.collection.immutable.ListMap
 import scala.collection.{ Seq => CSeq }
-import scala.collection.immutable.{ Seq => ISeq }
+import scala.collection.immutable.{ ListMap, Seq => ISeq }
+import scala.collection.mutable.{ LinkedHashSet, ListBuffer }
 
 trait Read[A] { self =>
   def arity: Int
@@ -371,24 +370,25 @@ abstract class OptionParser[C](programName: String) {
   }
   def optionsForRender: List[OptionDef[_, C]] = {
     val unsorted = options filter { o => o.kind != Head && o.kind != Check && !o.isHidden }
-    val (remaining, sorted) = unsorted partition {_.hasParent} match {
-      case (p, np) => (ListBuffer() ++ p, ListBuffer() ++ np)
+    val (remaining, sortedDeque) = unsorted partition {_.hasParent} match {
+      case (p, np) => (LinkedHashSet.empty ++= p, ListBuffer.empty ++= np)
     }
-    var continue = true
-    while (!remaining.isEmpty && continue) {
-      continue = false
-      for {
-        parent <- sorted
-      } {
-        val childrenOfThisParent = remaining filter {_.getParentId == Some(parent.id)}
-        if (childrenOfThisParent.nonEmpty) {
-          remaining --= childrenOfThisParent
-          sorted.insertAll((sorted indexOf parent) + 1, childrenOfThisParent)
-          continue = true
-        }
+    val sortedResult = ListBuffer[OptionDef[_, C]]()
+    // theoretically `sortedDequeue` could be empty and `remaining` not,
+    // and `remaining` would get lost, but in practice this is impossible
+    while (sortedDeque.nonEmpty && remaining.nonEmpty) {
+      val parent = sortedDeque.head
+      sortedDeque.remove(0) // closest we can get to `dequeue` without a proper `Deque`
+      sortedResult.append(parent)
+      val childrenOfThisParent = remaining filter {_.getParentId.contains(parent.id)}
+      if (childrenOfThisParent.nonEmpty) {
+        remaining --= childrenOfThisParent
+        sortedDeque.prependAll(childrenOfThisParent)
       }
     }
-    sorted.toList
+    // append remaining sorted elems when no children remaining
+    sortedResult ++= sortedDeque
+    sortedResult.toList
   }
   def usageExample: String = commandExample(None)
   private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]): String = {
