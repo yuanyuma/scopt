@@ -1,8 +1,6 @@
 package scopttest
 
-import minitest.SimpleTestSuite
-
-object Issue239 extends SimpleTestSuite with PowerAssertions {
+class Issue239 extends munit.FunSuite {
   test("double arg should accept negative numbers") {
     val set = List("-3.1415926" -> -3.1415926, "-.1" -> -.1)
     set.foreach {
