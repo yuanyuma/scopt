@@ -29,6 +29,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     scalacOptions ++= Seq("-language:existentials", "-deprecation"),
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          Seq("-source:3.0-migration")
         case Some((2, v)) if v <= 12 =>
           Seq("-Xfuture")
         case _ =>
@@ -47,6 +49,9 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
         baseDirectory.value.getParentFile / s"jvm_js/src/${Defaults.nameForSrc(x.name)}/scala/"
       }
     }
+  )
+  .jvmSettings(
+    crossScalaVersions += scala3,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),

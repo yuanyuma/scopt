@@ -4,6 +4,7 @@ import verify._
 import java.io.ByteArrayOutputStream
 
 object MutableParserSpec extends BasicTestSuite {
+
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")
@@ -146,7 +147,7 @@ object MutableParserSpec extends BasicTestSuite {
         .foreach(value => config = value)
     }
 
-    assert(parser.parse(Seq()))
+    assert(parser.parse(Seq(), ()).isDefined)
     assert(config == expectedConfig)
   }
 
@@ -159,7 +160,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Unit]('f', "foo").foreach(_ => foo = true)
       help("help")
     }
-    val result = parser.parse(args.toSeq)
+    val result = parser.parse(args.toSeq, ()).isDefined
     assert(result && foo)
   }
 
@@ -170,7 +171,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Unit]("debug").hidden().foreach(_ => debug = true)
       help("help")
     }
-    val result = parser.parse(args.toSeq)
+    val result = parser.parse(args.toSeq, ()).isDefined
     assert(debug)
   }
 
@@ -181,7 +182,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Int]('f', "foo").foreach(x => foo = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ()).isDefined
     assert(foo == 1)
   }
 
@@ -192,7 +193,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Long]('f', "foo").foreach(x => foo = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ()).isDefined
     assert(foo == 1L)
   }
 
@@ -203,7 +204,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Int]('f', "foo").foreach(x => foo = x)
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def stringParser(args: String*): Unit = {
@@ -213,7 +214,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[String]("foo").foreach(x => foo = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(foo == "bar")
   }
 
@@ -224,7 +225,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Double]("foo").foreach(x => foo = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(foo == 1.0)
   }
 
@@ -235,7 +236,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Double]("foo").foreach(x => foo = x)
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def trueParser(args: String*): Unit = {
@@ -245,7 +246,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Boolean]("foo").foreach(x => foo = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(foo == true)
   }
 
@@ -256,7 +257,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[Boolean]("foo").foreach(x => foo = x)
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def pairParser(args: String*): Unit = {
@@ -271,7 +272,7 @@ object MutableParserSpec extends BasicTestSuite {
       })
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert((foo == "k") && (value == 1))
   }
 
@@ -287,7 +288,7 @@ object MutableParserSpec extends BasicTestSuite {
       })
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def requiredFail(args: String*): Unit = {
@@ -297,7 +298,7 @@ object MutableParserSpec extends BasicTestSuite {
       opt[String]("foo").required().foreach(x => foo = x)
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def requiredWithFallback(args: Seq[String], expected: String): Unit = {
@@ -311,8 +312,7 @@ object MutableParserSpec extends BasicTestSuite {
       help("help")
     }
     assert {
-      parser.parse(args) == true
-      stringValue == expected
+      parser.parse(args, ()).isDefined && stringValue == expected
     }
   }
 
@@ -328,7 +328,7 @@ object MutableParserSpec extends BasicTestSuite {
         .validate(x => failure("Just because"))
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def intArg(args: String*): Unit = {
@@ -338,7 +338,7 @@ object MutableParserSpec extends BasicTestSuite {
       arg[Int]("<port>").foreach(x => port = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(port == 80)
   }
 
@@ -349,7 +349,7 @@ object MutableParserSpec extends BasicTestSuite {
       arg[Int]("<port>").foreach(x => port = x)
       help("help")
     }
-    assert(parser.parse(args.toSeq) == false)
+    assert(parser.parse(args.toSeq, ()).isDefined == false)
   }
 
   def multipleArgs(args: String*): Unit = {
@@ -361,7 +361,7 @@ object MutableParserSpec extends BasicTestSuite {
       arg[String]("<b>").foreach(x => b = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert((a == "a") && (b == "b"))
   }
 
@@ -374,7 +374,7 @@ object MutableParserSpec extends BasicTestSuite {
       arg[String]("<b>").foreach(x => b = x)
       help("help")
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert((a == "b") && (b == ""))
   }
 
@@ -387,7 +387,7 @@ object MutableParserSpec extends BasicTestSuite {
       arg[String]("<b>").foreach(x => b = x).optional()
       help("help")
     }
-    assert(parser.parse(args.toSeq) == true)
+    assert(parser.parse(args.toSeq, ()).isDefined)
   }
 
   def cmdParser(args: String*): Unit = {
@@ -397,7 +397,7 @@ object MutableParserSpec extends BasicTestSuite {
       cmd("update").foreach(_ => foo = true)
       help("help")
     }
-    val result = parser.parse(args.toSeq)
+    val result = parser.parse(args.toSeq, ()).isDefined
     assert(result && foo)
   }
 
@@ -455,7 +455,7 @@ object MutableParserSpec extends BasicTestSuite {
             .text("this option is hidden in the usage text")
         )
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(parser.usage == """scopt 3.x
 Usage: scopt [update] [options]
 
@@ -530,7 +530,7 @@ update is a command.
             .text("this option is hidden in the usage text")
         )
     }
-    parser.parse(args.toSeq)
+    parser.parse(args.toSeq, ())
     assert(parser.usage == """scopt 3.x
 Usage: scopt [update] [options]
 
