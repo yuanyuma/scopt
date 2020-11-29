@@ -82,6 +82,11 @@ Use `OParser.runParser(...)` to do so:
 OParser.runParser(parser1, args, Config()) match {
   case (result, effects) =>
     OParser.runEffects(effects, new DefaultOEffectSetup {
+      // override def displayToOut(msg: String): Unit = Console.out.println(msg)
+      // override def displayToErr(msg: String): Unit = Console.err.println(msg)
+      // override def reportError(msg: String): Unit = displayToErr("Error: " + msg)
+      // override def reportWarning(msg: String): Unit = displayToErr("Warning: " + msg)
+      
       // ignore terminate
       override def terminate(exitState: Either[String, Unit]): Unit = ()
     })
