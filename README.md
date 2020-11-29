@@ -351,7 +351,7 @@ Create a parser by extending `scopt.OptionParser[Config]`. See [Scaladoc API][1]
 
 ```scala
 val parser = new scopt.OptionParser[Config]("scopt") {
-  head("scopt", "3.x")
+  head("scopt", "4.x")
 
   opt[Int]('f', "foo")
     .action((x, c) => c.copy(foo = x))
@@ -380,7 +380,7 @@ Create a `scopt.OptionParser[Unit]` and customize it with the options you need, 
 
 ```scala
 val parser = new scopt.OptionParser[Unit]("scopt") {
-  head("scopt", "3.x")
+  head("scopt", "4.x")
 
   opt[Int]('f', "foo")
     .foreach( x => c = c.copy(foo = x) )
@@ -414,6 +414,17 @@ val setup: OParserSetup = new DefaultOParserSetup {
 val result = OParser.parse(parser1, args, Config(), setup)
 ```
 
+### Advanced: Rendering mode
+
+scopt 3.5.0 introduced rendering mode, and adopted two-column rendeing of the usage text by default. To switch back to the older one-column rendering override the `renderingMode` method:
+
+```scala
+import scopt.{ OParserSetup, DefaultOParserSetup }
+val setup: OParserSetup = new DefaultOParserSetup {
+  override def renderingMode = scopt.RenderingMode.OneColumn
+}
+val result = OParser.parse(parser1, args, Config(), setup)
+```
 
 ### Advanced: Termination handling
 
@@ -436,18 +447,6 @@ OParser.runParser(parser1, args, Config()) match {
         // arguments are bad, error message will have been displayed
     }
 }
-```
-
-### Advanced: Rendering mode
-
-scopt 3.5.0 introduced rendering mode, and adopted two-column rendeing of the usage text by default. To switch back to the older one-column rendering override the `renderingMode` method:
-
-```scala
-import scopt.{ OParserSetup, DefaultOParserSetup }
-val setup: OParserSetup = new DefaultOParserSetup {
-  override def renderingMode = scopt.RenderingMode.OneColumn
-}
-val result = OParser.parse(parser1, args, Config(), setup)
 ```
 
 Building

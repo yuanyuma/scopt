@@ -10,7 +10,7 @@ import scala.collection.{ Seq => CSeq }
  * <a href="#arg[A](String)(Read[A]):OptionDef[A,C]"><code>arg</code></a> method.
  * {{{
  * val parser = new scopt.OptionParser[Config]("scopt") {
- *   head("scopt", "3.x")
+ *   head("scopt", "4.x")
  *
  *   opt[Int]('f', "foo").action( (x, c) =>
  *     c.copy(foo = x) ).text("foo is an integer property")
