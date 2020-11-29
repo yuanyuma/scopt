@@ -40,6 +40,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
     testFrameworks += new TestFramework("verify.runner.Framework"),
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.19" % Test,
+    testFrameworks += new TestFramework("munit.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
