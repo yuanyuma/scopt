@@ -166,15 +166,6 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
     option
   }
 
-  /** parses the given `args`.
-   * @return `true` if successful, `false` otherwise
-   */
-  def parse(args: CSeq[String])(implicit ev: Zero[C]): Boolean =
-    parse(args, ev.zero) match {
-      case Some(x) => true
-      case None    => false
-    }
-
   private[scopt] def optionsWithProgramName =
     (new OptionDef[Unit, C](OptionDefKind.ProgramName, "").text(programName)) :: options.toList
 

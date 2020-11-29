@@ -29,6 +29,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     scalacOptions ++= Seq("-language:existentials", "-deprecation"),
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          Seq("-source:3.0-migration")
         case Some((2, v)) if v <= 12 =>
           Seq("-Xfuture")
         case _ =>
@@ -38,6 +40,8 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
     testFrameworks += new TestFramework("verify.runner.Framework"),
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.19" % Test,
+    testFrameworks += new TestFramework("munit.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
   )
@@ -47,6 +51,9 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
         baseDirectory.value.getParentFile / s"jvm_js/src/${Defaults.nameForSrc(x.name)}/scala/"
       }
     }
+  )
+  .jvmSettings(
+    crossScalaVersions += scala3,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),

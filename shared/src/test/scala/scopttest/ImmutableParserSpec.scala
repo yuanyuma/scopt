@@ -1,11 +1,10 @@
 package scopttest
 
-import verify._
 import java.net.URI
 import scala.concurrent.duration._
 import SpecUtil._
 
-object ImmutableParserSpec extends BasicTestSuite {
+class ImmutableParserSpec extends munit.FunSuite {
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")
