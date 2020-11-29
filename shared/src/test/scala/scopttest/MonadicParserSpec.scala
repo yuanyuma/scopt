@@ -531,6 +531,37 @@ object MonadicParserSpec extends BasicTestSuite {
     ()
   }
 
+  test("showMultilineUsage") {
+    val builder = OParser.builder[Config]
+
+    val parser: OParser[_, Config] = {
+      import builder._
+      OParser.sequence(
+        programName("scopt"),
+        head("scopt", "4.x"),
+        help("help").text(
+          """|prints this usage text
+             |here's a second line of text""".stripMargin
+        )
+      )
+    }
+    val out = printParserOut {
+      OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOParserSetup {
+        override def terminate(exitState: Either[String, Unit]): Unit = ()
+      })
+    }
+
+    assert(
+      out ==
+        """|scopt 4.x
+           |Usage: scopt [options]
+           |
+           |  --help  prints this usage text
+           |          here's a second line of text
+           |""".stripMargin)
+    ()
+  }
+
   case class Config(
       flag: Boolean = false,
       intValue: Int = 0,
