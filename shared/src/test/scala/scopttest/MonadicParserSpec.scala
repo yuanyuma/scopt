@@ -2,6 +2,7 @@ package scopttest
 
 import scala.concurrent.duration.Duration
 import scopt.OParser
+import scopt.OEffect._
 import SpecUtil._
 
 class MonadicParserSpec extends munit.FunSuite {
@@ -483,7 +484,7 @@ class MonadicParserSpec extends munit.FunSuite {
       )
     }
     val out = printParserOut {
-      OParser.parse(parser, List("--version"), Config(), new scopt.DefaultOParserSetup {
+      OParser.parse(parser, List("--version"), Config(), new scopt.DefaultOEffectSetup {
         override def terminate(exitState: Either[String, Unit]): Unit = ()
       })
     }
@@ -502,7 +503,7 @@ class MonadicParserSpec extends munit.FunSuite {
       )
     }
     val out = printParserOut {
-      OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOParserSetup {
+      OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOEffectSetup {
         override def terminate(exitState: Either[String, Unit]): Unit = ()
       })
     }
@@ -544,20 +545,19 @@ class MonadicParserSpec extends munit.FunSuite {
         )
       )
     }
-    val out = printParserOut {
-      OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOParserSetup {
-        override def terminate(exitState: Either[String, Unit]): Unit = ()
-      })
-    }
+    val (_, effects) =
+      OParser.runParser(parser, List("--help"), Config())
 
-    assert(
-      out ==
+    assertEquals(
+      effects.head,
+      DisplayToOut(
         """|scopt 4.x
            |Usage: scopt [options]
            |
            |  --help  prints this usage text
-           |          here's a second line of text
-           |""".stripMargin)
+           |          here's a second line of text""".stripMargin
+      )
+    )
     ()
   }
 
