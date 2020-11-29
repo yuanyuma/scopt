@@ -6,6 +6,7 @@ import scala.collection.{ Seq => CSeq }
 import scala.collection.immutable.{ Seq => ISeq }
 import OptionDef._
 import OptionDefKind._
+import OEffect._
 
 private[scopt] object ORunner {
   private[scopt] def renderUsage[C](
@@ -193,11 +194,11 @@ private[scopt] object ORunner {
 
   /** parses the given `args`.
    */
-  private[scopt] def parse[C](
+  private[scopt] def runParser[C](
       args: CSeq[String],
       init: C,
       options: List[OptionDef[_, C]],
-      setup: OParserSetup): Option[C] = {
+      setup: OParserSetup): (Option[C], List[OEffect]) = {
     var i = 0
     import setup._
     def heads: ISeq[OptionDef[_, C]] = options filter { _.kind == Head }
@@ -220,6 +221,13 @@ private[scopt] object ORunner {
     var _config: C = init
     var _error = false
     lazy val (header0, usage0) = ORunner.renderUsage(renderingMode, options)
+
+    val effects = ListBuffer[OEffect]()
+    def displayToOut(msg: String): Unit = effects.append(DisplayToOut(msg))
+    def displayToErr(msg: String): Unit = effects.append(DisplayToErr(msg))
+    def reportError(msg: String): Unit = effects.append(ReportError(msg))
+    def reportWarning(msg: String): Unit = effects.append(ReportWarning(msg))
+    def terminate(exitState: Either[String, Unit]): Unit = effects.append(Terminate(exitState))
 
     def pushChildren(opt: OptionDef[_, C]): Unit = {
       // commands are cleared to guarantee that it appears first
@@ -395,7 +403,17 @@ private[scopt] object ORunner {
     if (_error) {
       if (showUsageOnError.getOrElse(helpOptions.isEmpty)) showUsageAsError()
       else showTryHelp()
-      None
-    } else Some(_config)
+      (None, effects.toList)
+    } else (Some(_config), effects.toList)
+  }
+
+  private[scopt] def runEffects[C](effects: List[OEffect], setup: OEffectSetup): Unit = {
+    effects foreach {
+      case DisplayToOut(msg)    => setup.displayToOut(msg)
+      case DisplayToErr(msg)    => setup.displayToErr(msg)
+      case ReportError(msg)     => setup.reportError(msg)
+      case ReportWarning(msg)   => setup.reportWarning(msg)
+      case Terminate(exitState) => setup.terminate(exitState)
+    }
   }
 }

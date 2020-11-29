@@ -72,6 +72,29 @@ OParser.parse(parser1, args, Config()) match {
 
 See [Scaladoc API][1] and the rest of this page for the details on various builder methods.
 
+#### Abstracting over effects
+
+By default, scopt emits output when needed to stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to intercept the side effects.
+Use `OParser.runParser(...)` to do so:
+
+```scala
+// OParser.runParser returns (Option[Config], List[OEffect])
+OParser.runParser(parser1, args, Config()) match {
+  case (result, effects) =>
+    OParser.runEffects(effects, new DefaultOEffectSetup {
+      // ignore terminate
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
+    })
+
+    result match {
+      Some(config) =>
+        // do something
+      case _ =>
+        // arguments are bad, error message will have been displayed
+    }
+}
+```
+
 #### Full example
 
 ```scala
@@ -364,7 +387,7 @@ val parser = new scopt.OptionParser[Unit]("scopt") {
     .foreach( x => c = c.copy(out = x) )
     .text("out is a required file property")
 }
-if (parser.parse(args)) {
+if (parser.parse(args), ()) {
   // do stuff
 }
 else {
@@ -392,28 +415,22 @@ val result = OParser.parse(parser1, args, Config(), setup)
 By default, when the `--help` or `--version` are invoked, they call `sys.exit(0)` after printing the help or version information. If this is not desired (e.g. testing purposes), you can override the `terminate(exitState: Either[String, Unit])` method:
 
 ```scala
-import scopt.{ OParserSetup, DefaultOParserSetup }
-val setup: OParserSetup = new DefaultOParserSetup {
-  // Overriding the termination handler to no-op.
-  override def terminate(exitState: Either[String, Unit]): Unit = ()
+import scopt.{ OParser, DefaultOEffectSetup }
+
+OParser.runParser(parser1, args, Config()) match {
+  case (result, effects) =>
+    OParser.runEffects(effects, new DefaultOEffectSetup {
+      // ignore terminate
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
+    })
+
+    result match {
+      Some(config) =>
+        // do something
+      case _ =>
+        // arguments are bad, error message will have been displayed
+    }
 }
-val result = OParser.parse(parser1, args, Config(), setup)
-```
-
-### Advanced: Captured output
-
-By default, scopt emits output when needed to stderr and stdout.  This is expected behavior when using scopt to process arguments for your stand-alone application.  However, if your application requires parsing arguments while not producing output directly, you may wish to capture stderr and stdout output rather than emit them directly.   Redirecting Console in Scala can accomplish this in a thread-safe way, within a scope of your chosing, like this:
-
-```scala
-val outCapture = new ByteArrayOutputStream
-val errCapture = new ByteArrayOutputStream
-
-Console.withOut(outCapture) {
-  Console.withErr(errCapture) {
-    val result = OParser.parse(parser1, args, Config())
-  }
-}
-// Now stderr output from this block is in errCapture.toString, and stdout in outCapture.toString
 ```
 
 ### Advanced: Rendering mode

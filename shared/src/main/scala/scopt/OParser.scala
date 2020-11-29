@@ -179,14 +179,71 @@ object OParser {
         sequence(ps.head, ps.tail: _*)
       }
 
-  private[this] lazy val setup = new DefaultOParserSetup with OParserSetup {
+  private[this] lazy val psetup0 = new DefaultOParserSetup with OParserSetup {
+    def showUsageAsError(): Unit = ()
+    def showTryHelp(): Unit = ()
+  }
+  private[this] lazy val esetup0 = new DefaultOEffectSetup with OEffectSetup {
     def showUsageAsError(): Unit = ()
     def showTryHelp(): Unit = ()
   }
 
+  /** Run the parser, and run the effects.
+   */
   def parse[C](parser: OParser[_, C], args: CSeq[String], init: C): Option[C] =
-    ORunner.parse(args, init, parser.toList, setup)
+    ORunner.runParser(args, init, parser.toList, psetup0) match {
+      case (r, es) => ORunner.runEffects(es, esetup0); r
+    }
 
-  def parse[C](parser: OParser[_, C], args: CSeq[String], init: C, setup: OParserSetup): Option[C] =
-    ORunner.parse(args, init, parser.toList, setup)
+  /** Run the parser, and run the effects.
+   */
+  def parse[C](
+      parser: OParser[_, C],
+      args: CSeq[String],
+      init: C,
+      psetup: OParserSetup,
+      esetup: OEffectSetup): Option[C] =
+    ORunner.runParser(args, init, parser.toList, psetup) match {
+      case (r, es) => ORunner.runEffects(es, esetup); r
+    }
+
+  /** Run the parser, and run the effects.
+   */
+  def parse[C](
+      parser: OParser[_, C],
+      args: CSeq[String],
+      init: C,
+      psetup: OParserSetup): Option[C] =
+    ORunner.runParser(args, init, parser.toList, psetup) match {
+      case (r, es) => ORunner.runEffects(es, esetup0); r
+    }
+
+  /** Run the parser, and run the effects.
+   */
+  def parse[C](
+      parser: OParser[_, C],
+      args: CSeq[String],
+      init: C,
+      esetup: OEffectSetup): Option[C] =
+    ORunner.runParser(args, init, parser.toList, psetup0) match {
+      case (r, es) => ORunner.runEffects(es, esetup); r
+    }
+
+  /** Run the parser, and return the result and the effects.
+   */
+  def runParser[C](parser: OParser[_, C], args: CSeq[String], init: C): (Option[C], List[OEffect]) =
+    ORunner.runParser(args, init, parser.toList, psetup0)
+
+  /** Run the parser, and return the result and the effects.
+   */
+  def runParser[C](
+      parser: OParser[_, C],
+      args: CSeq[String],
+      init: C,
+      psetup: OParserSetup): (Option[C], List[OEffect]) =
+    ORunner.runParser(args, init, parser.toList, psetup)
+
+  def runEffects(es: List[OEffect]): Unit = ORunner.runEffects(es, esetup0)
+
+  def runEffects(es: List[OEffect], esetup: OEffectSetup): Unit = ORunner.runEffects(es, esetup)
 }

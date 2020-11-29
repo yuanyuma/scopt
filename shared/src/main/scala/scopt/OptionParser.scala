@@ -75,17 +75,20 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
   protected val options = new ListBuffer[OptionDef[_, C]]
 
   import platform._
-  private[scopt] val defaultConfig: DefaultOParserSetup = new DefaultOParserSetup {}
+  private[scopt] val defaultParserSetup: DefaultOParserSetup = new DefaultOParserSetup {}
+  private[scopt] val defaultEffectSetup: DefaultOEffectSetup = new DefaultOEffectSetup {}
   private[scopt] lazy val (header0, usage0) =
     ORunner.renderUsage(renderingMode, optionsWithProgramName)
 
-  def errorOnUnknownArgument: Boolean = defaultConfig.errorOnUnknownArgument
-  def showUsageOnError: Option[Boolean] = defaultConfig.showUsageOnError
-  def reportError(msg: String): Unit = defaultConfig.reportError(msg)
-  def reportWarning(msg: String): Unit = defaultConfig.reportWarning(msg)
-  def renderingMode: RenderingMode = defaultConfig.renderingMode
+  def errorOnUnknownArgument: Boolean = defaultParserSetup.errorOnUnknownArgument
+  def showUsageOnError: Option[Boolean] = defaultParserSetup.showUsageOnError
+  def reportError(msg: String): Unit = defaultEffectSetup.reportError(msg)
+  def reportWarning(msg: String): Unit = defaultEffectSetup.reportWarning(msg)
+  def renderingMode: RenderingMode = defaultParserSetup.renderingMode
   def terminate(exitState: Either[String, Unit]): Unit =
-    defaultConfig.terminate(exitState)
+    defaultEffectSetup.terminate(exitState)
+  def displayToOut(msg: String): Unit = defaultEffectSetup.displayToOut(msg)
+  def displayToErr(msg: String): Unit = defaultEffectSetup.displayToErr(msg)
 
   /** adds usage text. */
   def head(xs: String*): OptionDef[Unit, C] =
@@ -144,9 +147,6 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
   def checkConfig(f: C => Either[String, Unit]): OptionDef[Unit, C] =
     makeDef[Unit](OptionDefKind.Check, "") validateConfig (f)
 
-  def displayToOut(msg: String): Unit = defaultConfig.displayToOut(msg)
-  def displayToErr(msg: String): Unit = defaultConfig.displayToErr(msg)
-
   def header: String = header0
   def usage: String = usage0
 
@@ -172,7 +172,7 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
   /** parses the given `args`.
    */
   def parse(args: CSeq[String], init: C): Option[C] =
-    ORunner.parse(
+    ORunner.runParser(
       args,
       init,
       optionsWithProgramName,
@@ -180,12 +180,20 @@ abstract class OptionParser[C](programName: String) extends OptionDefCallback[C]
         override def renderingMode: RenderingMode = self.renderingMode
         override def errorOnUnknownArgument: Boolean = self.errorOnUnknownArgument
         override def showUsageOnError: Option[Boolean] = self.showUsageOnError
-        override def displayToOut(msg: String): Unit = self.displayToOut(msg)
-        override def displayToErr(msg: String): Unit = self.displayToErr(msg)
-        override def reportError(msg: String): Unit = self.reportError(msg)
-        override def reportWarning(msg: String): Unit = self.reportWarning(msg)
-
-        override def terminate(exitState: Either[String, Unit]): Unit = self.terminate(exitState)
       }
-    )
+    ) match {
+      case (r, es) =>
+        ORunner.runEffects(
+          es,
+          new OEffectSetup {
+            override def displayToOut(msg: String): Unit = self.displayToOut(msg)
+            override def displayToErr(msg: String): Unit = self.displayToErr(msg)
+            override def reportError(msg: String): Unit = self.reportError(msg)
+            override def reportWarning(msg: String): Unit = self.reportWarning(msg)
+            override def terminate(exitState: Either[String, Unit]): Unit =
+              self.terminate(exitState)
+          }
+        )
+        r
+    }
 }
