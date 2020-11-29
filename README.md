@@ -1,4 +1,4 @@
-  [1]: http://scopt.github.io/scopt/3.5.0/api/index.html#scopt.OptionParser
+  [1]: https://scopt.github.io/scopt/4.0.0/api/scopt/OParserBuilder.html
 
 # scopt
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.scopt/scopt_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.scopt/scopt_2.11)

@@ -3,7 +3,7 @@ import Dependencies._
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtcrossproject.crossProject
 
-def v: String = "4.0.0-SNAPSHOT"
+def v: String = "4.0.0"
 
 ThisBuild / version := v
 ThisBuild / scalaVersion := scala213
@@ -24,7 +24,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     // site
     // to preview, preview-site
     // to push, ghpages-push-site
-    siteSubdirName in SiteScaladoc := "$v/api",
+    siteSubdirName in SiteScaladoc := s"$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     scalacOptions ++= Seq("-language:existentials", "-deprecation"),
     scalacOptions ++= {
@@ -75,5 +75,6 @@ lazy val scoptJS = scopt.js
 
 lazy val scoptJVM = scopt.jvm
   .enablePlugins(SiteScaladocPlugin)
+  .enablePlugins(GhpagesPlugin)
 
 lazy val scoptNative = scopt.native
