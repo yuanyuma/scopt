@@ -1,11 +1,10 @@
 package scopttest
 
-import verify._
 import java.util.{ Calendar, GregorianCalendar }
 import java.io.File
 import scopt.OParser
 
-object MonadicParserSpecJVM extends BasicTestSuite {
+class MonadicParserSpecJVM extends munit.FunSuite {
   test("example parser should parse") {
     val result = OParser.parse(parser1, Array("--foo", "5", "--out", "target"), Config())
     assert(result == Some(Config(foo = 5, out = new File("target"))))

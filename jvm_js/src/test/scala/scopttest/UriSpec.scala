@@ -1,10 +1,9 @@
 package scopttest
 
-import verify._
 import java.net.URI
 import SpecUtil._
 
-object UriSpec extends BasicTestSuite {
+class UriSpec extends munit.FunSuite {
   test("URI parser should parse an URI") {
     uriParser("--foo", "http://github.com/")
     uriParser("--foo=http://github.com/")
