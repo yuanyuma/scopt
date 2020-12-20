@@ -38,9 +38,9 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
       }
     },
     resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
-    libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
-    testFrameworks += new TestFramework("verify.runner.Framework"),
-    libraryDependencies += "org.scalameta" %% "munit" % "0.7.19" % Test,
+    // libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
+    // testFrameworks += new TestFramework("verify.runner.Framework"),
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.20" % Test,
     testFrameworks += new TestFramework("munit.Framework"),
     // scaladoc fix
     unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
@@ -57,14 +57,14 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
   )
   .jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
-    scalacOptions += {
-      val a = (baseDirectory in LocalRootProject).value.toURI.toString
-      val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process
-        .Process("git rev-parse HEAD")
-        .lineStream_!
-        .head
-      s"-P:scalajs:mapSourceURI:$a->$g/"
-    },
+    // scalacOptions += {
+    //   val a = (baseDirectory in LocalRootProject).value.toURI.toString
+    //   val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process
+    //     .Process("git rev-parse HEAD")
+    //     .lineStream_!
+    //     .head
+    //   s"-P:scalajs:mapSourceURI:$a->$g/"
+    // },
   )
   .nativeSettings(
     scalaVersion := scala211,
