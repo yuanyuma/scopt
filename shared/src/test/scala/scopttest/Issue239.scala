@@ -1,6 +1,6 @@
 package scopttest
 
-class Issue239 extends munit.FunSuite {
+object Issue239 extends verify.BasicTestSuite {
   test("double arg should accept negative numbers") {
     val set = List("-3.1415926" -> -3.1415926, "-.1" -> -.1)
     set.foreach {

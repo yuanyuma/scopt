@@ -2,7 +2,7 @@ package scopttest
 
 import java.io.ByteArrayOutputStream
 
-class MutableParserSpec extends munit.FunSuite {
+object MutableParserSpec extends verify.BasicTestSuite {
 
   test("unit parser should parse ()") {
     unitParser("--foo")

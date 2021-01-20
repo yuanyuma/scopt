@@ -5,7 +5,7 @@ import java.io.File
 import java.net.{ URI, URL, InetAddress }
 import scala.concurrent.duration.Duration
 
-class ImmutableParserSpecJVM extends munit.FunSuite {
+object ImmutableParserSpecJVM extends verify.BasicTestSuite {
 
   private val url = new URL("https://example.com")
   private val uri = new URI("https://example.com/robots.txt")

@@ -5,7 +5,7 @@ import scopt.OParser
 import scopt.OEffect._
 import SpecUtil._
 
-class MonadicParserSpec extends munit.FunSuite {
+object MonadicParserSpec extends verify.BasicTestSuite {
   val NL = System.getProperty("line.separator")
 
   test("programName(s) should generate usage text") {
@@ -548,15 +548,15 @@ class MonadicParserSpec extends munit.FunSuite {
     val (_, effects) =
       OParser.runParser(parser, List("--help"), Config())
 
-    assertEquals(
-      effects.head,
-      DisplayToOut(
-        """|scopt 4.x
+    assert(
+      effects.head ==
+        DisplayToOut(
+          """|scopt 4.x
            |Usage: scopt [options]
            |
            |  --help  prints this usage text
            |          here's a second line of text""".stripMargin
-      )
+        )
     )
     ()
   }
