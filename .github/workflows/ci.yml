@@ -42,11 +42,9 @@ jobs:
             sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck +scoptJS/test +scoptJVM/test
             ;;
           2)
-            echo skip Scala Native test because MUnit is not available
             sudo apt-get update
             sudo apt install clang libunwind-dev libgc-dev libre2-dev
-            sbt ++$SCALA211! scoptNative/compile
-            # env SCALANATIVE_VERSION="0.4.0-M2" sbt ++$SCALA211! scoptNative/test
+            sbt +scoptNative/test
             ;;
           *)
             echo unknown jobtype

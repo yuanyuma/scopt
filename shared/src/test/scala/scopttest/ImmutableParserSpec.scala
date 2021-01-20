@@ -4,7 +4,7 @@ import java.net.URI
 import scala.concurrent.duration._
 import SpecUtil._
 
-class ImmutableParserSpec extends munit.FunSuite {
+object ImmutableParserSpec extends verify.BasicTestSuite {
   test("unit parser should parse ()") {
     unitParser("--foo")
     unitParser("-f")
