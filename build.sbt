@@ -24,7 +24,7 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     // site
     // to preview, preview-site
     // to push, ghpages-push-site
-    siteSubdirName in SiteScaladoc := s"$v/api",
+    SiteScaladoc / siteSubdirName := s"$v/api",
     git.remoteRepo := "git@github.com:scopt/scopt.git",
     scalacOptions ++= Seq("-language:existentials", "-deprecation"),
     scalacOptions ++= {
@@ -43,28 +43,32 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
     // libraryDependencies += "org.scalameta" %% "munit" % "0.7.20" % Test,
     // testFrameworks += new TestFramework("munit.Framework"),
     // scaladoc fix
-    unmanagedClasspath in Compile += Attributed.blank(new java.io.File("doesnotexist"))
+    Compile / unmanagedClasspath += Attributed.blank(new java.io.File("doesnotexist"))
   )
   .platformsSettings(JVMPlatform, JSPlatform)(
     Seq(Compile, Test).map { x =>
-      unmanagedSourceDirectories in x += {
+      (x / unmanagedSourceDirectories) += {
         baseDirectory.value.getParentFile / s"jvm_js/src/${Defaults.nameForSrc(x.name)}/scala/"
       }
-    }
-  )
-  .jvmSettings(
+    },
     crossScalaVersions += scala3,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
-    // scalacOptions += {
-    //   val a = (baseDirectory in LocalRootProject).value.toURI.toString
-    //   val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process
-    //     .Process("git rev-parse HEAD")
-    //     .lineStream_!
-    //     .head
-    //   s"-P:scalajs:mapSourceURI:$a->$g/"
-    // },
+    scalacOptions += {
+      val a = (LocalRootProject / baseDirectory).value.toURI.toString
+      val g = "https://raw.githubusercontent.com/scopt/scopt/" + sys.process
+        .Process("git rev-parse HEAD")
+        .lineStream_!
+        .head
+      val key = CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          "-scalajs-mapSourceURI"
+        case _ =>
+          "-P:scalajs:mapSourceURI"
+      }
+      s"${key}:$a->$g/"
+    },
   )
   .nativeSettings()
 
