@@ -84,4 +84,3 @@ lazy val scoptJVM = scopt.jvm
   .enablePlugins(GhpagesPlugin)
 
 lazy val scoptNative = scopt.native
-
