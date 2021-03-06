@@ -7,7 +7,7 @@ def v: String = "4.0.1-SNAPSHOT"
 
 ThisBuild / version := v
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq(scala211, scala212, scala213)
+ThisBuild / crossScalaVersions := Seq(scala211, scala212, scala213, scala3)
 ThisBuild / scalafmtOnCompile := true
 
 lazy val root = (project in file("."))
@@ -16,6 +16,11 @@ lazy val root = (project in file("."))
     name := "scopt root",
     publish / skip := true,
     crossScalaVersions := Nil,
+    commands += Command.command("release") { state =>
+      "clean" ::
+        "+publishSigned" ::
+        state
+    },
   )
 
 lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("."))
@@ -37,7 +42,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
           Nil
       }
     },
-    resolvers += "sonatype-public" at "https://oss.sonatype.org/content/repositories/public",
     libraryDependencies += "com.eed3si9n.verify" %%% "verify" % verifyVersion % Test,
     testFrameworks += new TestFramework("verify.runner.Framework"),
     // libraryDependencies += "org.scalameta" %% "munit" % "0.7.20" % Test,
@@ -51,7 +55,6 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
         baseDirectory.value.getParentFile / s"jvm_js/src/${Defaults.nameForSrc(x.name)}/scala/"
       }
     },
-    crossScalaVersions += scala3,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
@@ -70,7 +73,9 @@ lazy val scopt = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file(
       s"${key}:$a->$g/"
     },
   )
-  .nativeSettings()
+  .nativeSettings(
+    crossScalaVersions := Seq(scala211, scala212, scala213),
+  )
 
 lazy val scoptJS = scopt.js
 
@@ -79,3 +84,4 @@ lazy val scoptJVM = scopt.jvm
   .enablePlugins(GhpagesPlugin)
 
 lazy val scoptNative = scopt.native
+
