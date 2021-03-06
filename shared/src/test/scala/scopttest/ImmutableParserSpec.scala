@@ -311,6 +311,37 @@ Usage: scopt [options]
     assert(parsed.contains(ConfigWithNotToStringInverse(expectedValue)))
   }
 
+  test("show 'Try --help'") {
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
+      help("help").text("prints this usage text")
+      override def showUsageOnError: Option[Boolean] = Some(false)
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
+    }
+    val err = printParserError {
+      parser.parse(List("--foo"), Config())
+    }
+    assert(err == """|Error: Unknown option --foo
+                     |Try --help for more information.
+                     |""".stripMargin)
+    ()
+  }
+
+  test("showTryHelp doesn't show 'Try --help' when the help command is not the kind of OptHelp") {
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "3.x")
+      opt[Unit]('h', "help").text("prints this usage text")
+      override def showUsageOnError: Option[Boolean] = Some(false)
+      override def terminate(exitState: Either[String, Unit]): Unit = ()
+    }
+    val err = printParserError {
+      parser.parse(List("--foo"), Config())
+    }
+    assert(err == """|Error: Unknown option --foo
+                     |""".stripMargin)
+    ()
+  }
+
   val unitParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Unit]('f', "foo").action((x, c) => c.copy(flag = true))

@@ -339,8 +339,10 @@ private[scopt] object ORunner {
         case a :: b :: Nil => a + " or " + b
         case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
       }
-      displayToErr(
-        "Try " + oxford(helpOptions.toList map { _.fullName }) + " for more information.")
+      if (helpOptions.nonEmpty) {
+        displayToErr(
+          "Try " + oxford(helpOptions.toList map { _.fullName }) + " for more information.")
+      }
     }
     while (i < args.length) {
       pendingOptions find { _.tokensToRead(i, args) > 0 } match {
