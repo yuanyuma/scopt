@@ -2,8 +2,9 @@ package scopttest
 
 import java.util.{ Calendar, GregorianCalendar }
 import java.io.File
-import java.net.{ URI, URL, InetAddress }
+import java.net.{ InetAddress, URI, URL }
 import scala.concurrent.duration.Duration
+import scala.io.Source
 
 object ImmutableParserSpecJVM extends verify.BasicTestSuite {
 
@@ -20,6 +21,11 @@ object ImmutableParserSpecJVM extends verify.BasicTestSuite {
   test("file parser should parse test.txt") {
     fileParser("--foo", "test.txt")
     fileParser("--foo=test.txt")
+  }
+
+  test("source parser should parse test.txt") {
+    sourceParser("--foo", "test.txt")
+    sourceParser("--foo=test.txt")
   }
 
   test("InetAddress parser should parse 8.8.8.8") {
@@ -64,6 +70,23 @@ object ImmutableParserSpecJVM extends verify.BasicTestSuite {
     assert(result.get.fileValue == new File("test.txt"))
   }
 
+  val sourceParser1 = new scopt.OptionParser[Config]("scopt") {
+    head("scopt", "3.x")
+    opt[Source]("foo").action((x, c) => c.copy(sourceValue = x))
+    help("help")
+  }
+  def sourceParser(args: String*): Unit = {
+    val result = sourceParser1.parse(args.toSeq, Config())
+    val resultSourceValue = result.get.sourceValue
+      .getLines()
+      .toSeq
+
+    val expectedSourceValue =
+      Source.fromFile("test.txt").getLines().toSeq
+
+    assert(resultSourceValue == expectedSourceValue)
+  }
+
   val inetAddressParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[InetAddress]("foo").action((x, c) => c.copy(inetAddressValue = x))
@@ -105,6 +128,7 @@ object ImmutableParserSpecJVM extends verify.BasicTestSuite {
       bigDecimalValue: BigDecimal = BigDecimal("0.0"),
       calendarValue: Calendar = new GregorianCalendar(1900, Calendar.JANUARY, 1),
       fileValue: File = new File("."),
+      sourceValue: Source = Source.fromChar(0),
       uriValue: URI = new URI("http://localhost"),
       inetAddressValue: InetAddress = InetAddress.getByName("0.0.0.0"),
       durationValue: Duration = Duration("0s"),
