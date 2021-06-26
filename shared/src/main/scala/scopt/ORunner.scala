@@ -295,7 +295,14 @@ private[scopt] object ORunner {
       }
     }
     def handleOccurrence(opt: OptionDef[_, C], pending: ListBuffer[OptionDef[_, C]]): Unit = {
-      occurrences += (opt -> 1)
+
+      if (occurrences.contains(opt)) {
+        val o = occurrences(opt) + 1
+        occurrences += (opt -> o)
+      } else {
+        occurrences += (opt -> 1)
+      }
+
       if (occurrences(opt) >= opt.getMaxOccurs) {
         pending -= opt
       }
