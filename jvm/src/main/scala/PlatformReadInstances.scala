@@ -2,6 +2,7 @@ package scopt
 
 import java.net.{ URL, UnknownHostException }
 import collection.{ Seq => CSeq }
+import scala.io.Source
 
 private[scopt] object platform {
   val _NL = System.getProperty("line.separator")
@@ -26,6 +27,7 @@ private[scopt] object platform {
 
     implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
     implicit val fileRead: Read[File] = Read.reads { new File(_) }
+    implicit val sourceRead: scopt.Read[Source] = scopt.Read.reads { Source.fromFile(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
     implicit val uriRead: Read[URI] = Read.reads { new URI(_) }
     implicit val urlRead: Read[URL] = Read.reads { new URL(_) }
