@@ -372,9 +372,7 @@ private[scopt] object ORunner {
 
           args(i) match {
             case arg if arg startsWith "--" => handleError("Unknown option " + arg)
-            case arg if isShortOpt(arg) =>
-              if (arg == "-") handleError("Unknown option " + arg)
-              else handleShortOptions(arg drop 1)
+            case arg if isShortOpt(arg)     => handleShortOptions(arg drop 1)
             case arg if findCommand(arg).isDefined =>
               val cmd = findCommand(arg).get
               handleOccurrence(cmd, pendingCommands)
