@@ -365,10 +365,10 @@ private[scopt] object ORunner {
           } // if
         case None =>
           def isShortOpt(arg: String): Boolean =
-            arg.startsWith("-") && (arg.length == 1 || ! {
+            arg.startsWith("-") && arg.length > 1 && ! {
               val c = arg.charAt(1)
               (c >= '0' && c <= '9') || c == '.'
-            })
+            }
 
           args(i) match {
             case arg if arg startsWith "--" => handleError("Unknown option " + arg)
