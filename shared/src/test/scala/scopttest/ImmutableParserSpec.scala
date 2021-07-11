@@ -342,6 +342,19 @@ Usage: scopt [options]
     ()
   }
 
+  // https://github.com/scopt/scopt/issues/108
+  test("support passing a single dash as an argument") {
+    val options = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "4.x")
+      arg[String]("<a>").action((x, c) => c.copy(a = x))
+      help("help")
+    }
+
+    val result = options.parse(Seq("-"), Config())
+
+    assert(result.isDefined && result.get.a == "-")
+  }
+
   val unitParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Unit]('f', "foo").action((x, c) => c.copy(flag = true))

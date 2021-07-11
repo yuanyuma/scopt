@@ -190,7 +190,7 @@ class OptionDef[A: Read, C](
   private[scopt] def getParentId: Option[Int] = _parentId
   def isHidden: Boolean = _isHidden
   def hasFallback: Boolean = _fallback.isDefined
-  def getFallback: A = _fallback.get.apply
+  def getFallback: A = _fallback.get.apply()
   private[scopt] def checks: CSeq[C => Either[String, Unit]] = _configValidations
   def desc: String = _desc
   def shortOpt: Option[String] = _shortOpt

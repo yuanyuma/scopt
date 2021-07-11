@@ -202,7 +202,7 @@ class OParser[A, C](head: OptionDef[A, C], rest: List[OptionDef[_, C]]) {
   /** Requires the option to appear at least once. */
   def required(): OParser[A, C] = minOccurs(1)
 
-  /** Chanages the option to be optional. */
+  /** Changes the option to be optional. */
   def optional(): OParser[A, C] = minOccurs(0)
 
   /** Allows the argument to appear multiple times. */
