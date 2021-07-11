@@ -355,6 +355,20 @@ Usage: scopt [options]
     assert(result.isDefined && result.get.a == "-")
   }
 
+  // https://github.com/scopt/scopt/issues/303
+  test("stop options parsing when encountering `--`") {
+    val options = new scopt.OptionParser[Config]("scopt") {
+      head("scopt", "4.x")
+      opt[Unit]('f', "foo").action((x, c) => c.copy(flag = true))
+      arg[String]("<a>").action((x, c) => c.copy(a = x))
+      help("help")
+    }
+
+    val result = options.parse(Seq("--", "--foo"), Config())
+
+    assert(result.isDefined && (result.get.a == "--foo") && !result.get.flag)
+  }
+
   val unitParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
     opt[Unit]('f', "foo").action((x, c) => c.copy(flag = true))
