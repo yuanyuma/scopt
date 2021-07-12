@@ -351,38 +351,44 @@ private[scopt] object ORunner {
           "Try " + oxford(helpOptions.toList map { _.fullName }) + " for more information.")
       }
     }
-    while (i < args.length) {
-      pendingOptions find { _.tokensToRead(i, args) > 0 } match {
-        case Some(option) =>
-          handleOccurrence(option, pendingOptions)
-          option(i, args) match {
-            case Right(v)          => handleArgument(option, v)
-            case Left(outOfBounds) => handleError(outOfBounds)
-          }
-          // move index forward for gobbling
-          if (option.tokensToRead(i, args) > 1) {
-            i += option.tokensToRead(i, args) - 1
-          } // if
-        case None =>
-          def isShortOpt(arg: String): Boolean =
-            arg.startsWith("-") && arg.length > 1 && ! {
-              val c = arg.charAt(1)
-              (c >= '0' && c <= '9') || c == '.'
-            }
+    var processOptions = true
 
-          args(i) match {
-            case arg if arg startsWith "--" => handleError("Unknown option " + arg)
-            case arg if isShortOpt(arg)     => handleShortOptions(arg drop 1)
-            case arg if findCommand(arg).isDefined =>
-              val cmd = findCommand(arg).get
-              handleOccurrence(cmd, pendingCommands)
-              handleArgument(cmd, "")
-            case arg if pendingArgs.isEmpty => handleError("Unknown argument '" + arg + "'")
-            case arg =>
-              val first = pendingArgs.head
-              handleOccurrence(first, pendingArgs)
-              handleArgument(first, arg)
-          }
+    while (i < args.length) {
+      if (args(i) == "--") {
+        processOptions = false
+      } else {
+        pendingOptions find {
+          _.tokensToRead(i, args) > 0
+        } match {
+          case Some(option) if processOptions =>
+            handleOccurrence(option, pendingOptions)
+            option(i, args) match {
+              case Right(v)          => handleArgument(option, v)
+              case Left(outOfBounds) => handleError(outOfBounds)
+            }
+            // move index forward for gobbling
+            if (option.tokensToRead(i, args) > 1) {
+              i += option.tokensToRead(i, args) - 1
+            } // if
+          case _ =>
+            def isShortOpt(arg: String): Boolean =
+              arg.startsWith("-") && arg.length > 1 && arg(1) != '-'
+
+            args(i) match {
+              case arg if processOptions && arg.startsWith("--") =>
+                handleError("Unknown option " + arg)
+              case arg if processOptions && isShortOpt(arg) => handleShortOptions(arg drop 1)
+              case arg if findCommand(arg).isDefined =>
+                val cmd = findCommand(arg).get
+                handleOccurrence(cmd, pendingCommands)
+                handleArgument(cmd, "")
+              case arg if pendingArgs.isEmpty => handleError("Unknown argument '" + arg + "'")
+              case arg =>
+                val first = pendingArgs.head
+                handleOccurrence(first, pendingArgs)
+                handleArgument(first, arg)
+            }
+        }
       }
       i += 1
     }
