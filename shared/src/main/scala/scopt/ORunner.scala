@@ -372,10 +372,7 @@ private[scopt] object ORunner {
             } // if
           case _ =>
             def isShortOpt(arg: String): Boolean =
-              arg.startsWith("-") && arg.length > 1 && ! {
-                val c = arg.charAt(1)
-                (c >= '0' && c <= '9') || c == '.'
-              }
+              arg.startsWith("-") && arg.length > 1 && arg(1) != '-'
 
             args(i) match {
               case arg if processOptions && arg.startsWith("--") =>
