@@ -22,34 +22,34 @@ jobs:
             java: 8
             jobtype: 2
           - os: ubuntu-latest
-            java: 11
+            java: 17
             jobtype: 1
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Setup
-      uses: olafurpg/setup-scala@v10
+    - name: Setup JDK
+      uses: actions/setup-java@v2
       with:
-        java-version: "adopt@1.${{ matrix.java }}"
+        distribution: temurin
+        java-version: "${{ matrix.java }}"
     - name: Coursier cache
-      uses: coursier/cache-action@v5
-    - name: Build and test
+      uses: coursier/cache-action@v6
+    - name: Build and test (1)
+      if: \${{ matrix.jobtype == 1 }}
       shell: bash
       run: |
-        case ${{ matrix.jobtype }} in
-          1)
-            sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck +scoptJS/test +scoptJVM/test
-            ;;
-          2)
-            sudo apt-get update
-            sudo apt install clang libunwind-dev libgc-dev libre2-dev
-            sbt +scoptNative/test
-            ;;
-          *)
-            echo unknown jobtype
-            exit 1
-        esac
+        sbt -v scalafmtCheck test:scalafmtCheck scalafmtSbtCheck +scoptJS/test +scoptJVM/test
+    - name: Build and test (2)
+      if: \${{ matrix.jobtype == 2 }}
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt install clang libunwind-dev libgc-dev libre2-dev
+        sbt -v +scoptNative/test
+    - name: Cleanup before cache
+      shell: bash
+      run: |
         rm -rf "$HOME/.ivy2/local"
         find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
         find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
