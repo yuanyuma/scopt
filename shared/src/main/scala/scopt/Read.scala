@@ -76,7 +76,7 @@ object Read extends platform.PlatformReadInstances {
   implicit val finiteDurationRead: Read[FiniteDuration] =
     durationRead.map {
       case d: FiniteDuration => d
-      case d                 => throw new IllegalArgumentException("'" + d + "' is not a finite duration.")
+      case d => throw new IllegalArgumentException("'" + d + "' is not a finite duration.")
     }
 
   implicit def tupleRead[A1: Read, A2: Read]: Read[(A1, A2)] = new Read[(A1, A2)] {

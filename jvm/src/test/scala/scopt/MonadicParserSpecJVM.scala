@@ -52,7 +52,8 @@ update is a command.
         .action({ case ((k, v), c) => c.copy(libName = k, maxCount = v) })
         .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0"))
+          else failure("Value <max> must be >0")
+        )
         .keyValueName("<libname>", "<max>")
         .text("maximum count for <libname>"),
       opt[Seq[File]]('j', "jars")
@@ -92,10 +93,10 @@ update is a command.
             .hidden()
             .action((_, c) => c.copy(debug = true))
             .text("this option is hidden in the usage text"),
-          checkConfig(
-            c =>
-              if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
-              else success)
+          checkConfig(c =>
+            if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+            else success
+          )
         )
     )
   }
@@ -112,5 +113,6 @@ update is a command.
       files: Seq[File] = Seq(),
       keepalive: Boolean = false,
       jars: Seq[File] = Seq(),
-      kwargs: Map[String, String] = Map())
+      kwargs: Map[String, String] = Map()
+  )
 }

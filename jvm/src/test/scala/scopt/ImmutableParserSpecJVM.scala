@@ -53,7 +53,8 @@ object ImmutableParserSpecJVM extends verify.BasicTestSuite {
   def calendarParser(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
     assert(
-      result.get.calendarValue.getTime == new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime)
+      result.get.calendarValue.getTime == new GregorianCalendar(2000, Calendar.JANUARY, 1).getTime
+    )
   }
   def calendarParserFail(args: String*): Unit = {
     val result = calendarParser1.parse(args.toSeq, Config())
@@ -140,5 +141,6 @@ object ImmutableParserSpecJVM extends verify.BasicTestSuite {
       seqTupleStringString: Seq[(String, String)] = Nil,
       charValue: Char = 0,
       url: URL = url,
-      uri: URI = uri)
+      uri: URI = uri
+  )
 }

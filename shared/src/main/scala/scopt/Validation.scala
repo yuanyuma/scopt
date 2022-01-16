@@ -3,8 +3,9 @@ package scopt
 import scala.collection.{ Seq => CSeq }
 
 object Validation {
-  def validateValue[A](vs: CSeq[A => Either[String, Unit]])(
-      value: A): Either[CSeq[String], Unit] = {
+  def validateValue[A](
+      vs: CSeq[A => Either[String, Unit]]
+  )(value: A): Either[CSeq[String], Unit] = {
     val results = vs map { _.apply(value) }
     results.foldLeft(OptionDef.makeSuccess[CSeq[String]]) { (acc, r) =>
       (acc match {

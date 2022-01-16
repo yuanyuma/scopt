@@ -529,8 +529,8 @@ Usage: scopt [options]
 
   val pairParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[(String, Int)]("foo").action({
-      case ((k, v), c) => c.copy(key = k, intValue = v)
+    opt[(String, Int)]("foo").action({ case ((k, v), c) =>
+      c.copy(key = k, intValue = v)
     })
     help("help")
   }
@@ -545,8 +545,8 @@ Usage: scopt [options]
 
   val seqParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[Seq[Int]]("foo").action({
-      case (s, c) => c.copy(seqInts = s)
+    opt[Seq[Int]]("foo").action({ case (s, c) =>
+      c.copy(seqInts = s)
     })
     help("help")
   }
@@ -561,8 +561,8 @@ Usage: scopt [options]
 
   val mapParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[Map[String, Boolean]]("foo").action({
-      case (s, c) => c.copy(mapStringToBool = s)
+    opt[Map[String, Boolean]]("foo").action({ case (s, c) =>
+      c.copy(mapStringToBool = s)
     })
     help("help")
   }
@@ -577,8 +577,8 @@ Usage: scopt [options]
 
   val seqTupleParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
-    opt[Seq[(String, String)]]("foo").action({
-      case (s, c) => c.copy(seqTupleStringString = s)
+    opt[Seq[(String, String)]]("foo").action({ case (s, c) =>
+      c.copy(seqTupleStringString = s)
     })
     help("help")
   }
@@ -603,7 +603,7 @@ Usage: scopt [options]
     assert(result.get.optIntValue == Some(1))
   }
 
-  //parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
+  // parse Map("true" -> true, "false" -> false) out of --foo "true=true,false=false" ${mapParser("--foo","true=true,false=false")}
 
   val requireParser1 = new scopt.OptionParser[Config]("scopt") {
     head("scopt", "3.x")
@@ -630,7 +630,8 @@ Usage: scopt [options]
       .action((x, c) => c.copy(intValue = x))
       .validate(x =>
         if (x > 0) success
-        else failure("Option --foo must be >0"))
+        else failure("Option --foo must be >0")
+      )
       .validate(x => failure("Just because"))
     help("help")
   }
@@ -743,10 +744,10 @@ Usage: scopt [options]
       .children(
         cmd("update").children(
           arg[String]("<a>").action((x, c) => c.copy(a = x)),
-          checkConfig(
-            c =>
-              if (c.a == "foo") success
-              else failure("not foo"))
+          checkConfig(c =>
+            if (c.a == "foo") success
+            else failure("not foo")
+          )
         )
       )
     help("help")
@@ -770,7 +771,8 @@ Usage: scopt [options]
         debug: Boolean = false,
         mode: String = "",
         keepalive: Boolean = false,
-        kwargs: Map[String, String] = Map())
+        kwargs: Map[String, String] = Map()
+    )
     val parser = new scopt.OptionParser[Config]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
       head("scopt", "3.x")
@@ -778,12 +780,13 @@ Usage: scopt [options]
       opt[Int]('f', "foo").action((x, c) => c.copy(foo = x)).text("foo is an integer property")
 
       opt[(String, Int)]("max")
-        .action({
-          case ((k, v), c) => c.copy(libName = k, maxCount = v)
+        .action({ case ((k, v), c) =>
+          c.copy(libName = k, maxCount = v)
         })
         .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0"))
+          else failure("Value <max> must be >0")
+        )
         .keyValueName("<libname>", "<max>")
         .text("maximum count for <libname>")
 
@@ -816,10 +819,10 @@ Usage: scopt [options]
             .hidden()
             .action((_, c) => c.copy(debug = true))
             .text("this option is hidden in the usage text"),
-          checkConfig(
-            c =>
-              if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
-              else success)
+          checkConfig(c =>
+            if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+            else success
+          )
         )
     }
     parser.parse(args.toSeq, Config())
@@ -860,19 +863,21 @@ update is a command.
         debug: Boolean = false,
         mode: String = "",
         keepalive: Boolean = false,
-        kwargs: Map[String, String] = Map())
+        kwargs: Map[String, String] = Map()
+    )
     val parser = new scopt.OptionParser[Config]("scopt") {
       head("scopt", "3.x")
 
       opt[Int]('f', "foo").action((x, c) => c.copy(foo = x)).text("foo is an integer property")
 
       opt[(String, Int)]("max")
-        .action({
-          case ((k, v), c) => c.copy(libName = k, maxCount = v)
+        .action({ case ((k, v), c) =>
+          c.copy(libName = k, maxCount = v)
         })
         .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0"))
+          else failure("Value <max> must be >0")
+        )
         .keyValueName("<libname>", "<max>")
         .text("maximum count for <libname>")
 
@@ -905,10 +910,10 @@ update is a command.
             .hidden()
             .action((_, c) => c.copy(debug = true))
             .text("this option is hidden in the usage text"),
-          checkConfig(
-            c =>
-              if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
-              else success)
+          checkConfig(c =>
+            if (c.keepalive && c.xyz) failure("xyz cannot keep alive")
+            else success
+          )
         )
     }
     parser.parse(args.toSeq, Config())
@@ -979,5 +984,6 @@ Usage: scopt [options]
       seqTupleStringString: Seq[(String, String)] = Nil,
       charValue: Char = 0,
       optStringValue: Option[String] = None,
-      optIntValue: Option[Int] = None)
+      optIntValue: Option[Int] = None
+  )
 }

@@ -27,7 +27,8 @@ private[scopt] object platform {
 
   def applyArgumentExHandler[C](
       desc: String,
-      arg: String): PartialFunction[Throwable, Either[CSeq[String], C]] = {
+      arg: String
+  ): PartialFunction[Throwable, Either[CSeq[String], C]] = {
     case e: NumberFormatException =>
       Left(List(desc + " expects a number but was given '" + arg + "'"))
     case e: ParseException =>

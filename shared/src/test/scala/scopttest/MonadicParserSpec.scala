@@ -18,7 +18,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
       OParser.usage(programName1) ==
         """Usage: scopt
         |
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -31,7 +32,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
     assert(
       OParser.usage(head1) ==
         """scopt 3.x
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -50,7 +52,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
       OParser.usage(p) ==
         """scopt 4.x
         |x y
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -73,7 +76,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         """scopt 4.x
         |Usage: scopt
         |
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -111,7 +115,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |  -f, --foo <value>  foo is an integer property
         |  --debug            debug is a flag
         |  <source>
-        |  <dest>""".stripMargin)
+        |  <dest>""".stripMargin
+    )
     ()
   }
 
@@ -181,7 +186,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |Usage: scopt [options]
         |
         |  -b, --bob  text
-        |  -b, --bob""".stripMargin)
+        |  -b, --bob""".stripMargin
+    )
     ()
   }
 
@@ -200,7 +206,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         """scopt 4.x
         |Usage: scopt [options]
         |
-        |  -f, --foo""".stripMargin)
+        |  -f, --foo""".stripMargin
+    )
     ()
   }
 
@@ -241,7 +248,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |
         |  -a, --alice
         |  -b, --bob
-        |  -ab, --alicebob""".stripMargin)
+        |  -ab, --alicebob""".stripMargin
+    )
     ()
   }
 
@@ -282,7 +290,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |Usage: scopt [options]
         |
         |  -f, --foo <value>
-        |  --help""".stripMargin)
+        |  --help""".stripMargin
+    )
     ()
   }
 
@@ -338,7 +347,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |Usage: scopt [options]
         |
         |  -f, --foo <value>
-        |  --help""".stripMargin)
+        |  --help""".stripMargin
+    )
     ()
   }
 
@@ -394,7 +404,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
           .action((x, c) => c.copy(intValue = x))
           .validate(x =>
             if (x > 0) success
-            else failure("Option --foo must be >0"))
+            else failure("Option --foo must be >0")
+          )
           .validate(x => failure("Just because"))
       )
     }
@@ -428,7 +439,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |Command: update [options]
         |
         |  --foo
-        |  --bar <value>""".stripMargin)
+        |  --bar <value>""".stripMargin
+    )
     ()
   }
 
@@ -469,7 +481,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |
         |  --foo
         |  --bar <value>
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -484,9 +497,14 @@ object MonadicParserSpec extends verify.BasicTestSuite {
       )
     }
     val out = printParserOut {
-      OParser.parse(parser, List("--version"), Config(), new scopt.DefaultOEffectSetup {
-        override def terminate(exitState: Either[String, Unit]): Unit = ()
-      })
+      OParser.parse(
+        parser,
+        List("--version"),
+        Config(),
+        new scopt.DefaultOEffectSetup {
+          override def terminate(exitState: Either[String, Unit]): Unit = ()
+        }
+      )
     }
     assert(out == "scopt 4.x".newline)
     ()
@@ -503,9 +521,14 @@ object MonadicParserSpec extends verify.BasicTestSuite {
       )
     }
     val out = printParserOut {
-      OParser.parse(parser, List("--help"), Config(), new scopt.DefaultOEffectSetup {
-        override def terminate(exitState: Either[String, Unit]): Unit = ()
-      })
+      OParser.parse(
+        parser,
+        List("--help"),
+        Config(),
+        new scopt.DefaultOEffectSetup {
+          override def terminate(exitState: Either[String, Unit]): Unit = ()
+        }
+      )
     }
     assert(
       out ==
@@ -513,7 +536,8 @@ object MonadicParserSpec extends verify.BasicTestSuite {
         |Usage: scopt [options]
         |
         |  --help  prints this usage text
-        |""".stripMargin)
+        |""".stripMargin
+    )
     ()
   }
 
@@ -577,5 +601,6 @@ object MonadicParserSpec extends verify.BasicTestSuite {
       seqInts: Seq[Int] = Seq(),
       mapStringToBool: Map[String, Boolean] = Map(),
       seqTupleStringString: Seq[(String, String)] = Nil,
-      charValue: Char = 0)
+      charValue: Char = 0
+  )
 }

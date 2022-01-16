@@ -264,10 +264,9 @@ object MutableParserSpec extends verify.BasicTestSuite {
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo").foreach({
-        case (k, v) =>
-          foo = k
-          value = v
+      opt[(String, Int)]("foo").foreach({ case (k, v) =>
+        foo = k
+        value = v
       })
       help("help")
     }
@@ -280,10 +279,9 @@ object MutableParserSpec extends verify.BasicTestSuite {
     var value = 0
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
-      opt[(String, Int)]("foo").foreach({
-        case (k, v) =>
-          foo = k
-          value = v
+      opt[(String, Int)]("foo").foreach({ case (k, v) =>
+        foo = k
+        value = v
       })
       help("help")
     }
@@ -323,7 +321,8 @@ object MutableParserSpec extends verify.BasicTestSuite {
         .foreach(x => foo = x)
         .validate(x =>
           if (x > 0) success
-          else failure("Option --foo must be >0"))
+          else failure("Option --foo must be >0")
+        )
         .validate(x => failure("Just because"))
       help("help")
     }
@@ -409,7 +408,8 @@ object MutableParserSpec extends verify.BasicTestSuite {
         verbose: Boolean = false,
         debug: Boolean = false,
         mode: String = "",
-        keepalive: Boolean = false)
+        keepalive: Boolean = false
+    )
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       override def renderingMode = scopt.RenderingMode.OneColumn
@@ -418,13 +418,13 @@ object MutableParserSpec extends verify.BasicTestSuite {
       opt[Int]('f', "foo").foreach(x => c = c.copy(foo = x)).text("foo is an integer property")
 
       opt[(String, Int)]("max")
-        .foreach({
-          case (k, v) =>
-            c = c.copy(libName = k, maxCount = v)
+        .foreach({ case (k, v) =>
+          c = c.copy(libName = k, maxCount = v)
         })
         .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0"))
+          else failure("Value <max> must be >0")
+        )
         .keyValueName("<libname>", "<max>")
         .text("maximum count for <libname>")
 
@@ -485,7 +485,8 @@ update is a command.
         verbose: Boolean = false,
         debug: Boolean = false,
         mode: String = "",
-        keepalive: Boolean = false)
+        keepalive: Boolean = false
+    )
     var c = Config()
     val parser = new scopt.OptionParser[Unit]("scopt") {
       head("scopt", "3.x")
@@ -493,13 +494,13 @@ update is a command.
       opt[Int]('f', "foo").foreach(x => c = c.copy(foo = x)).text("foo is an integer property")
 
       opt[(String, Int)]("max")
-        .foreach({
-          case (k, v) =>
-            c = c.copy(libName = k, maxCount = v)
+        .foreach({ case (k, v) =>
+          c = c.copy(libName = k, maxCount = v)
         })
         .validate(x =>
           if (x._2 > 0) success
-          else failure("Value <max> must be >0"))
+          else failure("Value <max> must be >0")
+        )
         .keyValueName("<libname>", "<max>")
         .text("maximum count for <libname>")
 

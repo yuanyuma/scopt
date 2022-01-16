@@ -11,7 +11,8 @@ import OEffect._
 private[scopt] object ORunner {
   private[scopt] def renderUsage[C](
       mode: RenderingMode,
-      options: List[OptionDef[_, C]]): (String, String) = {
+      options: List[OptionDef[_, C]]
+  ): (String, String) = {
 
     def heads: ISeq[OptionDef[_, C]] = options filter { _.kind == Head }
     def arguments: ISeq[OptionDef[_, C]] = options filter { _.kind == Arg }
@@ -139,12 +140,15 @@ private[scopt] object ORunner {
     def renderTwoColumnsUsage: String = {
       val xs = optionsForRender
       val descriptions = {
-        val col1Len = math.min(column1MaxLength, xs map { x =>
-          usageColumn1(x).length + WW.length
-        } match {
-          case Nil  => 0
-          case list => list.max
-        })
+        val col1Len = math.min(
+          column1MaxLength,
+          xs map { x =>
+            usageColumn1(x).length + WW.length
+          } match {
+            case Nil  => 0
+            case list => list.max
+          }
+        )
         xs map { x =>
           usageTwoColumn(x, col1Len)
         }
@@ -170,10 +174,9 @@ private[scopt] object ORunner {
         c.getParentId == parentId && !c.isHidden
       }
       if (cs.nonEmpty) text += cs map { _.name } mkString ("[", "|", "]")
-      val os = options.toSeq filter {
-        case x =>
-          (x.kind == Opt || x.kind == OptVersion || x.kind == OptHelp) &&
-            x.getParentId == parentId
+      val os = options.toSeq filter { case x =>
+        (x.kind == Opt || x.kind == OptVersion || x.kind == OptHelp) &&
+        x.getParentId == parentId
       }
       val as = arguments filter { _.getParentId == parentId }
       if (os.nonEmpty) text += "[options]"
@@ -198,16 +201,16 @@ private[scopt] object ORunner {
       args: CSeq[String],
       init: C,
       options: List[OptionDef[_, C]],
-      setup: OParserSetup): (Option[C], List[OEffect]) = {
+      setup: OParserSetup
+  ): (Option[C], List[OEffect]) = {
     var i = 0
     import setup._
     def heads: ISeq[OptionDef[_, C]] = options filter { _.kind == Head }
-    def nonArgs: ISeq[OptionDef[_, C]] = options filter {
-      case x =>
-        x.kind == Opt ||
-          x.kind == Note ||
-          x.kind == OptHelp ||
-          x.kind == OptVersion
+    def nonArgs: ISeq[OptionDef[_, C]] = options filter { case x =>
+      x.kind == Opt ||
+      x.kind == Note ||
+      x.kind == OptHelp ||
+      x.kind == OptVersion
     }
     def arguments: ISeq[OptionDef[_, C]] = options filter { _.kind == Arg }
     def commands: ISeq[OptionDef[_, C]] = options filter { _.kind == Cmd }
@@ -316,9 +319,8 @@ private[scopt] object ORunner {
       }
       gs flatMap { g =>
         pendingOptions map { (g, _) }
-      } find {
-        case (g, opt) =>
-          opt.shortOptTokens("-" + g) == 1
+      } find { case (g, opt) =>
+        opt.shortOptTokens("-" + g) == 1
       } match {
         case Some(p) =>
           val (g, option) = p
@@ -347,8 +349,9 @@ private[scopt] object ORunner {
         case _             => (xs.dropRight(2) :+ xs.takeRight(2).mkString(", or ")).mkString(", ")
       }
       if (helpOptions.nonEmpty) {
-        displayToErr(
-          "Try " + oxford(helpOptions.toList map { _.fullName }) + " for more information.")
+        displayToErr("Try " + oxford(helpOptions.toList map {
+          _.fullName
+        }) + " for more information.")
       }
     }
     var processOptions = true
@@ -406,7 +409,8 @@ private[scopt] object ORunner {
       if (opt.getMinOccurs == 1) reportError("Missing " + opt.shortDescription)
       else
         reportError(
-          opt.shortDescription.capitalize + " must be given " + opt.getMinOccurs + " times")
+          opt.shortDescription.capitalize + " must be given " + opt.getMinOccurs + " times"
+        )
       _error = true
     }
     (pendingArgs filter { arg =>
@@ -415,7 +419,8 @@ private[scopt] object ORunner {
       if (arg.getMinOccurs == 1) reportError("Missing " + arg.shortDescription)
       else
         reportError(
-          arg.shortDescription.capitalize + "' must be given " + arg.getMinOccurs + " times")
+          arg.shortDescription.capitalize + "' must be given " + arg.getMinOccurs + " times"
+        )
       _error = true
     }
     handleChecks(_config)
