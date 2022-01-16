@@ -299,7 +299,8 @@ object OParser {
       args: CSeq[String],
       init: C,
       psetup: OParserSetup,
-      esetup: OEffectSetup): Option[C] =
+      esetup: OEffectSetup
+  ): Option[C] =
     ORunner.runParser(args, init, parser.toList, psetup) match {
       case (r, es) => ORunner.runEffects(es, esetup); r
     }
@@ -310,7 +311,8 @@ object OParser {
       parser: OParser[_, C],
       args: CSeq[String],
       init: C,
-      psetup: OParserSetup): Option[C] =
+      psetup: OParserSetup
+  ): Option[C] =
     ORunner.runParser(args, init, parser.toList, psetup) match {
       case (r, es) => ORunner.runEffects(es, esetup0); r
     }
@@ -321,7 +323,8 @@ object OParser {
       parser: OParser[_, C],
       args: CSeq[String],
       init: C,
-      esetup: OEffectSetup): Option[C] =
+      esetup: OEffectSetup
+  ): Option[C] =
     ORunner.runParser(args, init, parser.toList, psetup0) match {
       case (r, es) => ORunner.runEffects(es, esetup); r
     }
@@ -337,7 +340,8 @@ object OParser {
       parser: OParser[_, C],
       args: CSeq[String],
       init: C,
-      psetup: OParserSetup): (Option[C], List[OEffect]) =
+      psetup: OParserSetup
+  ): (Option[C], List[OEffect]) =
     ORunner.runParser(args, init, parser.toList, psetup)
 
   def runEffects(es: List[OEffect]): Unit = ORunner.runEffects(es, esetup0)

@@ -31,7 +31,8 @@ class OptionDef[A: Read, C](
     _maxOccurs: Int,
     _isHidden: Boolean,
     _fallback: Option[() => A],
-    _defCallback: OptionDefCallback[C]) {
+    _defCallback: OptionDefCallback[C]
+) {
 
   import platform._
   import OptionDef._
@@ -78,7 +79,8 @@ class OptionDef[A: Read, C](
       _maxOccurs: Int = this._maxOccurs,
       _isHidden: Boolean = this._isHidden,
       _fallback: Option[() => A] = this._fallback,
-      _defCallback: OptionDefCallback[C] = this._defCallback): OptionDef[A, C] =
+      _defCallback: OptionDefCallback[C] = this._defCallback
+  ): OptionDef[A, C] =
     new OptionDef(
       _id = _id,
       _kind = _kind,
@@ -200,7 +202,8 @@ class OptionDef[A: Read, C](
   private[scopt] def applyArgument(
       arg: String,
       config: C,
-      onOption: Option[C => C]): Either[CSeq[String], C] =
+      onOption: Option[C => C]
+  ): Either[CSeq[String], C] =
     try {
       val x = read.reads(arg)
       Validation.validateValue(_validations)(x) match {
@@ -216,7 +219,8 @@ class OptionDef[A: Read, C](
   private[scopt] def applyFallback(
       x: A,
       config: C,
-      onOption: Option[C => C]): Either[CSeq[String], C] =
+      onOption: Option[C => C]
+  ): Either[CSeq[String], C] =
     try {
       Validation.validateValue(_validations)(x) match {
         case Right(_) =>

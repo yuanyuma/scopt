@@ -78,9 +78,8 @@ object DiffUtil {
     actual
       .padTo(expected.length, "")
       .zip(expected.padTo(actual.length, ""))
-      .map {
-        case (act, exp) =>
-          mkColoredLineDiff(exp, act, expectedSize)
+      .map { case (act, exp) =>
+        mkColoredLineDiff(exp, act, expectedSize)
       }
       .mkString(System.lineSeparator)
   }
@@ -168,8 +167,8 @@ object DiffUtil {
         val (x1, x2) = x.splitAt(xmid)
         val leftScore = nwScore(x1, y)
         val rightScore = nwScore(x2.reverse, y.reverse)
-        val scoreSum = (leftScore zip rightScore.reverse).map {
-          case (left, right) => left + right
+        val scoreSum = (leftScore zip rightScore.reverse).map { case (left, right) =>
+          left + right
         }
         val max = scoreSum.max
         val ymid = scoreSum.indexOf(max)
@@ -207,7 +206,8 @@ object DiffUtil {
   private def needlemanWunsch(
       x: Array[String],
       y: Array[String],
-      builder: mutable.ArrayBuilder[Patch]): Unit = {
+      builder: mutable.ArrayBuilder[Patch]
+  ): Unit = {
     def similarity(a: String, b: String) = if (a == b) 2 else -1
     val d = 1
     val score = Array.tabulate(x.length + 1, y.length + 1) { (i, j) =>
