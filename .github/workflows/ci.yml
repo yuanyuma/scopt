@@ -36,12 +36,12 @@ jobs:
     - name: Coursier cache
       uses: coursier/cache-action@v6
     - name: Build and test (1)
-      if: \${{ matrix.jobtype == 1 }}
+      if: ${{ matrix.jobtype == 1 }}
       shell: bash
       run: |
         sbt -v +scalafmtCheckAll scalafmtSbtCheck +scoptJS/test +scoptJVM/test
     - name: Build and test (2)
-      if: \${{ matrix.jobtype == 2 }}
+      if: ${{ matrix.jobtype == 2 }}
       shell: bash
       run: |
         sbt -v +scoptNative/test
