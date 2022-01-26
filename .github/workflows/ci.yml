@@ -44,8 +44,6 @@ jobs:
       if: \${{ matrix.jobtype == 2 }}
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt install clang libunwind-dev libgc-dev libre2-dev
         sbt -v +scoptNative/test
     - name: Cleanup before cache
       shell: bash
