@@ -1,5 +1,6 @@
 package scopt
 
+import java.net.URI
 import scala.collection.{ Seq => CSeq }
 import scala.collection.immutable.{ Seq => ISeq }
 
@@ -128,4 +129,6 @@ object Read extends platform.PlatformReadInstances {
     case ""  => None
     case str => Some(implicitly[Read[A]].reads(str))
   }
+
+  implicit val uriRead: Read[URI] = Read.reads { new URI(_) }
 }

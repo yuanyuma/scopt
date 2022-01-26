@@ -29,7 +29,6 @@ private[scopt] object platform {
     implicit val fileRead: Read[File] = Read.reads { new File(_) }
     implicit val sourceRead: scopt.Read[Source] = scopt.Read.reads { Source.fromFile(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
-    implicit val uriRead: Read[URI] = Read.reads { new URI(_) }
     implicit val urlRead: Read[URL] = Read.reads { new URL(_) }
   }
 

@@ -20,10 +20,7 @@ private[scopt] object platform {
   type ParseException = scopt.ParseException
   def mkParseEx(s: String, p: Int) = new ParseException(s, p)
 
-  trait PlatformReadInstances {
-    import java.net.URI
-    implicit val uriRead: Read[URI] = Read.reads { new URI(_) }
-  }
+  trait PlatformReadInstances {}
 
   def applyArgumentExHandler[C](
       desc: String,
