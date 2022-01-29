@@ -10,6 +10,7 @@ private[scopt] object platform {
   import java.util.{ Locale, Calendar, GregorianCalendar }
   import java.text.SimpleDateFormat
   import java.io.File
+  import java.nio.file.{ Path, Paths }
   import java.net.{ InetAddress, URI }
 
   type ParseException = java.text.ParseException
@@ -27,6 +28,7 @@ private[scopt] object platform {
 
     implicit val yyyymmdddRead: Read[Calendar] = calendarRead("yyyy-MM-dd")
     implicit val fileRead: Read[File] = Read.reads { new File(_) }
+    implicit val pathRead: Read[Path] = Read.reads { Paths.get(_) }
     implicit val sourceRead: scopt.Read[Source] = scopt.Read.reads { Source.fromFile(_) }
     implicit val inetAddress: Read[InetAddress] = Read.reads { InetAddress.getByName(_) }
     implicit val urlRead: Read[URL] = Read.reads { new URL(_) }
