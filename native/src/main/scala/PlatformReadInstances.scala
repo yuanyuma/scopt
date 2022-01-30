@@ -1,6 +1,7 @@
 package scopt
 
 import java.io.File
+import java.nio.file.{ Path, Paths }
 import java.net.UnknownHostException
 import collection.{ Seq => CSeq }
 
@@ -12,6 +13,7 @@ private[scopt] object platform {
 
   trait PlatformReadInstances {
     implicit val fileRead: Read[File] = Read.reads { new File(_) }
+    implicit val pathRead: Read[Path] = Read.reads { Paths.get(_) }
   }
 
   def applyArgumentExHandler[C](
